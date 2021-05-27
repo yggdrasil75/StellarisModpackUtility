@@ -41,7 +41,7 @@ targets3 = {
     "count_ships ": "count_galaxy_fleet ",
     "count(_owned)?_pops ": "count_owned_pop ",
     "count_owned_ships ": "count_owned_ship ",
-    "any_ship_in_system": "any_fleet_in_system",
+    # "any_ship_in_system": "any_fleet_in_system",
     r"spawn_megastructure = \{\n([^{}]+)location": r"spawn_megastructure = {\n\1planet",
     r"any_system_within_border\s*=\s*\{[\s\n]*any_system_planet\s*=": "any_planet_within_border =",
     r"is_country_type = default\s+has_monthly_income = \{ resource = (\w+) value <=? \d": r"no_resource_for_component = { RESOURCE = \1",
