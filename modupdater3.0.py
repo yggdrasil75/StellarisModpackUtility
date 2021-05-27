@@ -81,63 +81,76 @@ def parse_dir():
     if not os.path.isdir(mod_outpath) or mod_outpath == mod_path:
         mod_outpath = mod_path
         print('Warning: Mod files will be overwritten!')
-    else: mod_outpath = os.path.normpath(mod_outpath)
+    else:
+        mod_outpath = os.path.normpath(mod_outpath)
 
-    files += glob.glob(mod_path + '/**', recursive=True)  # '\\*.txt'
+    files = glob.glob(mod_path + '/**', recursive=True)  # '\\*.txt'
     # files = glob.glob(mod_path, recursive=True)  # os.path.join( ,'\\*.txt'
-
     modfix(files)
 
 
 def modfix(file_list):
     # global mod_path, mod_outpath
     # print(targets3)
-    print("mod_outpath", mod_outpath)
+    # print("mod_outpath", mod_outpath)
     # print(mod_path)
     subfolder = ''
     for _file in file_list:
+        # print(_file)
         if os.path.isfile(_file) and re.search(r"\.txt$", _file):
+            subfolder = os.path.relpath(_file, mod_path)
             file_contents = ""
             with open(_file, 'r', encoding='utf-8') as txtfile:
                 # try:
                 # print(_file, type(_file))
                 file_contents = txtfile.readlines()
-                basename = os.path.basename(_file)
-
+                subfolder, basename = os.path.split(subfolder)
+                # basename = os.path.basename(_file)
                 txtfile.close()
                 out = ""
-                # changed = False
+                changed = False
                 for i, line in enumerate(file_contents):
-                # for line in file_contents:
+                    # for line in file_contents:
                     # print(line)
                     for rt in removedTargets:
                         if rt in line:
-                            print("WARNING outdated removed trigger: %s in line %i file %s" % (rt, i, basename))
+                            print("WARNING outdated removed trigger: %s in line %i file %s" % (
+                                rt, i, basename))
                             # changed = True
                     for pattern, repl in targets3.items():
                         if re.search(pattern, line):
                             # , count=0, flags=0
                             line = re.sub(pattern, repl, line)
                             # line = line.replace(t, r)
-                            print("Updated file: %s at line %i with %s" % (basename, i, line.strip()))
-                            # changed = True
-
+                            print("Updated file: %s at line %i with %s" %
+                                  (basename, i, line.strip()))
+                            changed = True
                     out += line
-                out_file = os.path.join(mod_outpath, subfolder, basename)
-                # if changed:
-                # print('file:', out_file)
-                with open(out_file, "w", encoding='utf-8') as txtfile:
-                    txtfile.write(out)
+
+                if changed:
+                    structure = os.path.join(mod_outpath, subfolder)
+                    out_file = os.path.join(structure, basename)
+                    print('Folder: %s File: %s' % (structure, out_file))
+                    if not os.path.exists(structure):
+                        os.makedirs(structure)
+                        # print('Create folder:', subfolder)
+                    with open(out_file, "w", encoding='utf-8') as txtfile:
+                        txtfile.write(out)
                 # except Exception as e:
                 # except OSError as e:
                 #     print(e)
                 #     print("Unable to open", _file)
             txtfile.close()
-        elif os.path.isdir(_file):
-            # if _file.is_dir():
-            subfolder = _file.replace(mod_path+os.path.sep, '')
-            # print("subfolder:", subfolder)
+        # elif os.path.isdir(_file):
+        #     # if .is_dir():
+        #     # subfolder = _file.replace(mod_path + os.path.sep, '')
+        #     subfolder = os.path.relpath(_file, mod_path)
+        #     # print("subfolder:", subfolder)
+        #     structure = os.path.join(mod_outpath, subfolder)
+        #     if not os.path.isdir(structure):
+        #         os.mkdir(structure)
         # else: print("NO TXT?", _file)
     print("Done!")
 
-parse_dir() #mod_path, mod_outpath
+
+parse_dir()  # mod_path, mod_outpath
