@@ -7,7 +7,8 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
 
-mod_path = 'c:/Games/Settings/Mods/CrisisManagers (all)'
+mod_path = os.path.expanduser('~') + '\Documents\Paradox Interactive\Stellaris\mod'
+# mod_path = 'c:/Games/Settings/Mods/CrisisManagers (all)'
 mod_outpath = mod_path
 
 # 3.0.*
@@ -89,8 +90,9 @@ def parse_dir():
 
 
 def modfix(file_list):
+    # global mod_path, mod_outpath
     # print(targets3)
-    # print(mod_outpath)
+    print("mod_outpath", mod_outpath)
     # print(mod_path)
     subfolder = ''
     for _file in file_list:
@@ -122,7 +124,8 @@ def modfix(file_list):
 
                     out += line
                 out_file = os.path.join(mod_outpath, subfolder, basename)
-                # if changed: print('Changed file', out_file)
+                # if changed:
+                # print('file:', out_file)
                 with open(out_file, "w", encoding='utf-8') as txtfile:
                     txtfile.write(out)
                 # except Exception as e:
@@ -132,7 +135,7 @@ def modfix(file_list):
             txtfile.close()
         elif os.path.isdir(_file):
             # if _file.is_dir():
-            subfolder = os.path.basename(_file)
+            subfolder = _file.replace(mod_path+os.path.sep, '')
             # print("subfolder:", subfolder)
         # else: print("NO TXT?", _file)
     print("Done!")
