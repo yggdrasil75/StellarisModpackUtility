@@ -18,14 +18,14 @@ import yaml
 # yaml=YAML(typ='safe')
 
 # Write here your mod folder name
-# localModPath = "ADeadlyTempest"
-localModPath = "Decentralized Empires"
+localModPath = "ADeadlyTempest"
+# localModPath = "Decentralized Empires"
 # localModPath = "starbasestrong"
-local_OVERHAUL = ["russian", "spanish",
-                  "braz_por", "french", "polish", "simp_chinese"]
+# local_OVERHAUL = ["russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
+local_OVERHAUL = ["russian", "french", "polish"]
+
 print(localModPath)
 
-# localizations = ["english", "russian", "spanish"]
 
 # def abort(message):
 # 	mBox('abort', message, 0)
@@ -89,7 +89,7 @@ regRev2 = re.compile(r'(?:\'|([^:"]{2}))\'?$', re.MULTILINE)
 
 def tr(s):
     print(type(s), len(s))
-    if isinstance(s) is bytes:
+    if isinstance(s, bytes):
         s = s.decode('utf-8-sig')
     # s = re.sub('\n', '\\n', s)
     s = s.replace('\\r?\\n', 'BRR')
@@ -103,7 +103,7 @@ def tr(s):
 def trReverse(s):
     "Paradox workaround"
     print(type(s))
-    if isinstance(s) is bytes:
+    if isinstance(s, bytes):
         s = s.decode('utf-8-sig')
     s = s.replace('\r\n', '\n')  # Windows
     s = s.replace('  ', ' ')
@@ -140,7 +140,7 @@ def writeStream(lang, stream, filename):
     lang = os.path.join(os.getcwd(), filename)
     print(lang, os.path.isfile(lang))
     # if not os.path.isfile(lang):
-    if isinstance(stream) is bytes:
+    if isinstance(stream, bytes):
         stream = stream.decode('utf-8-sig')
     with io.open(lang, 'w', encoding='utf-8-sig') as f:
         f.write(stream)
@@ -204,7 +204,7 @@ for filename in glob.iglob(os.path.join('english', '*.yml'), recursive=False):
         #print("Dict document:", type(langStream), langStream)
 
         # for _, doc in dictionary.items():
-        if isinstance(doc) is dict and isinstance(langDict) is dict:
+        if isinstance(doc, dict) and isinstance(langDict, dict):
             for key, value in doc.items():
                 # print(key, value)
                 if key not in langDict or (lang in local_OVERHAUL and langDict[key] != value):
