@@ -8,7 +8,8 @@ from tkinter import filedialog
 from tkinter import messagebox
 
 mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
-# mod_path = 'c:/Games/Settings/Mods/CrisisManagers (all)'
+mod_path = 'c:/Games/Settings/Mods/'
+
 if not os.path.isdir(mod_path):
     mod_path = os.getcwd()
 mod_outpath = mod_path
@@ -19,9 +20,10 @@ removedTargets = {
     r"\s(ship|army|colony|station)_maintenance",
     r"\s(construction|trade|federation)_expenses"
 }
-# 3.0.*
+# 3.0.* (only one liner)
 targets3 = {
-    r"surveyed\s*=\s*\{(\s*)set_surveyed": r"set_surveyed = {\1surveyed",
+    r"\tsurveyed\s*=\s*\{": r"\tset_surveyed = {",
+    r"(\s+)set_surveyed\s*=\s*(yes|no)": r"\1surveyed = \2",
     r"has_completed_special_project\s+": "has_completed_special_project_in_log ",
     r"has_failed_special_project\s+": "has_failed_special_project_in_log ",
     r"species\s*=\s*last_created(\s)": r"species = last_created_species\1",
@@ -39,10 +41,12 @@ targets3 = {
     r"count_owned_ships\s*": "count_owned_ship ",
     # "any_ship_in_system": "any_fleet_in_system", # works only sure for single size fleets
     r"spawn_megastructure\s*=\s*\{([^{}]+)location\s*=": r"spawn_megastructure = {\1planet =",
-    r"\s+planet =\s*(solar_system|planet)\s*\n?": "", # REMOVE
-    r"any_system_within_border\s*=\s*\{[\s\n]*any_system_planet\s*=": "any_planet_within_border =",
-    r"is_country_type\s*=\s*default\s+has_monthly_income = \{ resource = (\w+) value <=? \d": r"no_resource_for_component = { RESOURCE = \1",
+    r"\s+planet =\s*(solar_system|planet)[\s\n\r]*": "",  # REMOVE
+    r"any_system_within_border\s*=\s*\{\s*any_system_planet\s*=": "any_planet_within_border =",
+    r"is_country_type\s*=\s*default\s+has_monthly_income\s*=\s*\{\s*resource = (\w+) value <=? \d": r"no_resource_for_component = { RESOURCE = \1",
     r"([^\._])(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*(\w+)\s*\}": r"\1is_owned_by = \2",
+    # code opt only
+    r"(\s*)OR\s*\=\s*\{\s*has_valid_civic\s*\=\s*civic_fanatic_purifiers\s*has_valid_civic\s*\=\s*civic_machine_terminator\s*has_valid_civic\s*\=\s*civic_hive_devouring_swarm\s*\}": "\1is_homicidal = yes"
 }
 
 
@@ -107,21 +111,24 @@ def modfix(file_list):
                 out = ""
                 changed = False
                 for i, line in enumerate(file_contents):
-                    # for line in file_contents:
-                    # print(line)
-                    for rt in removedTargets:
-                        rt = re.search(rt, line)
-                        if rt:
-                            print("WARNING outdated removed trigger: %s in line %i file %s" % (
-                                rt.group(0), i, basename))
-                    for pattern, repl in targets3.items():
-                        if re.search(pattern, line):
-                            # , count=0, flags=0
-                            line = re.sub(pattern, repl, line)
-                            # line = line.replace(t, r)
-                            print("Updated file: %s at line %i with %s" %
-                                  (basename, i, line.strip()))
-                            changed = True
+                    if len(line) > 10:
+                        # for line in file_contents:
+                        # print(line)
+                        for rt in removedTargets:
+                            rt = re.search(rt, line)
+                            if rt:
+                                print("WARNING outdated removed trigger: %s in line %i file %s" % (
+                                    rt.group(0), i, basename))
+                        for pattern, repl in targets3.items():
+                            # print(line)
+                            # print(pattern, repl)
+                            if re.search(pattern, line):
+                                # , count=0, flags=0
+                                line = re.sub(pattern, repl, line)
+                                # line = line.replace(t, r)
+                                print("Updated file: %s at line %i with %s" %
+                                      (basename, i, line.strip()))
+                                changed = True
                     out += line
 
                 if changed:
