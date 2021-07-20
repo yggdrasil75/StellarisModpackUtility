@@ -8,7 +8,6 @@ from tkinter import filedialog
 from tkinter import messagebox
 
 mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
-mod_path = 'c:/Games/Settings/Mods/'
 
 if not os.path.isdir(mod_path):
     mod_path = os.getcwd()
@@ -45,8 +44,10 @@ targets3 = {
     r"any_system_within_border\s*=\s*\{\s*any_system_planet\s*=": "any_planet_within_border =",
     r"is_country_type\s*=\s*default\s+has_monthly_income\s*=\s*\{\s*resource = (\w+) value <=? \d": r"no_resource_for_component = { RESOURCE = \1",
     r"([^\._])(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*(\w+)\s*\}": r"\1is_owned_by = \2",
-    # code opt only
-    r"(\s*)OR\s*\=\s*\{\s*has_valid_civic\s*\=\s*civic_fanatic_purifiers\s*has_valid_civic\s*\=\s*civic_machine_terminator\s*has_valid_civic\s*\=\s*civic_hive_devouring_swarm\s*\}": "\1is_homicidal = yes"
+    r"exists\s*=\s*(solar_system|planet)\.owner": "has_owner = yes",
+    # code optss only
+    r"NOT\s*=\s*\{\s*([^\s]+)\s*=\s*yes\s*\}": r"\1 = no"
+    # r"(\s*)OR\s*\=\s*\{\s*has_valid_civic\s*\=\s*civic_fanatic_purifiers\s*has_valid_civic\s*\=\s*civic_machine_terminator\s*has_valid_civic\s*\=\s*civic_hive_devouring_swarm\s*\}": "\1is_homicidal = yes"
 }
 
 
@@ -69,17 +70,18 @@ def parse_dir():
     global mod_path, mod_outpath
     files = []
     mod_path = os.path.normpath(mod_path)
+    print(mod_path)
     mod_path = iBox("Please select a mod folder:", mod_path)
     # mod_path = input('Enter target directory: ')
-    mod_outpath = iBox('Enter out directory (optional):', mod_path)
+    # mod_outpath = iBox('Enter out directory (optional):', mod_path)
     # mod_outpath = input('Enter out directory (optional):')
-    mod_outpath = os.path.normpath(mod_outpath)
+    # mod_outpath = os.path.normpath(mod_outpath)
 
     if not os.path.isdir(mod_path):
         # except OSError:
         #     print('Unable to locate the mod path %s' % mod_path)
         mBox('Error', 'Unable to locate the mod path %s' % mod_path)
-    if not os.path.isdir(mod_outpath) or mod_outpath == mod_path:
+    if len(mod_outpath) < 1 or not os.path.isdir(mod_outpath) or mod_outpath == mod_path:
         mod_outpath = mod_path
         print('Warning: Mod files will be overwritten!')
     else:
@@ -115,16 +117,16 @@ def modfix(file_list):
                         # for line in file_contents:
                         # print(line)
                         for rt in removedTargets:
-                            rt = re.search(rt, line)
+                            rt = re.search(rt, line, flags=re.I)
                             if rt:
                                 print("WARNING outdated removed trigger: %s in line %i file %s" % (
                                     rt.group(0), i, basename))
                         for pattern, repl in targets3.items():
                             # print(line)
                             # print(pattern, repl)
-                            if re.search(pattern, line):
+                            if re.search(pattern, line, flags=re.I):
                                 # , count=0, flags=0
-                                line = re.sub(pattern, repl, line)
+                                line = re.sub(pattern, repl, line, flags=re.I)
                                 # line = line.replace(t, r)
                                 print("Updated file: %s at line %i with %s" %
                                       (basename, i, line.strip()))
