@@ -8,10 +8,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 
 mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
-
-if not os.path.isdir(mod_path):
-    mod_path = os.getcwd()
-mod_outpath = mod_path
+mod_outpath = ""
 
 # 3.0.*
 removedTargets = {
@@ -19,6 +16,12 @@ removedTargets = {
     r"\s(ship|army|colony|station)_maintenance",
     r"\s(construction|trade|federation)_expenses"
 }
+
+# targets2 = {
+#     r"MACHINE_species_trait_points_add = \d" : ["MACHINE_species_trait_points_add ="," ROBOT_species_trait_points_add = ",""],
+#     r"job_replicator_add = \d":["if = {limit = {has_authority = auth_machine_intelligence} job_replicator_add = ", "} if = {limit = {has_country_flag = synthetic_empire} job_roboticist_add = ","}"]
+# }
+
 # 3.0.* (only one liner)
 targets3 = {
     r"\tsurveyed\s*=\s*\{": r"\tset_surveyed = {",
@@ -44,12 +47,19 @@ targets3 = {
     r"any_system_within_border\s*=\s*\{\s*any_system_planet\s*=": "any_planet_within_border =",
     r"is_country_type\s*=\s*default\s+has_monthly_income\s*=\s*\{\s*resource = (\w+) value <=? \d": r"no_resource_for_component = { RESOURCE = \1",
     r"([^\._])(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*(\w+)\s*\}": r"\1is_owned_by = \2",
-    r"exists\s*=\s*(solar_system|planet)\.owner": "has_owner = yes",
+    r"(\s+)exists\s*=\s*(solar_system|planet)\.(?:space_)?owner": r"\1has_owner = yes",
     # code optss only
-    r"NOT\s*=\s*\{\s*([^\s]+)\s*=\s*yes\s*\}": r"\1 = no"
-    # r"(\s*)OR\s*\=\s*\{\s*has_valid_civic\s*\=\s*civic_fanatic_purifiers\s*has_valid_civic\s*\=\s*civic_machine_terminator\s*has_valid_civic\s*\=\s*civic_hive_devouring_swarm\s*\}": "\1is_homicidal = yes"
+    r"(\s+)NOT\s*=\s*\{\s*([^\s]+)\s*=\s*yes\s*\}": r"\1\2 = no"
 }
 
+# 3.0.* (multiline)
+targets4 = {
+    r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*[\w\._:]+\s*\}\s*\}": [r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w\._:]+)\s*\}\s*\}", r"{ is_owned_by = \1 }"],
+    r"NOR\s+=\s+\{\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+\}": "is_synthetic_empire = no",
+    r"OR\s+=\s+\{\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+\}": "is_synthetic_empire = yes",
+    r"NOR\s*=\s*\{\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*\}": "is_homicidal = no",
+    r"OR\s*=\s*\{\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*\}": "is_homicidal = yes"
+}
 
 def mBox(mtype, text):
     tk.Tk().withdraw()
@@ -71,6 +81,9 @@ def parse_dir():
     files = []
     mod_path = os.path.normpath(mod_path)
     print(mod_path)
+
+    if not os.path.isdir(mod_path):
+        mod_path = os.getcwd()
     mod_path = iBox("Please select a mod folder:", mod_path)
     # mod_path = input('Enter target directory: ')
     # mod_outpath = iBox('Enter out directory (optional):', mod_path)
@@ -81,6 +94,7 @@ def parse_dir():
         # except OSError:
         #     print('Unable to locate the mod path %s' % mod_path)
         mBox('Error', 'Unable to locate the mod path %s' % mod_path)
+        return False
     if len(mod_outpath) < 1 or not os.path.isdir(mod_outpath) or mod_outpath == mod_path:
         mod_outpath = mod_path
         print('Warning: Mod files will be overwritten!')
@@ -104,12 +118,31 @@ def modfix(file_list):
             subfolder = os.path.relpath(_file, mod_path)
             file_contents = ""
             with open(_file, 'r', encoding='utf-8') as txtfile:
+                # out = txtfile.read() # full_fille
                 # try:
                 # print(_file, type(_file))
+                # pattern = re.compile(u)
+                # print(pattern.search(txtfile))
+                # for t, r in targets2.items():
+                #     targets = re.findall(t, txtfile)
+                #     if len(targets) > 0:
+                #         for target in targets:
+                #             value = target.split("=")[1]
+                #             replacer = ""
+                #             for i in range(len(r)):
+                #                 replacer += r[i]
+                #                 if i < len(r) -1:
+                #                     replacer += value
+                #             if target in line and replacer not in line: 
+                #                 line = line.replace(target,replacer)
+
+
+
+
                 file_contents = txtfile.readlines()
                 subfolder, basename = os.path.split(subfolder)
                 # basename = os.path.basename(_file)
-                txtfile.close()
+                # txtfile.close()
                 out = ""
                 changed = False
                 for i, line in enumerate(file_contents):
@@ -128,10 +161,24 @@ def modfix(file_list):
                                 # , count=0, flags=0
                                 line = re.sub(pattern, repl, line, flags=re.I)
                                 # line = line.replace(t, r)
-                                print("Updated file: %s at line %i with %s" %
-                                      (basename, i, line.strip()))
                                 changed = True
+                                print("Updated file: %s at line %i with %s" % (basename, i, line.strip()))
                     out += line
+
+                for pattern, repl in targets4.items():
+                    targets = re.findall(pattern, out, flags=re.I)
+                    # if targets:
+                    if len(targets) > 0:
+                        # print(targets, type(targets))
+                        for tar in targets:
+                            replace = repl
+                            print(type(repl), tar, type(tar))
+                            if type(repl) == list:
+                                replace = re.sub(repl[0], repl[1], tar, flags=re.I)
+                            if type(repl) == str or (type(tar) != tuple and tar in out):
+                                print("multiline replace")
+                                out = out.replace(tar, replace)
+                                changed = True
 
                 if changed:
                     structure = os.path.join(mod_outpath, subfolder)
@@ -140,8 +187,8 @@ def modfix(file_list):
                     if not os.path.exists(structure):
                         os.makedirs(structure)
                         # print('Create folder:', subfolder)
-                    with open(out_file, "w", encoding='utf-8') as txtfile:
-                        txtfile.write(out)
+                    open(out_file, "w", encoding='utf-8').write(out)
+
                 # except Exception as e:
                 # except OSError as e:
                 #     print(e)
