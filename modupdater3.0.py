@@ -54,10 +54,8 @@ targets3 = {
 
 # 3.0.* (multiline)
 targets4 = {
-    r"\sany_country\s*=\s*\{[\s\n]*has_event_chain\s*=": [r"(\s)any_country\s*=\s*(\{[\s\n]*has_event_chain\s*=)", r"\1any_playable_country = \2"],
-    r"\s(?:every|random)_country\s*=\s*\{[\s\n]*limit\s*=\s*\{\s*has_event_chain\s*=": [r"(\s)(every|random)_country\s*=\s*(\{[\s\n]*limit\s*=\s*\{\s*has_event_chain\s*=)", r"\1\2_playable_country = \3"],
-    r"\sany_country\s*=\s*\{[\s\n]*is_ai\s*=\s*no\s*": [r"(\s)any_country\s*=\s*(\{[\s\n]*is_ai\s*=\s*no)\s*", r"\1any_playable_country = \2 "],
-    r"\s(?:every|random)_country\s*=\s*\{[\s\n]*limit\s*=\s*\{\s*is_ai\s*=\s*no\s*\}": [r"(\s)(every|random)_country\s*=\s*(\{[\s\n]*limit\s*=\s*\{\s*is_ai\s*=\s*no\s*\})", r"\1\2_playable_country = \3"],
+    r"\sany_country\s*=\s*\{[\s\n]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default)": [r"(\s)any_country\s*=\s*(\{[\s\n]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default))", r"\1any_playable_country = \2"],
+    r"\s(?:every|random)_country\s*=\s*\{[\s\n]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default)": [r"(\s(?:every|random))_country\s*=\s*(\{[\s\n]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default))", r"\1_playable_country = \2"],
     r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*[\w\._:]+\s*\}\s*\}": [r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w\._:]+)\s*\}\s*\}", r"{ is_owned_by = \1 }"],
     r"NOR\s+=\s+\{\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+\}": "is_synthetic_empire = no",
     r"OR\s+=\s+\{\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+\}": "is_synthetic_empire = yes",
