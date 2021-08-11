@@ -22,7 +22,7 @@ removedTargets = {
 #     r"job_replicator_add = \d":["if = {limit = {has_authority = auth_machine_intelligence} job_replicator_add = ", "} if = {limit = {has_country_flag = synthetic_empire} job_roboticist_add = ","}"]
 # }
 
-# 3.0.* (only one liner)
+# 3.0.* (only one-liner)
 targets3 = {
     r"\tsurveyed\s*=\s*\{": r"\tset_surveyed = {",
     r"(\s+)set_surveyed\s*=\s*(yes|no)": r"\1surveyed = \2",
@@ -34,13 +34,12 @@ targets3 = {
     r"(\s)(any|every|random)_planet\s*=": r"\1\2_galaxy_planet =",
     r"(\s)(any|every|random)_ship\s*=": r"\1\2_galaxy_fleet =",
     r"(any|every|random|count)_sector\s*=": r"\1_galaxy_sector =",
-    r"(any|every|random)_war_defender\s*=": r"\1_defender =",
-    r"(any|every|random)_war_attacker\s*=": r"\1_attacker =",
+    r"(any|every|random)_war_(attacker|defender)\s*=": r"\1_\2 =",
     r"(any|every|random|count)_recruited_leader\s*=": r"\1_owned_leader =",
     r"count_planets\s*": "count_galaxy_planet ",
     r"count_ships\s*": "count_galaxy_fleet ",
     r"count(_owned)?_pops\s*": "count_owned_pop ",
-    r"count_owned_ships\s*": "count_owned_ship ",
+    r"count_(owned|fleet)_ships\s*": "count_owned_ship ", # 2.7
     # "any_ship_in_system": "any_fleet_in_system", # works only sure for single size fleets
     r"spawn_megastructure\s*=\s*\{([^{}]+)location\s*=": r"spawn_megastructure = {\1planet =",
     r"\s+planet =\s*(solar_system|planet)[\s\n\r]*": "",  # REMOVE
@@ -54,8 +53,9 @@ targets3 = {
 
 # 3.0.* (multiline)
 targets4 = {
-    r"\sany_country\s*=\s*\{[\s\n]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default)": [r"(\s)any_country\s*=\s*(\{[\s\n]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default))", r"\1any_playable_country = \2"],
-    r"\s(?:every|random)_country\s*=\s*\{[\s\n]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default)": [r"(\s(?:every|random))_country\s*=\s*(\{[\s\n]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default))", r"\1_playable_country = \2"],
+    # r"\s*\n{2,}": "\n\n", # surplus lines
+    r"\sany_country\s*=\s*\{[^{}]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default)": [r"(\s)any_country\s*=\s*(\{[^{}]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default))", r"\1any_playable_country = \2"],
+    r"\s(?:every|random|count)_country\s*=\s*\{[^{}]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default)": [r"(\s(?:every|random|count))_country\s*=\s*(\{[^{}]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default))", r"\1_playable_country = \2"],
     r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*[\w\._:]+\s*\}\s*\}": [r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w\._:]+)\s*\}\s*\}", r"{ is_owned_by = \1 }"],
     r"NOR\s+=\s+\{\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+\}": "is_synthetic_empire = no",
     r"OR\s+=\s+\{\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+\}": "is_synthetic_empire = yes",
@@ -82,6 +82,7 @@ def parse_dir():
     global mod_path, mod_outpath
     files = []
     mod_path = os.path.normpath(mod_path)
+    print("Welcome to Stellaris Mod-Updater-3.0 by F1r3Pr1nc3!")
     print(mod_path)
 
     if not os.path.isdir(mod_path):
@@ -119,7 +120,7 @@ def modfix(file_list):
         if os.path.isfile(_file) and re.search(r"\.txt$", _file):
             subfolder = os.path.relpath(_file, mod_path)
             file_contents = ""
-            with open(_file, 'r', encoding='utf-8') as txtfile:
+            with open(_file, 'r', encoding='utf-8', errors='ignore') as txtfile:
                 # out = txtfile.read() # full_fille
                 # try:
                 # print(_file, type(_file))
@@ -135,11 +136,8 @@ def modfix(file_list):
                 #                 replacer += r[i]
                 #                 if i < len(r) -1:
                 #                     replacer += value
-                #             if target in line and replacer not in line: 
+                #             if target in line and replacer not in line:
                 #                 line = line.replace(target,replacer)
-
-
-
 
                 file_contents = txtfile.readlines()
                 subfolder, basename = os.path.split(subfolder)
