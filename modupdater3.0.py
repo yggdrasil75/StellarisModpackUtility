@@ -1,4 +1,7 @@
+###    @author FirePrince
+###    @revision 2021/08/13
 
+#============== Import libs ===============
 import os  # io for high level usage
 import glob
 import re
@@ -7,7 +10,9 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
 
+#============== Initialise global variables ===============
 mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
+
 mod_outpath = ""
 
 # 3.0.*
@@ -51,15 +56,25 @@ targets3 = {
     r"(\s+)NOT\s*=\s*\{\s*([^\s]+)\s*=\s*yes\s*\}": r"\1\2 = no"
 }
 
+
+
 # 3.0.* (multiline)
 targets4 = {
     # r"\s*\n{2,}": "\n\n", # surplus lines
+    r"\s+NO[RT]\s*=\s*\{\s*(?:[^{}]+?)\s*\}\s*NO[RT]\s*=\s*\{\s*(?:[^{}]+?)\s*\}": [r"(\t*)NO[RT]\s*=\s*\{\s*([^{}]+?)\s*\}\s*NO[RT]\s*=\s*\{\s*([^{}]+?)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"], # only 2 items (sub-trigger)
+    r"\s+OR\s*=\s*\{\s*NO[RT]\s*=\s*\{[^{}]*?\}\s*\}": [r"(\t*)OR\s*=\s*\{\s*NO[RT]\s*=\s*\{\s*(?:\t([^{}\n]+?\n))?(?:\t([^{}\n]+?\n))?(?:\t([^{}\n]+?\n))?(?:\t([^{}\n]+?\n))?\s*\}\s*\}[ \t]*\n", r"\1NAND = {\n\2\3\4\5"], # only 4 items (sub-trigger)
+    r"\s+NO[RT]\s*=\s*\{\s*AND\s*=\s*\{[^{}]*?\}\s*\}": [r"(\t*)NO[RT]\s*=\s*\{\s*AND\s*=\s*\{[ \t]*\n(?:\t([^{}\n]+\n))?(?:\t([^{}\n]+\n))?(?:\t([^{}\n]+\n))?(?:\t([^{}\n]+\n))?\s*\}[ \t]*\n", r"\1NAND = {\n\2\3\4\5"], # only 4 items (sub-trigger)
+    r"\s+NO[RT]\s*=\s*\{\s*OR\s*=\s*\{[^{}]*?\}\s*\}": [r"(\t*)NO[RT]\s*=\s*\{\s*OR\s*=\s*\{[ \t]*\n(?:\t([^{}\n]+\n))?(?:\t([^{}\n]+\n))?(?:\t([^{}\n]+\n))?(?:\t([^{}\n]+\n))?\t([^{}]*?)[ \t]*\}[ \t]*\n", r"\1NOR = {\n\2\3\4\5\6"], # only right indent for 5 items (sub-trigger)
     r"\sany_country\s*=\s*\{[^{}]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default)": [r"(\s)any_country\s*=\s*(\{[^{}]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default))", r"\1any_playable_country = \2"],
     r"\s(?:every|random|count)_country\s*=\s*\{[^{}]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default)": [r"(\s(?:every|random|count))_country\s*=\s*(\{[^{}]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default))", r"\1_playable_country = \2"],
     r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*[\w\._:]+\s*\}\s*\}": [r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w\._:]+)\s*\}\s*\}", r"{ is_owned_by = \1 }"],
-    r"NOR\s+=\s+\{\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+\}": "is_synthetic_empire = no",
-    r"OR\s+=\s+\{\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+\}": "is_synthetic_empire = yes",
-    r"NOR\s*=\s*\{\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*\}": "is_homicidal = no",
+    r"NO[RT]\s*=\s*\{\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}\}": "is_fallen_empire = no",
+    r"OR\s*=\s*\{\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}\}": "is_fallen_empire = yes",
+    r"NO[RT]\s*=\s*\{\s*is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = no",
+    r"OR\s*=\s*\{\s*is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = yes",
+    r"NO[RT]\s*=\s*\{\s*(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+\}": "is_synthetic_empire = no",
+    r"OR\s*=\s*\{\s*(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+\}": "is_synthetic_empire = yes",
+    r"NO[RT]\s*=\s*\{\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*\}": "is_homicidal = no",
     r"OR\s*=\s*\{\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*\}": "is_homicidal = yes"
 }
 
@@ -83,7 +98,6 @@ def parse_dir():
     files = []
     mod_path = os.path.normpath(mod_path)
     print("Welcome to Stellaris Mod-Updater-3.0 by F1r3Pr1nc3!")
-    print(mod_path)
 
     if not os.path.isdir(mod_path):
         mod_path = os.getcwd()
@@ -104,6 +118,8 @@ def parse_dir():
     else:
         mod_outpath = os.path.normpath(mod_outpath)
 
+    print("\tLoading folder", mod_path)
+
     files = glob.glob(mod_path + '/**', recursive=True)  # '\\*.txt'
     # files = glob.glob(mod_path, recursive=True)  # os.path.join( ,'\\*.txt'
     modfix(files)
@@ -116,10 +132,10 @@ def modfix(file_list):
     # print(mod_path)
     subfolder = ''
     for _file in file_list:
-        # print(_file)
         if os.path.isfile(_file) and re.search(r"\.txt$", _file):
             subfolder = os.path.relpath(_file, mod_path)
             file_contents = ""
+            print("\tOpen file:",_file)
             with open(_file, 'r', encoding='utf-8', errors='ignore') as txtfile:
                 # out = txtfile.read() # full_fille
                 # try:
@@ -152,7 +168,7 @@ def modfix(file_list):
                         for rt in removedTargets:
                             rt = re.search(rt, line, flags=re.I)
                             if rt:
-                                print("WARNING outdated removed trigger: %s in line %i file %s" % (
+                                print("\tWARNING outdated removed trigger: %s in line %i file %s" % (
                                     rt.group(0), i, basename))
                         for pattern, repl in targets3.items():
                             # print(line)
@@ -162,7 +178,7 @@ def modfix(file_list):
                                 line = re.sub(pattern, repl, line, flags=re.I)
                                 # line = line.replace(t, r)
                                 changed = True
-                                print("Updated file: %s at line %i with %s" % (basename, i, line.strip()))
+                                print("\tUpdated file: %s at line %i with %s" % (basename, i, line.strip()))
                     out += line
 
                 for pattern, repl in targets4.items():
@@ -176,14 +192,14 @@ def modfix(file_list):
                             if type(repl) == list:
                                 replace = re.sub(repl[0], repl[1], tar, flags=re.I)
                             if type(repl) == str or (type(tar) != tuple and tar in out):
-                                print("multiline replace")
+                                print("\tMultiline replace:", replace) # repr(
                                 out = out.replace(tar, replace)
                                 changed = True
 
                 if changed:
-                    structure = os.path.join(mod_outpath, subfolder)
+                    structure = os.path.normpath(os.path.join(mod_outpath, subfolder))
                     out_file = os.path.join(structure, basename)
-                    print('Folder: %s File: %s' % (structure, out_file))
+                    print('\tWrite file:', out_file)
                     if not os.path.exists(structure):
                         os.makedirs(structure)
                         # print('Create folder:', subfolder)
