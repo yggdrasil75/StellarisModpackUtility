@@ -1,5 +1,5 @@
 ###    @author FirePrince
-###    @revision 2021/08/13-2
+###    @revision 2021/08/13-3
 
 #============== Import libs ===============
 import os, sys  # io for high level usage
@@ -62,17 +62,15 @@ targets3 = {
     r"(\s+)NOT\s*=\s*\{\s*([^\s]+)\s*=\s*yes\s*\}": r"\1\2 = no"
 }
 
-
-
 # 3.0.* (multiline)
 targets4 = {
-    # r"\s*\n{2,}": "\n\n", # surplus lines
-       # logical operator merge
-    r"\s+NO[RT]\s*=\s*\{\s*(?:[^{}]+?)\s*\}\s*NO[RT]\s*=\s*\{\s*(?:[^{}]+?)\s*\}": [r"(\t*)NO[RT]\s*=\s*\{\s*([^{}]+?)\s*\}\s*NO[RT]\s*=\s*\{\s*([^{}]+?)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"], # only 2 items (sub-trigger)
-    r"\s+OR\s*=\s*\{\s*NO[RT]\s*=\s*\{[^{}]*?\}\s*\}\n": [r"(\t*)OR\s*=\s*\{\s*NO[RT]\s*=\s*\{[ \t]*\n(?:\t([^{}\n]+?\n))?(?:\t([^{}\n]+?\n))?(?:\t([^{}\n]+?\n))?(?:\t([^{}\n]+?\n))?(?:\t([^{}\n]+?\n))?(?:\t([^{}\n]+?\n))?\s*\}\s*\}[ \t]*\n", r"\1NAND = {\n\2\3\4\5\6\7\1}\n"], # only 6 items (sub-trigger)
+    # r"\s*\n{2,}": "\n\n", # remove surplus lines
+      # boolean operator merge
+    r"\{\s*NO[RT]\s*=\s*\{\s*(?:[^{}]+?)\s*\}\s*NO[RT]\s*=\s*\{\s*(?:[^{}]+?)\s*\}\s*\}[ \t]*\n": [r"(\t*)NO[RT]\s*=\s*\{\s*([^{}]+?)\s*\}\s*NO[RT]\s*=\s*\{\s*([^{}]+?)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"], # only 2 items (sub-trigger)
+    r"^\s+OR\s*=\s*\{\s*NO[RT]\s*=\s*(?:\{[^{}]*?\}\s*\})+\s*\}[ \t]*\n": [r"(\t*)OR\s*=\s*\{\s*NO[RT]\s*=\s*\{[ \t]*\n(?:\t([^{}\n]+?\n))?(?:\t([^{}\n]+?\n))?(?:\t([^{}\n]+?\n))?(?:\t([^{}\n]+?\n))?(?:\t([^{}\n]+?\n))?(?:\t([^{}\n]+?\n))?\s*\}\s*\}[ \t]*\n", r"\1NAND = {\n\2\3\4\5\6\7\1}\n"], # only 6 items (sub-trigger)
     r"\s+NO[RT]\s*=\s*\{\s*AND\s*=\s*\{[^{}]*?\}\s*\}": [r"(\t*)NO[RT]\s*=\s*\{\s*AND\s*=\s*\{[ \t]*\n(?:\t([^{}\n]+\n))?(?:\t([^{}\n]+\n))?(?:\t([^{}\n]+\n))?(?:\t([^{}\n]+\n))?\s*\}[ \t]*\n", r"\1NAND = {\n\2\3\4\5"], # only 4 items (sub-trigger)
     r"\s+NO[RT]\s*=\s*\{\s*OR\s*=\s*\{[^{}]*?\}\s*\}": [r"(\t*)NO[RT]\s*=\s*\{\s*OR\s*=\s*\{[ \t]*\n(?:\t([^{}\n]+\n))?(?:\t([^{}\n]+\n))?(?:\t([^{}\n]+\n))?(?:\t([^{}\n]+\n))?\t([^{}]*?)[ \t]*\}[ \t]*\n", r"\1NOR = {\n\2\3\4\5\6"], # only right indent for 5 items (sub-trigger)
-    # end logical operator merge
+      # end boolean operator merge
     r"\sany_country\s*=\s*\{[^{}]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default)": [r"(\s)any_country\s*=\s*(\{[^{}]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default))", r"\1any_playable_country = \2"],
     r"\s(?:every|random|count)_country\s*=\s*\{[^{}]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default)": [r"(\s(?:every|random|count))_country\s*=\s*(\{[^{}]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default))", r"\1_playable_country = \2"],
     r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*[\w\._:]+\s*\}\s*\}": [r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w\._:]+)\s*\}\s*\}", r"{ is_owned_by = \1 }"],
@@ -197,11 +195,11 @@ def modfix(file_list):
                         for tar in targets:
                             replace = repl
                             # print(type(repl), tar, type(tar))
-                            print("Match:", tar)
+                            print("Match:\n", tar)
                             if type(repl) == list:
                                 replace = re.sub(repl[0], repl[1], tar, flags=re.I)
                             if type(repl) == str or (type(tar) != tuple and tar in out):
-                                print("Multiline replace:", replace) # repr(
+                                print("Multiline replace:\n", replace) # repr(
                                 out = out.replace(tar, replace)
                                 changed = True
 
