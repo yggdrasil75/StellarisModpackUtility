@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# USAGE: You need install https://pyyaml.org/wiki/PyYAMLDocumentation for Python3.x
-# ATTENTION: You must customize the vars localModPath and local_OVERHAUL
-# TODO: Renaming (already translated) keys is not working
+###    @author FirePrince
+###    @revision 2021/08/13-3
+###    USAGE: You need install https://pyyaml.org/wiki/PyYAMLDocumentation for Python3.x
+###    ATTENTION: You must customize the vars localModPath and local_OVERHAUL
+###    TODO: Renaming (already translated) keys is not working
+
+#============== Import libs ===============
 import os
 import io
 import tkinter as tk
@@ -17,12 +21,17 @@ import glob
 import yaml
 # yaml=YAML(typ='safe')
 
+
+#============== Initialise global variables ===============
 # Write here your mod folder name
-localModPath = "ADeadlyTempest"
-# localModPath = "Decentralized Empires"
-# localModPath = "starbasestrong"
-# local_OVERHAUL = ["russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
-local_OVERHAUL = ["russian", "french", "polish"]
+localModPath = "CrisisManager_EndGame"
+# local_OVERHAUL = ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
+local_OVERHAUL = ["french", "polish", "russian"]
+
+ymlfiles = '*.yml' # you can also use single names
+# ymlfiles = 'CrisisManagerMenu_l_english.yml'
+
+key_IGNORE = "" # stops copying over localisations keys with this starting pattern eg. "dmm_mod."
 
 print(localModPath)
 
@@ -63,6 +72,9 @@ settingsPath = [
 
 settingsPath = [s for s in settingsPath if os.path.isfile(
     os.path.join(s, mods_registry))]
+
+ymlfiles = glob.iglob(os.path.join('english', ymlfiles), recursive=False)
+
 # for s in settingsPath:
 # 	if os.path.isfile(os.path.join(s, mods_registry)):
 # 		settingsPath[0] = s
@@ -155,8 +167,10 @@ yaml.allow_unicode = True
 # if __name__ == '__main__':
 # yaml.warnings({'YAMLLoadWarning': False})
 
+
+
 #CrisisManagerEvent_l_english ,'**'
-for filename in glob.iglob(os.path.join('english', '*.yml'), recursive=False):
+for filename in ymlfiles:
     print(filename)
     streamEn = getYAMLstream(localizations[0], filename)
     streamEn = streamEn.read()
@@ -207,7 +221,7 @@ for filename in glob.iglob(os.path.join('english', '*.yml'), recursive=False):
         if isinstance(doc, dict) and isinstance(langDict, dict):
             for key, value in doc.items():
                 # print(key, value)
-                if key not in langDict or (lang in local_OVERHAUL and langDict[key] != value):
+                if key not in langDict or value == "" or langDict[key] in ("", "REPLACE_ME") or (lang in local_OVERHAUL and langDict[key] != value) and not (key_IGNORE != "" and key.startswith(key_IGNORE)):
                     langDict[key] = value
                     changed = True
                     print("Fixed document " +
