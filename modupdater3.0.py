@@ -1,5 +1,5 @@
 ###    @author FirePrince
-###    @revision 2021/08/13-3
+###    @revision 2021/08/22
 
 #============== Import libs ===============
 import os, sys  # io for high level usage
@@ -52,8 +52,8 @@ targets3 = {
     r"count(_owned)?_pops\s*": "count_owned_pop ",
     r"count_(owned|fleet)_ships\s*": "count_owned_ship ", # 2.7
     # "any_ship_in_system": "any_fleet_in_system", # works only sure for single size fleets
-    r"spawn_megastructure\s*=\s*\{([^{}]+)location\s*=": r"spawn_megastructure = {\1planet =",
-    r"\s+planet =\s*(solar_system|planet)[\s\n\r]*": "",  # REMOVE
+    r"spawn_megastructure\s*=\s*\{([^{}#]+)location\s*=": r"spawn_megastructure = {\1planet =",
+    r"\s+planet\s*=\s*(solar_system|planet)[\s\n\r]*": "",  # REMOVE
     r"any_system_within_border\s*=\s*\{\s*any_system_planet\s*=": "any_planet_within_border =",
     r"is_country_type\s*=\s*default\s+has_monthly_income\s*=\s*\{\s*resource = (\w+) value <=? \d": r"no_resource_for_component = { RESOURCE = \1",
     r"([^\._])(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*(\w+)\s*\}": r"\1is_owned_by = \2",
@@ -64,15 +64,16 @@ targets3 = {
 
 # 3.0.* (multiline)
 targets4 = {
+    r"\screate_leader\s*=\s*\{[^{}]+?type\s*=\s*\w+": [r"\screate_leader\s*=\s*\{[^{}]+?(\s+)type\s*=\s*(\w+)", r"\1class = \2"],
     # r"\s*\n{2,}": "\n\n", # remove surplus lines
       # boolean operator merge
-    r"\{\s*NO[RT]\s*=\s*\{\s*(?:[^{}]+?)\s*\}\s*NO[RT]\s*=\s*\{\s*(?:[^{}]+?)\s*\}\s*\}[ \t]*\n": [r"(\t*)NO[RT]\s*=\s*\{\s*([^{}]+?)\s*\}\s*NO[RT]\s*=\s*\{\s*([^{}]+?)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"], # only 2 items (sub-trigger)
-    r"^\s+OR\s*=\s*\{\s*NO[RT]\s*=\s*(?:\{[^{}]*?\}\s*\})+\s*\}[ \t]*\n": [r"(\t*)OR\s*=\s*\{\s*NO[RT]\s*=\s*\{[ \t]*\n(?:\t([^{}\n]+?\n))?(?:\t([^{}\n]+?\n))?(?:\t([^{}\n]+?\n))?(?:\t([^{}\n]+?\n))?(?:\t([^{}\n]+?\n))?(?:\t([^{}\n]+?\n))?\s*\}\s*\}[ \t]*\n", r"\1NAND = {\n\2\3\4\5\6\7\1}\n"], # only 6 items (sub-trigger)
-    r"\s+NO[RT]\s*=\s*\{\s*AND\s*=\s*\{[^{}]*?\}\s*\}": [r"(\t*)NO[RT]\s*=\s*\{\s*AND\s*=\s*\{[ \t]*\n(?:\t([^{}\n]+\n))?(?:\t([^{}\n]+\n))?(?:\t([^{}\n]+\n))?(?:\t([^{}\n]+\n))?\s*\}[ \t]*\n", r"\1NAND = {\n\2\3\4\5"], # only 4 items (sub-trigger)
-    r"\s+NO[RT]\s*=\s*\{\s*OR\s*=\s*\{[^{}]*?\}\s*\}": [r"(\t*)NO[RT]\s*=\s*\{\s*OR\s*=\s*\{[ \t]*\n(?:\t([^{}\n]+\n))?(?:\t([^{}\n]+\n))?(?:\t([^{}\n]+\n))?(?:\t([^{}\n]+\n))?\t([^{}]*?)[ \t]*\}[ \t]*\n", r"\1NOR = {\n\2\3\4\5\6"], # only right indent for 5 items (sub-trigger)
+    r"\s+OR\s*=\s*\{(?:\s*NOT\s*=\s*\{[^{}#]*?\})+\s*\}[ \t]*\n": [r"^(\s+)OR\s*=\s*\{\s*^(?:(\s+)NOT\s*=\s*\{\s*)?([^{}#]*?)\s*\}(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?", r"\1NAND = {\n\2\3\4\5\6\7\8\9\10\11\12\13\14\15"], # up to 7 items (sub-trigger)
+    r"(?<![ \t]OR)\s+=\s*\{\s+(?:[^{}#\n]+\n)*(?:\s+NO[RT]\s*=\s*\{\s*[^{}#]+?\s*\}){2,}": [r"(\t*)NO[RT]\s*=\s*\{\s*([^{}#]+?)\s*\}\s*NO[RT]\s*=\s*\{\s*([^{}#]+?)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"], # only 2 items (sub-trigger) (?<!\sOR) Negative Lookbehind
+    r"\s+NO[RT]\s*=\s*\{\s*AND\s*=\s*\{[^{}#]*?\}\s*\}": [r"(\t*)NO[RT]\s*=\s*\{\s*AND\s*=\s*\{[ \t]*\n(?:\t([^{}#\n]+\n))?(?:\t([^{}#\n]+\n))?(?:\t([^{}#\n]+\n))?(?:\t([^{}#\n]+\n))?\s*\}[ \t]*\n", r"\1NAND = {\n\2\3\4\5"], # only 4 items (sub-trigger)
+    r"\s+NO[RT]\s*=\s*\{\s*OR\s*=\s*\{[^{}#]*?\}\s*\}": [r"(\t*)NO[RT]\s*=\s*\{\s*OR\s*=\s*\{[ \t]*\n(?:\t([^{}#\n]+\n))?(?:\t([^{}#\n]+\n))?(?:\t([^{}#\n]+\n))?(?:\t([^{}#\n]+\n))?\t([^{}#]*?)[ \t]*\}[ \t]*\n", r"\1NOR = {\n\2\3\4\5\6"], # only right indent for 5 items (sub-trigger)
       # end boolean operator merge
-    r"\sany_country\s*=\s*\{[^{}]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default)": [r"(\s)any_country\s*=\s*(\{[^{}]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default))", r"\1any_playable_country = \2"],
-    r"\s(?:every|random|count)_country\s*=\s*\{[^{}]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default)": [r"(\s(?:every|random|count))_country\s*=\s*(\{[^{}]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default))", r"\1_playable_country = \2"],
+    r"\sany_country\s*=\s*\{[^{}#]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default)": [r"(\s)any_country\s*=\s*(\{[^{}#]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default))", r"\1any_playable_country = \2"],
+    r"\s(?:every|random|count)_country\s*=\s*\{[^{}#]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default)": [r"(\s(?:every|random|count))_country\s*=\s*(\{[^{}#]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default))", r"\1_playable_country = \2"],
     r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*[\w\._:]+\s*\}\s*\}": [r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w\._:]+)\s*\}\s*\}", r"{ is_owned_by = \1 }"],
     r"NO[RT]\s*=\s*\{\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}\}": "is_fallen_empire = no",
     r"OR\s*=\s*\{\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}\}": "is_fallen_empire = yes",
@@ -81,7 +82,7 @@ targets4 = {
     r"NO[RT]\s*=\s*\{\s*(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+\}": "is_synthetic_empire = no",
     r"OR\s*=\s*\{\s*(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+\}": "is_synthetic_empire = yes",
     r"NO[RT]\s*=\s*\{\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*\}": "is_homicidal = no",
-    r"OR\s*=\s*\{\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*\}": "is_homicidal = yes"
+    r"OR\s*=\s*\{\s*has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s+has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s+has_valid_civic\s*=\s*(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\s*\}": "is_homicidal = yes"
 }
 
 def mBox(mtype, text):
@@ -98,7 +99,7 @@ def iBox(title, prefil):  # , master
     )
     return answer
 
-
+#============== Set paths ===============
 def parse_dir():
     global mod_path, mod_outpath
     files = []
@@ -197,7 +198,7 @@ def modfix(file_list):
                             # print(type(repl), tar, type(tar))
                             print("Match:\n", tar)
                             if type(repl) == list:
-                                replace = re.sub(repl[0], repl[1], tar, flags=re.I)
+                                replace = re.sub(repl[0], repl[1], tar, flags=re.I|re.M|re.A)
                             if type(repl) == str or (type(tar) != tuple and tar in out):
                                 print("Multiline replace:\n", replace) # repr(
                                 out = out.replace(tar, replace)
