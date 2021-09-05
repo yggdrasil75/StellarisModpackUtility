@@ -1,5 +1,5 @@
 # @author FirePrince
-# @revision 2021/09/04
+# @revision 2021/09/05
 # @Thanks to OldEnt for his detailed rundowns.
 
 # ============== Import libs ===============
@@ -14,6 +14,7 @@ from tkinter import messagebox
 
 # ============== Initialise global variables ===============
 mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
+
 
 mod_outpath = ""
 
@@ -32,9 +33,18 @@ removedTargets = {
     # this are only warnings, commands which cannot be easily replaced
     # < 3.1
     r"\s(any|every|random)_(research|mining)_station", # = 2 trigger & 4 effects
-    r"\sobservation_outpost\s*=\s*\{\s*",
+    r"\sobservation_outpost\s*=\s*\{\s*limit",
     r"\sspaceport\W", # scope
-    r"\smodifier\s*=\s*\{\s*mult", # => factor
+    r"(\s+)count_armies", # (scope split: depending on planet/country)
+    r"(\s+)which\s*=\s*\"?\w+\"?\s+value\s*=\s*\{\s*scope\s*=", # var from 3.0
+
+    # # PRE BETA TEST ONLY
+    # r"\smodifier\s*=\s*\{\s*mult", # => factor
+    # r"(\s+)count_diplo_ties",
+    # r"(\s+)pop_can_live_on_planet",
+    # r"(\s+)has_non_swapped_tradition",
+    # r"(\s+)has_swapped_tradition",
+
     # < 3.0
     r"\sproduced_energy",
     r"\s(ship|army|colony|station)_maintenance",
@@ -81,10 +91,11 @@ targets3 = {
     r"(\s+)add_(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro)\s*=\s*(\d+|@\w+)": r"\1add_resource = { \2 = \3 }",
 ## > 3.1.* beta
     r"(\s+set_)(primitive)\s*=\s*yes": r"\1country_type = \2",
+    # r"(\s+)count_armies": r"\1count_owned_army", # count_planet_army (scope split: depending on planet/country)
+
     r"(\s+modifier)\s*=\s*\{\s*mult": r"\1 = { factor",
     r"(\s+)count_diplo_ties": r"\1count_relation",
     r"(\s+)pop_can_live_on_planet": r"\1can_live_on_planet",
-    r"(\s+)count_armies": r"\1count_owned_army", # count_planet_army (depending on the case)
     r"(\s+)has_non_swapped_tradition": r"\1has_active_tradition",
     r"(\s+)has_swapped_tradition": r"\1has_active_tradition",
 
@@ -95,7 +106,7 @@ targets3 = {
 targets4 = {
     r"\screate_leader\s*=\s*\{[^{}]+?\s+type\s*=\s*\w+": [r"(\screate_leader\s*=\s*\{[^{}]+?\s+)type\s*=\s*(\w+)", r"\1class = \2"],
     r"NO[RT]\s*=\s*\{\s*has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+\}": [r"NO[RT]\s*=\s*\{\s*has_ethic\s*=\s*\"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:\1|\2)|fanatic_(?:\1|\2))\"?\s+\}", r"is_\1\2 = no"],
-    r"(?:OR\s*=\s*\{)?\s*has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*\}?": [r"(OR\s*=\s*\{)?\s*has_ethic\s*=\s*\"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?(\n(?(1)\t)\t+)has_ethic\s*=\s*\"?ethic_(?:(?:\2|\3)|fanatic_(?:\2|\3))\"?\s*?(?(1)\})", r"\4is_\2\3 = yes"], # r"\4is_ethics_aligned = { ARG1 = \2\3 }"
+    r"(?:OR\s*=\s*\{)?\s*has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*\}?": [r"(\n\s*)has_ethic\s*=\s*\"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*?has_ethic\s*=\s*\"?ethic_(?:(?:\2|\3)|fanatic_(?:\2|\3))\"?\s*?", r"\1is_\2\3 = yes"], # r"\4is_ethics_aligned = { ARG1 = \2\3 }",
     # r"\s*\n{2,}": "\n\n", # remove surplus lines
     ### Boolean operator merge
     # NAND <=> OR = { NOT
