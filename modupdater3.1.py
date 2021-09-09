@@ -1,5 +1,5 @@
 # @author FirePrince
-# @revision 2021/09/05
+# @revision 2021/09/09
 # @Thanks to OldEnt for his detailed rundowns.
 
 # ============== Import libs ===============
@@ -14,7 +14,6 @@ from tkinter import messagebox
 
 # ============== Initialise global variables ===============
 mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
-
 
 mod_outpath = ""
 
@@ -36,14 +35,13 @@ removedTargets = {
     r"\sobservation_outpost\s*=\s*\{\s*limit",
     r"\sspaceport\W", # scope
     r"(\s+)count_armies", # (scope split: depending on planet/country)
+    # PRE BETA TEST ONLY
+    r"\smodifier\s*=\s*\{\s*mult", # => factor
+    r"(\s+)count_diplo_ties",
+    r"(\s+)pop_can_live_on_planet",
+    r"(\s+)has_non_swapped_tradition",
+    r"(\s+)has_swapped_tradition",
     r"(\s+)which\s*=\s*\"?\w+\"?\s+value\s*=\s*\{\s*scope\s*=", # var from 3.0
-
-    # # PRE BETA TEST ONLY
-    # r"\smodifier\s*=\s*\{\s*mult", # => factor
-    # r"(\s+)count_diplo_ties",
-    # r"(\s+)pop_can_live_on_planet",
-    # r"(\s+)has_non_swapped_tradition",
-    # r"(\s+)has_swapped_tradition",
 
     # < 3.0
     r"\sproduced_energy",
@@ -106,7 +104,7 @@ targets3 = {
 targets4 = {
     r"\screate_leader\s*=\s*\{[^{}]+?\s+type\s*=\s*\w+": [r"(\screate_leader\s*=\s*\{[^{}]+?\s+)type\s*=\s*(\w+)", r"\1class = \2"],
     r"NO[RT]\s*=\s*\{\s*has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+\}": [r"NO[RT]\s*=\s*\{\s*has_ethic\s*=\s*\"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:\1|\2)|fanatic_(?:\1|\2))\"?\s+\}", r"is_\1\2 = no"],
-    r"(?:OR\s*=\s*\{)?\s*has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*\}?": [r"(\n\s*)has_ethic\s*=\s*\"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*?has_ethic\s*=\s*\"?ethic_(?:(?:\2|\3)|fanatic_(?:\2|\3))\"?\s*?", r"\1is_\2\3 = yes"], # r"\4is_ethics_aligned = { ARG1 = \2\3 }",
+    r"(?:\s+OR\s*=\s*\{)?\s*has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*\}?": [r"(\s+OR\s*=\s*\{)?(\n\s*?)(?(1)\t)has_ethic\s*=\s*\"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*?has_ethic\s*=\s*\"?ethic_(?:(?:\2|\3)|fanatic_(?:\2|\3))\"?\s*?(?(1)\})", r"\2is_\3\4 = yes"], # r"\4is_ethics_aligned = { ARG1 = \2\3 }",
     # r"\s*\n{2,}": "\n\n", # remove surplus lines
     ### Boolean operator merge
     # NAND <=> OR = { NOT
