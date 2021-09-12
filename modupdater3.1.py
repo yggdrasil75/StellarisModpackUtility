@@ -1,5 +1,5 @@
 # @author FirePrince
-# @revision 2021/09/09
+# @revision 2021/09/13
 # @Thanks to OldEnt for his detailed rundowns.
 
 # ============== Import libs ===============
@@ -14,6 +14,7 @@ from tkinter import messagebox
 
 # ============== Initialise global variables ===============
 mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
+
 
 mod_outpath = ""
 
@@ -35,13 +36,15 @@ removedTargets = {
     r"\sobservation_outpost\s*=\s*\{\s*limit",
     r"\sspaceport\W", # scope
     r"(\s+)count_armies", # (scope split: depending on planet/country)
+
     # PRE BETA TEST ONLY
     r"\smodifier\s*=\s*\{\s*mult", # => factor
-    r"(\s+)count_diplo_ties",
-    r"(\s+)pop_can_live_on_planet",
-    r"(\s+)has_non_swapped_tradition",
-    r"(\s+)has_swapped_tradition",
-    r"(\s+)which\s*=\s*\"?\w+\"?\s+value\s*=\s*\{\s*scope\s*=", # var from 3.0
+    r"\s+count_diplo_ties",
+    r"\s+pop_can_live_on_planet",
+    r"\s+has_non_swapped_tradition",
+    r"\s+has_swapped_tradition",
+    r"\s+which\s*=\s*\"?\w+\"?\s+value\s*=\s*\{\s*scope\s*=", # var from 3.0
+    re.compile(r"\s+which\s*=\s*\"?\w+\"?\s+value\s*=\s*(prev|from|root|event_target:[^\.\s]+)+\s*\}", re.I), # var from 3.0
 
     # < 3.0
     r"\sproduced_energy",
@@ -96,6 +99,7 @@ targets3 = {
     r"(\s+)pop_can_live_on_planet": r"\1can_live_on_planet",
     r"(\s+)has_non_swapped_tradition": r"\1has_active_tradition",
     r"(\s+)has_swapped_tradition": r"\1has_active_tradition",
+    r"(\s+which\s*=\s*(\"?\w+\"?)\s+value\s*=\s*(prev|from|root|event_target:[^\.\s]+)\s+\}": r"\1.\2 }",
 
 }
 
