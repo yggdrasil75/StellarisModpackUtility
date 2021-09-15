@@ -1,5 +1,5 @@
 # @author FirePrince
-# @revision 2021/09/13
+# @revision 2021/09/15
 # @Thanks to OldEnt for his detailed rundowns.
 
 # ============== Import libs ===============
@@ -24,7 +24,7 @@ if not sys.version_info.major == 3 and sys.version_info.minor >= 6:
     sys.exit(1)
 
 # > 3.0.*
-removedTargets = {
+removedTargets = [
 """== 3.1 Quick stats ==
 6 effects removed/renamed.
 8 triggers removed/renamed.
@@ -36,15 +36,17 @@ removedTargets = {
     r"\sobservation_outpost\s*=\s*\{\s*limit",
     r"\sspaceport\W", # scope
     r"(\s+)count_armies", # (scope split: depending on planet/country)
+    ("common\\bombardment_stances", r"\s+icon_frame\s*=\s*\d+"), # [6-9]
 
     # PRE BETA TEST ONLY
-    r"\smodifier\s*=\s*\{\s*mult", # => factor
-    r"\s+count_diplo_ties",
-    r"\s+pop_can_live_on_planet",
-    r"\s+has_non_swapped_tradition",
-    r"\s+has_swapped_tradition",
-    r"\s+which\s*=\s*\"?\w+\"?\s+value\s*=\s*\{\s*scope\s*=", # var from 3.0
-    re.compile(r"\s+which\s*=\s*\"?\w+\"?\s+value\s*=\s*(prev|from|root|event_target:[^\.\s]+)+\s*\}", re.I), # var from 3.0
+    # r"\smodifier\s*=\s*\{\s*mult", # => factor
+    # r"\s+count_diplo_ties",
+    # r"\s+pop_can_live_on_planet",
+    # r"\s+has_non_swapped_tradition",
+    # r"\s+has_swapped_tradition",
+    # r"\s+which\s*=\s*\"?\w+\"?\s+value\s*=\s*\{\s*scope\s*=", # var from 3.0
+    # re.compile(r"\s+which\s*=\s*\"?\w+\"?\s+value\s*=\s*(prev|from|root|event_target:[^\.\s]+)+\s*\}", re.I), # var from 3.0
+
 
     # < 3.0
     r"\sproduced_energy",
@@ -52,7 +54,7 @@ removedTargets = {
     r"\s(construction|trade|federation)_expenses",
     # < 2.0
     r"\s+can_support_spaceport\s*=\s*(yes|no)"
-}
+]
 
 # targets2 = {
 #     r"MACHINE_species_trait_points_add = \d" : ["MACHINE_species_trait_points_add ="," ROBOT_species_trait_points_add = ",""],
@@ -87,19 +89,24 @@ targets3 = {
     # code opts only
     r"(\s+)NOT\s*=\s*\{\s*([^\s]+)\s*=\s*yes\s*\}": r"\1\2 = no",
     r"(\s+)any_system_planet\s*=\s*\{\s*is_capital\s*=\s*(yes|no)\s*\}": r"\1is_capital_system = \2",
+    r"([\s\.]+(PREV|FROM|ROOT|THIS)+)": lambda pat: pat.group(1).lower(),
+
     ## somewhat older
     r"(\s+)ship_upkeep_mult\s*=": r"\1ships_upkeep_mult =",     
     r"(\s+)add_(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro)\s*=\s*(\d+|@\w+)": r"\1add_resource = { \2 = \3 }",
 ## > 3.1.* beta
     r"(\s+set_)(primitive)\s*=\s*yes": r"\1country_type = \2",
+
     # r"(\s+)count_armies": r"\1count_owned_army", # count_planet_army (scope split: depending on planet/country)
+    # r"(\s+)(icon_frame\s*=\s*[0-5])": "", # remove
 
     r"(\s+modifier)\s*=\s*\{\s*mult": r"\1 = { factor",
     r"(\s+)count_diplo_ties": r"\1count_relation",
     r"(\s+)pop_can_live_on_planet": r"\1can_live_on_planet",
     r"(\s+)has_non_swapped_tradition": r"\1has_active_tradition",
     r"(\s+)has_swapped_tradition": r"\1has_active_tradition",
-    r"(\s+which\s*=\s*(\"?\w+\"?)\s+value\s*=\s*(prev|from|root|event_target:[^\.\s]+)\s+\}": r"\1.\2 }",
+    r"(\s+)is_for_colonizeable": r"\1is_for_colonizable",
+    r"(\s+which\s*=\s*(\"?\w+\"?)\s+value\s*=\s*(prev|from|root|event_target:[^\.\s]+))\s+\}": r"\1.\2 }"
 
 }
 
@@ -223,16 +230,21 @@ def modfix(file_list):
                         # for line in file_contents:
                         # print(line)
                         for rt in removedTargets:
-                            rt = re.search(rt, line) # , flags=re.I
+                            if type(rt) == tuple:
+                                # print(type(subfolder), subfolder, rt[0])
+                                if rt[0] in subfolder:
+                                    rt = re.search(rt[1], line) # , flags=re.I
+                                else: rt = False
+                            else:
+                                rt = re.search(rt, line) # , flags=re.I
                             if rt:
-                                print("\tWARNING outdated removed syntax: %s in line %i file %s" % (
-                                    rt.group(0), i, basename))
+                                print("\tWARNING outdated removed syntax: %s in line %i file %s" % ( rt.group(0), i, basename) )
                         for pattern, repl in targets3.items():
                             # print(line)
                             # print(pattern, repl)
-                            if re.search(pattern, line, flags=re.I):
+                            if re.search(pattern, line, flags=0): # , flags=re.I
                                 # , count=0, flags=0
-                                line = re.sub(pattern, repl, line, flags=re.I)
+                                line = re.sub(pattern, repl, line, flags=0) # , flags=re.I
                                 # line = line.replace(t, r)
                                 changed = True
                                 print("\tUpdated file: %s at line %i with %s" % (basename, i, line.strip()))
