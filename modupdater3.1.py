@@ -1,5 +1,5 @@
 # @author FirePrince
-# @revision 2021/09/15
+# @revision 2021/09/16
 # @Thanks to OldEnt for his detailed rundowns.
 
 # ============== Import libs ===============
@@ -12,7 +12,7 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
 
-# ============== Initialize global variables ===============
+# ============== Initialise global variables ===============
 mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
 
 
@@ -36,7 +36,7 @@ removedTargets = [
     r"\sobservation_outpost\s*=\s*\{\s*limit",
     r"\sspaceport\W", # scope
     r"(\s+)count_armies", # (scope split: depending on planet/country)
-    (["common\\bombardment_stances", "common\\ship_sizes"], r"\s+icon_frame\s*=\s*\d+"), # [6-9]
+    (["common\\bombardment_stances", "common\\ship_sizes"], r"^\s+icon_frame\s*=\s*\d+"), # [6-9]
 
     # PRE BETA TEST ONLY
     # r"\smodifier\s*=\s*\{\s*mult", # => factor
@@ -110,7 +110,7 @@ targets3 = {
     r"(\s+)has_non_swapped_tradition": r"\1has_active_tradition",
     r"(\s+)has_swapped_tradition": r"\1has_active_tradition",
     r"(\s+)is_for_colonizeable": r"\1is_for_colonizable",
-    r"(\s+which\s*=\s*\"?(\w+)\"?\s+value\s*[<=>]+\s*(prev|from|root|event_target:[^\.\s]+))\s+\}": r"\1.\2 }"
+    r"(\s+which\s*=\s*\"?(\w+)\"?\s+value\s*[<=>]+\s*(prev|from|root|event_target:[^\.\s])+)\s+\}": r"\1.\2 }"
 
 }
 
