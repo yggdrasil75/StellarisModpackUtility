@@ -12,7 +12,7 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
 
-# ============== Initialise global variables ===============
+# ============== Initialize global variables ===============
 mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
 
 
@@ -36,7 +36,7 @@ removedTargets = [
     r"\sobservation_outpost\s*=\s*\{\s*limit",
     r"\sspaceport\W", # scope
     r"(\s+)count_armies", # (scope split: depending on planet/country)
-    ("common\\bombardment_stances", r"\s+icon_frame\s*=\s*\d+"), # [6-9]
+    (["common\\bombardment_stances", "common\\ship_sizes"], r"\s+icon_frame\s*=\s*\d+"), # [6-9]
 
     # PRE BETA TEST ONLY
     # r"\smodifier\s*=\s*\{\s*mult", # => factor
@@ -99,6 +99,10 @@ targets3 = {
 
     # r"(\s+)count_armies": r"\1count_owned_army", # count_planet_army (scope split: depending on planet/country)
     # r"(\s+)(icon_frame\s*=\s*[0-5])": "", # remove
+    r"text_icon\s*=\s*military_size_space_creature": ("common\\ship_sizes", "icon = ship_size_space_monster"),
+    # r"icon_frame\s*=\s*2": ("common\\ship_sizes", "icon = ship_size_military_1"), used for starbase
+    r"text_icon\s*=\s*military_size_": ("common\\ship_sizes", "icon = ship_size_military_"),
+    # r"\s+icon_frame\s*=\s*\d": (["common\\bombardment_stances", "common\\ship_sizes"], ""), used for starbase
 
     r"(\s+modifier)\s*=\s*\{\s*mult": r"\1 = { factor",
     r"(\s+)count_diplo_ties": r"\1count_relation",
@@ -106,7 +110,7 @@ targets3 = {
     r"(\s+)has_non_swapped_tradition": r"\1has_active_tradition",
     r"(\s+)has_swapped_tradition": r"\1has_active_tradition",
     r"(\s+)is_for_colonizeable": r"\1is_for_colonizable",
-    r"(\s+which\s*=\s*(\"?\w+\"?)\s+value\s*[<=>]+\s*(prev|from|root|event_target:[^\.\s]+))\s+\}": r"\1.\2 }"
+    r"(\s+which\s*=\s*\"?(\w+)\"?\s+value\s*[<=>]+\s*(prev|from|root|event_target:[^\.\s]+))\s+\}": r"\1.\2 }"
 
 }
 
@@ -232,17 +236,23 @@ def modfix(file_list):
                         for rt in removedTargets:
                             if type(rt) == tuple:
                                 # print(type(subfolder), subfolder, rt[0])
-                                if rt[0] in subfolder:
+                                if subfolder in rt[0]:
                                     rt = re.search(rt[1], line) # , flags=re.I
                                 else: rt = False
-                            else:
-                                rt = re.search(rt, line) # , flags=re.I
+                            else: rt = re.search(rt, line) # , flags=re.I
                             if rt:
                                 print("\tWARNING outdated removed syntax: %s in line %i file %s" % ( rt.group(0), i, basename) )
                         for pattern, repl in targets3.items():
                             # print(line)
                             # print(pattern, repl)
-                            if re.search(pattern, line, flags=0): # , flags=re.I
+                            rt = False
+                            if type(repl) == tuple:
+                                folder, repl = repl
+                                if subfolder in folder:
+                                    rt = re.search(pattern, line) # , flags=re.I
+                                else: rt = False
+                            else: rt = re.search(pattern, line)
+                            if rt: # , flags=re.I
                                 # , count=0, flags=0
                                 line = re.sub(pattern, repl, line, flags=0) # , flags=re.I
                                 # line = line.replace(t, r)
