@@ -106,7 +106,7 @@ targets3 = {
     r"(\s+)has_non_swapped_tradition": r"\1has_active_tradition",
     r"(\s+)has_swapped_tradition": r"\1has_active_tradition",
     r"(\s+)is_for_colonizeable": r"\1is_for_colonizable",
-    r"(\s+which\s*=\s*(\"?\w+\"?)\s+value\s*=\s*(prev|from|root|event_target:[^\.\s]+))\s+\}": r"\1.\2 }"
+    r"(\s+which\s*=\s*(\"?\w+\"?)\s+value\s*[<=>]+\s*(prev|from|root|event_target:[^\.\s]+))\s+\}": r"\1.\2 }"
 
 }
 
