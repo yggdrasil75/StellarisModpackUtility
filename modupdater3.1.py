@@ -12,16 +12,17 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
 
-# ============== Initialise global variables ===============
+# ============== Initialize global variables ===============
+# mod_path = os.path.dirname(os.getcwd())
 mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
 
 
 mod_outpath = ""
 
-if not sys.version_info.major == 3 and sys.version_info.minor >= 6:
-    print("Python 3.6 or higher is required.")
-    print("You are using Python {}.{}.".format(sys.version_info.major, sys.version_info.minor))
-    sys.exit(1)
+# if not sys.version_info.major == 3 and sys.version_info.minor >= 6:
+#     print("Python 3.6 or higher is required.")
+#     print("You are using Python {}.{}.".format(sys.version_info.major, sys.version_info.minor))
+#     sys.exit(1)
 
 # > 3.0.*
 removedTargets = [
@@ -34,11 +35,12 @@ removedTargets = [
     # < 3.1
     r"\s(any|every|random)_(research|mining)_station", # = 2 trigger & 4 effects
     r"\sobservation_outpost\s*=\s*\{\s*limit",
-    r"\sspaceport\W", # scope
     r"(\s+)count_armies", # (scope split: depending on planet/country)
     (["common\\bombardment_stances", "common\\ship_sizes"], r"^\s+icon_frame\s*=\s*\d+"), # [6-9]
 
-    # PRE BETA TEST ONLY
+    # PRE BETA TEST
+    # r"\sspaceport\W", # scope replace?
+    # r"\shas_any_tradition_unlocked\W", # replace?
     # r"\smodifier\s*=\s*\{\s*mult", # => factor
     # r"\s+count_diplo_ties",
     # r"\s+pop_can_live_on_planet",
@@ -86,10 +88,10 @@ targets3 = {
     r"is_country_type\s*=\s*default\s+has_monthly_income\s*=\s*\{\s*resource = (\w+) value <=? \d": r"no_resource_for_component = { RESOURCE = \1",
     r"([^\._])(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w:]+)\s*\}": r"\1is_owned_by = \2",
     r"(\s+)exists\s*=\s*(solar_system|planet)\.(?:space_)?owner": r"\1has_owner = yes",
-    # code opts only
+    # code opts/cosmetic only
     r"(\s+)NOT\s*=\s*\{\s*([^\s]+)\s*=\s*yes\s*\}": r"\1\2 = no",
     r"(\s+)any_system_planet\s*=\s*\{\s*is_capital\s*=\s*(yes|no)\s*\}": r"\1is_capital_system = \2",
-    r"([\s\.]+(PREV|FROM|ROOT|THIS)+)": lambda pat: pat.group(1).lower(),
+    r"([\s\.]+(PREV|FROM|ROOT|THIS)+)": lambda p: p.group(1).lower(),
 
     ## somewhat older
     r"(\s+)ship_upkeep_mult\s*=": r"\1ships_upkeep_mult =",     
@@ -103,6 +105,22 @@ targets3 = {
     # r"icon_frame\s*=\s*2": ("common\\ship_sizes", "icon = ship_size_military_1"), used for starbase
     r"text_icon\s*=\s*military_size_": ("common\\ship_sizes", "icon = ship_size_military_"),
     # r"\s+icon_frame\s*=\s*\d": (["common\\bombardment_stances", "common\\ship_sizes"], ""), used for starbase
+    r"^\s+robotic\s*=\s*(yes|no)[ \t]*\n": ("common\\species_classes", ""),
+    r"^(\s+)icon_frame\s*=\s*([1-9][0-4]?)": ("common\\armies", lambda p: p.group(1)+"icon = GFX_army_type_"+{
+        "1": "defensive",
+        "2": "assault",
+        "3": "rebel",
+        "4": "robot",
+        "5": "primitive",
+        "6": "gene_warrior",
+        "7": "clone",
+        "8": "xenomorph",
+        "9": "psionic",
+        "10": "slave",
+        "11": "machine_assault",
+        "12": "machine_defensive",
+        "13": "undead",
+        "14": "imperial" }[p.group(2)]),
 
     r"(\s+modifier)\s*=\s*\{\s*mult": r"\1 = { factor",
     r"(\s+)count_diplo_ties": r"\1count_relation",
@@ -110,6 +128,7 @@ targets3 = {
     r"(\s+)has_non_swapped_tradition": r"\1has_active_tradition",
     r"(\s+)has_swapped_tradition": r"\1has_active_tradition",
     r"(\s+)is_for_colonizeable": r"\1is_for_colonizable",
+    r"(\s+)colonizeable_planet": r"\1colonizable_planet",
     r"(\s+which\s*=\s*\"?(\w+)\"?\s+value\s*[<=>]+\s*(prev|from|root|event_target:[^\.\s])+)\s+\}": r"\1.\2 }"
 
 }
@@ -165,7 +184,7 @@ def parse_dir():
     global mod_path, mod_outpath
     files = []
     mod_path = os.path.normpath(mod_path)
-    print("Welcome to Stellaris Mod-Updater-3.0 by F1r3Pr1nc3!")
+    print("Welcome to Stellaris Mod-Updater-3.1 by F1r3Pr1nc3!")
 
     if not os.path.isdir(mod_path):
         mod_path = os.getcwd()
@@ -301,5 +320,6 @@ def modfix(file_list):
         # else: print("NO TXT?", _file)
     print("Done!")
 
-
+# modfix(files)
 parse_dir()  # mod_path, mod_outpath
+# input("\nPRESS ANY KEY TO EXIT!")
