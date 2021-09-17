@@ -106,21 +106,7 @@ targets3 = {
     r"text_icon\s*=\s*military_size_": ("common\\ship_sizes", "icon = ship_size_military_"),
     # r"\s+icon_frame\s*=\s*\d": (["common\\bombardment_stances", "common\\ship_sizes"], ""), used for starbase
     r"^\s+robotic\s*=\s*(yes|no)[ \t]*\n": ("common\\species_classes", ""),
-    r"^(\s+)icon_frame\s*=\s*([1-9][0-4]?)": ("common\\armies", lambda p: p.group(1)+"icon = GFX_army_type_"+{
-        "1": "defensive",
-        "2": "assault",
-        "3": "rebel",
-        "4": "robot",
-        "5": "primitive",
-        "6": "gene_warrior",
-        "7": "clone",
-        "8": "xenomorph",
-        "9": "psionic",
-        "10": "slave",
-        "11": "machine_assault",
-        "12": "machine_defensive",
-        "13": "undead",
-        "14": "imperial" }[p.group(2)]),
+    r"^(\s+)icon_frame\s*=\s*([1-9][0-4]?)": ("common\\armies", lambda p: p.group(1)+"icon = GFX_army_type_"+{ "1": "defensive", "2": "assault", "3": "rebel", "4": "robot", "5": "primitive", "6": "gene_warrior", "7": "clone", "8": "xenomorph", "9": "psionic", "10": "slave", "11": "machine_assault", "12": "machine_defensive", "13": "undead", "14": "imperial" }[p.group(2)]),
 
     r"(\s+modifier)\s*=\s*\{\s*mult": r"\1 = { factor",
     r"(\s+)count_diplo_ties": r"\1count_relation",
@@ -320,6 +306,5 @@ def modfix(file_list):
         # else: print("NO TXT?", _file)
     print("Done!")
 
-# modfix(files)
 parse_dir()  # mod_path, mod_outpath
-# input("\nPRESS ANY KEY TO EXIT!")
+input("\nPRESS ANY KEY TO EXIT!")
