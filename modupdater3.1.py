@@ -1,5 +1,5 @@
 # @author FirePrince
-# @revision 2021/09/22
+# @revision 2021/10/04
 # @Thanks to OldEnt for his detailed rundowns.
 
 # ============== Import libs ===============
@@ -54,6 +54,7 @@ removedTargets = [
     r"\sproduced_energy",
     r"\s(ship|army|colony|station)_maintenance",
     r"\s(construction|trade|federation)_expenses",
+    r"\s+has_(population|migration)_control\s*=\s*(yes|no)",
     # < 2.0
     r"\s+can_support_spaceport\s*=\s*(yes|no)"
 ]
@@ -86,12 +87,14 @@ targets3 = {
     r"\s+planet\s*=\s*(solar_system|planet)[\s\n\r]*": "",  # REMOVE
     r"any_system_within_border\s*=\s*\{\s*any_system_planet\s*=": "any_planet_within_border =",
     r"is_country_type\s*=\s*default\s+has_monthly_income\s*=\s*\{\s*resource = (\w+) value <=? \d": r"no_resource_for_component = { RESOURCE = \1",
-    r"([^\._])(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w:]+)\s*\}": r"\1is_owned_by = \2",
+    r"([^\._])(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w\._:]+)\s*\}": r"\1is_owned_by = \2",
+    r"(\s+)is_(?:country|same_value)\s*=\s*([\w\._:]+\.(?:space_)?owner)": r"\1is_same_empire = \2",
     r"(\s+)exists\s*=\s*(solar_system|planet)\.(?:space_)?owner": r"\1has_owner = yes",
     # code opts/cosmetic only
     r"(\s+)NOT\s*=\s*\{\s*([^\s]+)\s*=\s*yes\s*\}": r"\1\2 = no",
     r"(\s+)any_system_planet\s*=\s*\{\s*is_capital\s*=\s*(yes|no)\s*\}": r"\1is_capital_system = \2",
     r"([\s\.]+(PREV|FROM|ROOT|THIS)+)": lambda p: p.group(1).lower(),
+    r"(\s+has_(?:population|migration)_control)\s*=\s*(yes|no)": r"\1 = { value = \2 country = prev.owner }", # NOT SURE
 
     ## somewhat older
     r"(\s+)ship_upkeep_mult\s*=": r"\1ships_upkeep_mult =",     
@@ -102,11 +105,13 @@ targets3 = {
     # r"(\s+)count_armies": r"\1count_owned_army", # count_planet_army (scope split: depending on planet/country)
     # r"(\s+)(icon_frame\s*=\s*[0-5])": "", # remove
     r"text_icon\s*=\s*military_size_space_creature": ("common\\ship_sizes", "icon = ship_size_space_monster"),
-    # r"icon_frame\s*=\s*2": ("common\\ship_sizes", "icon = ship_size_military_1"), used for starbase
+    # conflict used for starbase
+    # r"icon_frame\s*=\s*2": ("common\\ship_sizes", lambda p: p.group(1)+"icon = }[p.group(2)]),
     r"text_icon\s*=\s*military_size_": ("common\\ship_sizes", "icon = ship_size_military_"),
     # r"\s+icon_frame\s*=\s*\d": (["common\\bombardment_stances", "common\\ship_sizes"], ""), used for starbase
     r"^\s+robotic\s*=\s*(yes|no)[ \t]*\n": ("common\\species_classes", ""),
-    r"^(\s+)icon_frame\s*=\s*([1-9][0-4]?)": ("common\\armies", lambda p: p.group(1)+"icon = GFX_army_type_"+{ "1": "defensive", "2": "assault", "3": "rebel", "4": "robot", "5": "primitive", "6": "gene_warrior", "7": "clone", "8": "xenomorph", "9": "psionic", "10": "slave", "11": "machine_assault", "12": "machine_defensive", "13": "undead", "14": "imperial" }[p.group(2)]),
+    r"^(\s+)icon_frame\s*=\s*([1-9][0-4]?)": ("common\\armies",
+        lambda p: p.group(1)+"icon = GFX_army_type_"+{ "1": "defensive", "2": "assault", "3": "rebel", "4": "robot", "5": "primitive", "6": "gene_warrior", "7": "clone", "8": "xenomorph", "9": "psionic", "10": "slave", "11": "machine_assault", "12": "machine_defensive", "13": "undead", "14": "imperial" }[p.group(2)]),
 
     r"(\s+modifier)\s*=\s*\{\s*mult": r"\1 = { factor",
     r"(\s+)count_diplo_ties": r"\1count_relation",
@@ -121,6 +126,7 @@ targets3 = {
 # 3.0.* (multiline)
 targets4 = {
     # key (pre match without group): arr (search, replace) or str (if no group)
+    r"\s+random_system_planet\s*=\s*\{\s*limit\s*=\s*\{\s*is_star\s*=\s*yes\s*\}": [r"(\s+)random_system_planet\s*=\s*\{\s*limit\s*=\s*\{\s*is_star\s*=\s*yes\s*\}", r"\1star = {"],
     r"\screate_leader\s*=\s*\{[^{}]+?\s+type\s*=\s*\w+": [r"(\screate_leader\s*=\s*\{[^{}]+?\s+)type\s*=\s*(\w+)", r"\1class = \2"],
     r"NO[RT]\s*=\s*\{\s*has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+\}": [r"NO[RT]\s*=\s*\{\s*has_ethic\s*=\s*\"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:\1|\2)|fanatic_(?:\1|\2))\"?\s+\}", r"is_\1\2 = no"],
     r"(?:\s+OR\s*=\s*\{)?\s*has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*\}?": [r"(\s+OR\s*=\s*\{)?(\n\s*?)(?(1)\t)has_ethic\s*=\s*\"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*?has_ethic\s*=\s*\"?ethic_(?:(?:\2|\3)|fanatic_(?:\2|\3))\"?\s*?(?(1)\})", r"\2is_\3\4 = yes"], # r"\4is_ethics_aligned = { ARG1 = \2\3 }",
@@ -141,7 +147,7 @@ targets4 = {
     r"\s(?:every|random|count)_country\s*=\s*\{[^{}#]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default|has_special_project)": [r"(\s(?:every|random|count))_country\s*=\s*(\{[^{}#]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default|has_special_project))", r"\1_playable_country = \2"],
     r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*[\w\._:]+\s*\}\s*\}": [r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w\._:]+)\s*\}\s*\}", r"{ is_owned_by = \1 }"],
     r"NO[RT]\s*=\s*\{\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}\}": "is_fallen_empire = no",
-    r"OR\s*=\s*\{\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}\}": "is_fallen_empire = yes",
+    r"(?:OR\s*=\s*\{\s{3,})?is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}\}": [r"(OR\s*=\s*\{\s{3,})?is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)(\s{3,})is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)(?(1)\s{3,}\})", r"is_fallen_empire = yes"],
     r"NO[RT]\s*=\s*\{\s*is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = no",
     r"OR\s*=\s*\{\s*is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = yes",
     r"NO[RT]\s*=\s*\{\s*(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+\}": "is_synthetic_empire = no",
@@ -149,7 +155,11 @@ targets4 = {
     r"NO[RT]\s*=\s*\{\s*has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*\}": "is_homicidal = no",
     r"OR\s*=\s*\{\s*has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*\}": "is_homicidal = yes",
     # >3.1
-    r"\s+which\s*=\s*\"?\w+\"?\s+value\s*[<=>]+\s*(?:prev|from|root|event_target:[^\.\s])+\s+\}": [r"(\s+which\s*=\s*\"?(\w+)\"?\s+value\s*[<=>]+\s*(prev|from|root|event_target:[^\.\s])+)", r"\1.\2"]
+    #but not used for starbases
+    r"is_space_station\s*=\s*no\s*icon_frame\s*=\s*\d+": [r"(is_space_station\s*=\s*no\s*)icon_frame\s*=\s*([1-9][0-2]?)", ("common\\ship_sizes",
+        lambda p: p.group(1)+"icon = ship_size_"+{"1":"military_1","2":"military_1","3":"military_2","4":"military_4","5":"military_8","6":"military_16","7":"military_32","8":"science","9":"constructor","10":"colonizer","11":"transport","12":"space_monster"}[p.group(2)])],
+        
+    r"\s+which\s*=\s*\"?\w+\"?\s+value\s*[<=>]+\s*(?:prev|from|root|event_target:[^\.\s])+\s*\}": [r"(\s+which\s*=\s*\"?(\w+)\"?\s+value\s*[<=>]+\s*(prev|from|root|event_target:[^\.\s])+)", r"\1.\2"]
 }
 
 def mBox(mtype, text):
@@ -251,6 +261,7 @@ def modfix(file_list):
                         for pattern, repl in targets3.items():
                             # print(line)
                             # print(pattern, repl)
+                            # check valid folder
                             rt = False
                             if type(repl) == tuple:
                                 folder, repl = repl
@@ -258,8 +269,7 @@ def modfix(file_list):
                                     rt = re.search(pattern, line) # , flags=re.I
                                 else: rt = False
                             else: rt = re.search(pattern, line)
-                            if rt: # , flags=re.I
-                                # , count=0, flags=0
+                            if rt: # , flags=re.I # , count=0, flags=0
                                 line = re.sub(pattern, repl, line, flags=0) # , flags=re.I
                                 # line = line.replace(t, r)
                                 changed = True
@@ -272,15 +282,26 @@ def modfix(file_list):
                     if len(targets) > 0:
                         # print(targets, type(targets))
                         for tar in targets:
+                            # check valid folder
+                            rt = False
                             replace = repl
-                            # print(type(repl), tar, type(tar))
-                            if type(repl) == list:
-                                replace = re.sub(repl[0], repl[1], tar, flags=re.I|re.M|re.A)
-                            if type(repl) == str or (type(tar) != tuple and tar in out and tar != replace):
-                                print("Match:\n", tar)
-                                print("Multiline replace:\n", replace) # repr(
-                                out = out.replace(tar, replace)
-                                changed = True
+                            if type(repl) == list and type(repl[1]) == tuple:
+                                folder, repl = repl[1]
+                                replace[1] = repl
+                                repl = replace
+                                print(type(repl), repl)
+                                if subfolder in folder: rt = True
+                                else: rt = False
+                            else: rt = True
+                            if rt:
+                                # print(type(repl), tar, type(tar))
+                                if type(repl) == list:
+                                    replace = re.sub(repl[0], repl[1], tar, flags=re.I|re.M|re.A)
+                                if type(repl) == str or (type(tar) != tuple and tar in out and tar != replace):
+                                    print("Match:\n", tar)
+                                    print("Multiline replace:\n", replace) # repr(
+                                    out = out.replace(tar, replace)
+                                    changed = True
 
                 if changed:
                     structure = os.path.normpath(os.path.join(mod_outpath, subfolder))
