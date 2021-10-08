@@ -1,5 +1,5 @@
 # @author FirePrince
-# @revision 2021/10/04
+# @revision 2021/10/08
 # @Thanks to OldEnt for his detailed rundowns.
 
 # ============== Import libs ===============
@@ -112,6 +112,41 @@ targets3 = {
     r"^\s+robotic\s*=\s*(yes|no)[ \t]*\n": ("common\\species_classes", ""),
     r"^(\s+)icon_frame\s*=\s*([1-9][0-4]?)": ("common\\armies",
         lambda p: p.group(1)+"icon = GFX_army_type_"+{ "1": "defensive", "2": "assault", "3": "rebel", "4": "robot", "5": "primitive", "6": "gene_warrior", "7": "clone", "8": "xenomorph", "9": "psionic", "10": "slave", "11": "machine_assault", "12": "machine_defensive", "13": "undead", "14": "imperial" }[p.group(2)]),
+
+   r"^(\s+)icon_frame\s*=\s*(\d+)": ("common\\planet_classes", lambda p:
+        p.group(1)+"icon = GFX_planet_type_"+{ 
+            "1": "desert",
+            "2": "arid",
+            "3": "tundra",
+            "4": "continental",
+            "5": "tropical",
+            "6": "ocean",
+            "7": "arctic",
+            "8": "gaia",
+            "9": "barren_cold",
+            "10": "barren",
+            "11": "toxic",
+            "12": "molten",
+            "13": "frozen",
+            "14": "gas_giant",
+            "15": "machine",
+            "16": "hive",
+            "17": "nuked",
+            "18": "asteroid",
+            "19": "alpine",
+            "20": "savannah",
+            "21": "ringworld",
+            "22": "habitat",
+            "23": "shrouded",
+            "25": "city",
+            "26": "m_star",
+            "27": "f_g_star",
+            "28": "k_star",
+            "29": "a_b_star",
+            "30": "pulsar",
+            "31": "neutron_star",
+            "32": "black_hole"
+        }[p.group(2)]),
 
     r"(\s+modifier)\s*=\s*\{\s*mult": r"\1 = { factor",
     r"(\s+)count_diplo_ties": r"\1count_relation",
