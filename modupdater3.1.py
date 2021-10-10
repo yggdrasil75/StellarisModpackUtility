@@ -1,13 +1,14 @@
 # @author FirePrince
-# @revision 2021/10/08
+# @revision 2021/10/10
 # @Thanks to OldEnt for his detailed rundowns.
 
 # ============== Import libs ===============
-import os, sys  # io for high level usage
+import os  # io for high level usage
 import glob
 import re
 
 # from pathlib import Path
+import sys
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
@@ -110,44 +111,76 @@ targets3 = {
     r"text_icon\s*=\s*military_size_": ("common\\ship_sizes", "icon = ship_size_military_"),
     # r"\s+icon_frame\s*=\s*\d": (["common\\bombardment_stances", "common\\ship_sizes"], ""), used for starbase
     r"^\s+robotic\s*=\s*(yes|no)[ \t]*\n": ("common\\species_classes", ""),
-    r"^(\s+)icon_frame\s*=\s*([1-9][0-4]?)": ("common\\armies",
-        lambda p: p.group(1)+"icon = GFX_army_type_"+{ "1": "defensive", "2": "assault", "3": "rebel", "4": "robot", "5": "primitive", "6": "gene_warrior", "7": "clone", "8": "xenomorph", "9": "psionic", "10": "slave", "11": "machine_assault", "12": "machine_defensive", "13": "undead", "14": "imperial" }[p.group(2)]),
-
-   r"^(\s+)icon_frame\s*=\s*(\d+)": ("common\\planet_classes", lambda p:
-        p.group(1)+"icon = GFX_planet_type_"+{ 
-            "1": "desert",
-            "2": "arid",
-            "3": "tundra",
-            "4": "continental",
-            "5": "tropical",
-            "6": "ocean",
-            "7": "arctic",
-            "8": "gaia",
-            "9": "barren_cold",
-            "10": "barren",
-            "11": "toxic",
-            "12": "molten",
-            "13": "frozen",
-            "14": "gas_giant",
-            "15": "machine",
-            "16": "hive",
-            "17": "nuked",
-            "18": "asteroid",
-            "19": "alpine",
-            "20": "savannah",
-            "21": "ringworld",
-            "22": "habitat",
-            "23": "shrouded",
-            "25": "city",
-            "26": "m_star",
-            "27": "f_g_star",
-            "28": "k_star",
-            "29": "a_b_star",
-            "30": "pulsar",
-            "31": "neutron_star",
-            "32": "black_hole"
+    r"^(\s+icon)_frame\s*=\s*([1-9][0-4]?)": ("common\\armies",
+        lambda p: p.group(1)+" = GFX_army_type_"+{ "1": "defensive", "2": "assault", "3": "rebel", "4": "robot", "5": "primitive", "6": "gene_warrior", "7": "clone", "8": "xenomorph", "9": "psionic", "10": "slave", "11": "machine_assault", "12": "machine_defensive", "13": "undead", "14": "imperial" }[p.group(2)]),
+   r"^(\s+icon)_frame\s*=\s*(\d+)": ("common\\planet_classes", lambda p:
+        p.group(1)+" = GFX_planet_type_"+{ 
+        "1": "desert",
+        "2": "arid",
+        "3": "tundra",
+        "4": "continental",
+        "5": "tropical",
+        "6": "ocean",
+        "7": "arctic",
+        "8": "gaia",
+        "9": "barren_cold",
+        "10": "barren",
+        "11": "toxic",
+        "12": "molten",
+        "13": "frozen",
+        "14": "gas_giant",
+        "15": "machine",
+        "16": "hive",
+        "17": "nuked",
+        "18": "asteroid",
+        "19": "alpine",
+        "20": "savannah",
+        "21": "ringworld",
+        "22": "habitat",
+        "23": "shrouded",
+        "25": "city",
+        "26": "m_star",
+        "27": "f_g_star",
+        "28": "k_star",
+        "29": "a_b_star",
+        "30": "pulsar",
+        "31": "neutron_star",
+        "32": "black_hole"
         }[p.group(2)]),
-
+   r"^(\s+icon)\s*=\s*(\d+)": ("common\\colony_types", lambda p:
+        p.group(1)+" = GFX_colony_type_"+{ 
+        "1": "urban", 
+        "2": "mine", 
+        "3": "farm", 
+        "4": "generator", 
+        "5": "foundry", 
+        "6": "factory", 
+        "7": "refinery", 
+        "8": "research", 
+        "9": "fortress", 
+        "10": "capital", 
+        "11": "normal_colony", 
+        "12": "habitat", 
+        "13": "rural", 
+        "14": "resort", 
+        "15": "penal", 
+        "16": "primitive", 
+        "17": "dying", 
+        "18": "workers", 
+        "19": "habitat_energy", 
+        "20": "habitat_leisure", 
+        "21": "habitat_trade", 
+        "22": "habitat_research", 
+        "23": "habitat_mining", 
+        "24": "habitat_fortress", 
+        "25": "habitat_foundry", 
+        "26": "habitat_factory", 
+        "27": "habitat_refinery", 
+        "28": "bureaucratic", 
+        "29": "picker", 
+        "30": "fringe", 
+        "31": "industrial"
+        }[p.group(2)]),
     r"(\s+modifier)\s*=\s*\{\s*mult": r"\1 = { factor",
     r"(\s+)count_diplo_ties": r"\1count_relation",
     # r"(\s+)pop_can_live_on_planet": r"\1can_live_on_planet", needs planet target
@@ -182,13 +215,13 @@ targets4 = {
     r"\s(?:every|random|count)_country\s*=\s*\{[^{}#]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default|has_special_project)": [r"(\s(?:every|random|count))_country\s*=\s*(\{[^{}#]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default|has_special_project))", r"\1_playable_country = \2"],
     r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*[\w\._:]+\s*\}\s*\}": [r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w\._:]+)\s*\}\s*\}", r"{ is_owned_by = \1 }"],
     r"NO[RT]\s*=\s*\{\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}\}": "is_fallen_empire = no",
-    r"(?:OR\s*=\s*\{\s{3,})?is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}\}": [r"(OR\s*=\s*\{\s{3,})?is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)(\s{3,})is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)(?(1)\s{3,}\})", r"is_fallen_empire = yes"],
+    r"(?:OR\s*=\s*\{\s{3,})?is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}\}?": [r"(OR\s*=\s*\{\s{3,})?is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)(\s{3,})is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)(?(1)\s{3,}\})", "is_fallen_empire = yes"],
     r"NO[RT]\s*=\s*\{\s*is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = no",
     r"OR\s*=\s*\{\s*is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = yes",
     r"NO[RT]\s*=\s*\{\s*(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+\}": "is_synthetic_empire = no",
     r"OR\s*=\s*\{\s*(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+\}": "is_synthetic_empire = yes",
     r"NO[RT]\s*=\s*\{\s*has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*\}": "is_homicidal = no",
-    r"OR\s*=\s*\{\s*has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*\}": "is_homicidal = yes",
+    r"(?:OR\s*=\s*\{\s*)?has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*\}?": [r"(OR\s*=\s*\{\s*)?has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?(?(1)\s*\})", "is_homicidal = yes"],
     # >3.1
     #but not used for starbases
     r"is_space_station\s*=\s*no\s*icon_frame\s*=\s*\d+": [r"(is_space_station\s*=\s*no\s*)icon_frame\s*=\s*([1-9][0-2]?)", ("common\\ship_sizes",
