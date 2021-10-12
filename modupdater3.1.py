@@ -1,5 +1,5 @@
 # @author FirePrince
-# @revision 2021/10/10
+# @revision 2021/10/12
 # @Thanks to OldEnt for his detailed rundowns.
 
 # ============== Import libs ===============
@@ -227,7 +227,8 @@ targets4 = {
     r"is_space_station\s*=\s*no\s*icon_frame\s*=\s*\d+": [r"(is_space_station\s*=\s*no\s*)icon_frame\s*=\s*([1-9][0-2]?)", ("common\\ship_sizes",
         lambda p: p.group(1)+"icon = ship_size_"+{"1":"military_1","2":"military_1","3":"military_2","4":"military_4","5":"military_8","6":"military_16","7":"military_32","8":"science","9":"constructor","10":"colonizer","11":"transport","12":"space_monster"}[p.group(2)])],
         
-    r"\s+which\s*=\s*\"?\w+\"?\s+value\s*[<=>]+\s*(?:prev|from|root|event_target:[^\.\s])+\s*\}": [r"(\s+which\s*=\s*\"?(\w+)\"?\s+value\s*[<=>]+\s*(prev|from|root|event_target:[^\.\s])+)", r"\1.\2"]
+    r"\s+which\s*=\s*\"?\w+\"?\s+value\s*[<=>]+\s*(?:prev|from|root|event_target:[^\.\s])+\s*\}": [r"(\s+which\s*=\s*\"?(\w+)\"?\s+value\s*[<=>]+\s*(prev|from|root|event_target:[^\.\s])+)", r"\1.\2"],
+    r"\s+spawn_megastructure\s*=\s*\{[^{}#]+": [r"(\s+)location\s*=\s*([\w\._:]+)", r"\1coords_from = \2"]
 }
 
 def mBox(mtype, text):
