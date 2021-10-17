@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ###    @author FirePrince
-###    @revision 2021/10/117
+###    @revision 2021/10/17-2
 ###    USAGE: You need install https://pyyaml.org/wiki/PyYAMLDocumentation for Python3.x
 ###    ATTENTION: You must customize the vars localModPath and local_OVERHAUL
 ###    TODO: Renaming (already translated) keys is not working
@@ -26,8 +26,8 @@ import yaml
 
 #============== Initialise global variables ===============
 # Write here your mod folder name
+# local_OVERHAUL = ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
 localModPath = ["Decentralized Empires", ["russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
-
 
 ymlfiles = '*.yml' # you can also use single names
 # ymlfiles = 'CrisisManagerMenu_l_english.yml'
@@ -229,10 +229,10 @@ for filename in ymlfiles:
         # langStream = yaml.load(langStream, Loader=yaml.FullLoader)
         langStream = yaml.safe_load(langStream)
 
-        if not "l_"+lang in langStream:
-            print("FAIL on file", filename.replace(
-                "english", lang), langStream)
-            continue
+        if not "l_"+lang in langStream: # not langStream.startswith("l_"+lang):
+            print("Key ERROR on file", filename.replace("english", lang), "try to fix", type(langStream))
+            langStream["l_"+lang] = langStream.pop(next(iter(langStream))) # old list(langStream.keys())[0]
+            # continue
         langDict = langStream["l_"+lang]
         #print("Dict document:", type(langStream), langStream)
 
