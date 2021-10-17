@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ###    @author FirePrince
-###    @revision 2021/08/13-3
+###    @revision 2021/10/117
 ###    USAGE: You need install https://pyyaml.org/wiki/PyYAMLDocumentation for Python3.x
 ###    ATTENTION: You must customize the vars localModPath and local_OVERHAUL
 ###    TODO: Renaming (already translated) keys is not working
@@ -20,25 +20,26 @@ import re
 import glob
 import yaml
 # yaml=YAML(typ='safe')
+# import chardet # test 'utf-8-sig'
+# import codecs
 
 
 #============== Initialise global variables ===============
 # Write here your mod folder name
-localModPath = "CrisisManager_EndGame"
-# local_OVERHAUL = ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
-local_OVERHAUL = ["french", "polish", "russian"]
+localModPath = ["Decentralized Empires", ["russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
+
 
 ymlfiles = '*.yml' # you can also use single names
 # ymlfiles = 'CrisisManagerMenu_l_english.yml'
 
 key_IGNORE = "" # stops copying over localisations keys with this starting pattern eg. "dmm_mod."
 
-print(localModPath)
-
+localModPath, local_OVERHAUL = localModPath
+print(localModPath, local_OVERHAUL)
 
 # def abort(message):
-# 	mBox('abort', message, 0)
-# 	sys.exit(1)
+#   mBox('abort', message, 0)
+#   sys.exit(1)
 
 
 def mBox(mtype, text):
@@ -76,9 +77,9 @@ settingsPath = [s for s in settingsPath if os.path.isfile(
 ymlfiles = glob.iglob(os.path.join('english', ymlfiles), recursive=False)
 
 # for s in settingsPath:
-# 	if os.path.isfile(os.path.join(s, mods_registry)):
-# 		settingsPath[0] = s
-# 		break
+#   if os.path.isfile(os.path.join(s, mods_registry)):
+#       settingsPath[0] = s
+#       break
 print(settingsPath)
 
 if len(settingsPath):
@@ -100,7 +101,7 @@ regRev2 = re.compile(r'(?:\'|([^:"]{2}))\'?$', re.MULTILINE)
 
 
 def tr(s):
-    print(type(s), len(s))
+    # print(type(s), len(s))
     if isinstance(s, bytes):
         s = s.decode('utf-8-sig')
     # s = re.sub('\n', '\\n', s)
@@ -114,7 +115,7 @@ def tr(s):
 
 def trReverse(s):
     "Paradox workaround"
-    print(type(s))
+    # print(type(s))
     if isinstance(s, bytes):
         s = s.decode('utf-8-sig')
     s = s.replace('\r\n', '\n')  # Windows
@@ -138,7 +139,6 @@ def getYAMLstream(lang, filename):
     if os.path.isfile(lang):
         return io.open(lang, "rb")  # "rb" , encoding='utf-8-sig'
 
-
 def writeStream(lang, stream, filename):
     "Write YAML file"
     filename = filename.replace("english", lang)
@@ -158,6 +158,19 @@ def writeStream(lang, stream, filename):
         f.write(stream)
         # yaml.dump(stream, f, indent=1)
 
+# BOM = codecs.BOM_UTF8 # u'feff'
+# def testYAML_BOM(text):
+#     "Test YAML encoding"
+#     # filename = filename.replace("english", lang)
+#     # lang = os.path.join(os.getcwd(), filename)
+#     # with open(lang, mode='rb') as f:
+#         # text = f.read(4)
+#     # print(BOM, "BOM", text)
+#     # if not text.startswith(BOM):
+#     if text != BOM:
+#         print("File not in UTF8-BOM:")
+#         # changed = True
+#         return True
 
 # yaml = ruamel.yaml.YAML(typ='safe')
 yaml.default_flow_style = False
@@ -168,7 +181,6 @@ yaml.allow_unicode = True
 # yaml.warnings({'YAMLLoadWarning': False})
 
 
-
 #CrisisManagerEvent_l_english ,'**'
 for filename in ymlfiles:
     print(filename)
@@ -177,10 +189,10 @@ for filename in ymlfiles:
     # print(streamEn)
     dictionary = {}
     # try:
-    # 	print(type(dictionary),dictionary)
-    # 	# print(dictionary["ï»¿l_english"])
+    #   print(type(dictionary),dictionary)
+    #   # print(dictionary["ï»¿l_english"])
     # except yaml.YAMLError as exc:
-    # 	print(exc)
+    #   print(exc)
     # doc = yaml.load_all(stream, Loader=yaml.FullLoader)
     # doc = yaml.dump(dictionary) # ["\u00ef\u00bb\u00bfl_english"]
     # doc = json.dumps(dictionary) # ["\u00ef\u00bb\u00bfl_english"]
@@ -204,8 +216,15 @@ for filename in ymlfiles:
             # copy file with new header
             writeStream(lang, stream, filename)
             continue
+        else:
+            stream = stream.read()
+            # print(stream[0],"BOM", filename.replace("english", lang))
+            # changed = testYAML_BOM(stream.read(3))
+            if stream[0] != 239: # b'ufeff':
+                print(filename.replace("english", lang), "not UTF8-BOM", stream[0])
+                changed = True
 
-        langStream = tr(stream.read())
+        langStream = tr(stream)
         # print("Str document:", type(langStream), langStream)
         # langStream = yaml.load(langStream, Loader=yaml.FullLoader)
         langStream = yaml.safe_load(langStream)
