@@ -1,5 +1,5 @@
 # @author FirePrince
-# @revision 2021/10/12
+# @revision 2021/10/19
 # @Thanks to OldEnt for his detailed rundowns.
 
 # ============== Import libs ===============
@@ -14,9 +14,9 @@ from tkinter import filedialog
 from tkinter import messagebox
 
 # ============== Initialize global variables ===============
+code_cosmetic = False
 # mod_path = os.path.dirname(os.getcwd())
 mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
-
 
 mod_outpath = ""
 
@@ -94,13 +94,12 @@ targets3 = {
     # code opts/cosmetic only
     r"(\s+)NOT\s*=\s*\{\s*([^\s]+)\s*=\s*yes\s*\}": r"\1\2 = no",
     r"(\s+)any_system_planet\s*=\s*\{\s*is_capital\s*=\s*(yes|no)\s*\}": r"\1is_capital_system = \2",
-    r"([\s\.]+(PREV|FROM|ROOT|THIS)+)": lambda p: p.group(1).lower(),
     r"(\s+has_(?:population|migration)_control)\s*=\s*(yes|no)": r"\1 = { value = \2 country = prev.owner }", # NOT SURE
 
     ## somewhat older
     r"(\s+)ship_upkeep_mult\s*=": r"\1ships_upkeep_mult =",     
     r"(\s+)add_(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro)\s*=\s*(\d+|@\w+)": r"\1add_resource = { \2 = \3 }",
-## > 3.1.* beta
+### > 3.1.* beta
     r"(\s+set_)(primitive)\s*=\s*yes": r"\1country_type = \2",
 
     # r"(\s+)count_armies": r"\1count_owned_army", # count_planet_army (scope split: depending on planet/country)
@@ -111,8 +110,23 @@ targets3 = {
     r"text_icon\s*=\s*military_size_": ("common\\ship_sizes", "icon = ship_size_military_"),
     # r"\s+icon_frame\s*=\s*\d": (["common\\bombardment_stances", "common\\ship_sizes"], ""), used for starbase
     r"^\s+robotic\s*=\s*(yes|no)[ \t]*\n": ("common\\species_classes", ""),
-    r"^(\s+icon)_frame\s*=\s*([1-9][0-4]?)": ("common\\armies",
-        lambda p: p.group(1)+" = GFX_army_type_"+{ "1": "defensive", "2": "assault", "3": "rebel", "4": "robot", "5": "primitive", "6": "gene_warrior", "7": "clone", "8": "xenomorph", "9": "psionic", "10": "slave", "11": "machine_assault", "12": "machine_defensive", "13": "undead", "14": "imperial" }[p.group(2)]),
+    r"^(\s+icon)_frame\s*=\s*([1-9][0-4]?)": ("common\\armies", lambda p:
+        p.group(1)+" = GFX_army_type_"+{
+        "1": "defensive",
+        "2": "assault",
+        "3": "rebel",
+        "4": "robot",
+        "5": "primitive",
+        "6": "gene_warrior",
+        "7": "clone",
+        "8": "xenomorph",
+        "9": "psionic",
+        "10": "slave",
+        "11": "machine_assault",
+        "12": "machine_defensive",
+        "13": "undead",
+        "14": "imperial"
+        }[p.group(2)]),
    r"^(\s+icon)_frame\s*=\s*(\d+)": ("common\\planet_classes", lambda p:
         p.group(1)+" = GFX_planet_type_"+{ 
         "1": "desert",
@@ -198,7 +212,6 @@ targets4 = {
     r"\screate_leader\s*=\s*\{[^{}]+?\s+type\s*=\s*\w+": [r"(\screate_leader\s*=\s*\{[^{}]+?\s+)type\s*=\s*(\w+)", r"\1class = \2"],
     r"NO[RT]\s*=\s*\{\s*has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+\}": [r"NO[RT]\s*=\s*\{\s*has_ethic\s*=\s*\"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:\1|\2)|fanatic_(?:\1|\2))\"?\s+\}", r"is_\1\2 = no"],
     r"(?:\s+OR\s*=\s*\{)?\s*has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*\}?": [r"(\s+OR\s*=\s*\{)?(\n\s*?)(?(1)\t)has_ethic\s*=\s*\"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*?has_ethic\s*=\s*\"?ethic_(?:(?:\2|\3)|fanatic_(?:\2|\3))\"?\s*?(?(1)\})", r"\2is_\3\4 = yes"], # r"\4is_ethics_aligned = { ARG1 = \2\3 }",
-    # r"\s*\n{2,}": "\n\n", # remove surplus lines
     ### Boolean operator merge
     # NAND <=> OR = { NOT
     r"\s+OR\s*=\s*\{(?:\s*NOT\s*=\s*\{[^{}#]*?\})+\s*\}[ \t]*\n": [r"^(\s+)OR\s*=\s*\{\s*?\n(?:(\s+)NOT\s*=\s*\{\s*)?([^{}#]*?)\s*\}(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?", r"\1NAND = {\n\2\3\4\5\6\7\8\9\10\11\12\13\14\15"], # up to 7 items (sub-trigger)
@@ -214,22 +227,32 @@ targets4 = {
     r"\sany_country\s*=\s*\{[^{}#]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default)": [r"(\s)any_country\s*=\s*(\{[^{}#]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default))", r"\1any_playable_country = \2"],
     r"\s(?:every|random|count)_country\s*=\s*\{[^{}#]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default|has_special_project)": [r"(\s(?:every|random|count))_country\s*=\s*(\{[^{}#]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default|has_special_project))", r"\1_playable_country = \2"],
     r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*[\w\._:]+\s*\}\s*\}": [r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w\._:]+)\s*\}\s*\}", r"{ is_owned_by = \1 }"],
-    r"NO[RT]\s*=\s*\{\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}\}": "is_fallen_empire = no",
-    r"(?:OR\s*=\s*\{\s{3,})?is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s{3,}\}?": [r"(OR\s*=\s*\{\s{3,})?is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)(\s{3,})is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)(?(1)\s{3,}\})", "is_fallen_empire = yes"],
+    r"NO[RT]\s*=\s*\{\s*is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s*\}": "is_fallen_empire = no",
+    r"(?:OR\s*=\s*\{)?\s{4,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s+\}?": [r"(OR\s*=\s*\{)?\s{4,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)(\s+)is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)(?(1)\s*\})", "is_fallen_empire = yes"],
     r"NO[RT]\s*=\s*\{\s*is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = no",
     r"OR\s*=\s*\{\s*is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = yes",
     r"NO[RT]\s*=\s*\{\s*(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+\}": "is_synthetic_empire = no",
     r"OR\s*=\s*\{\s*(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+\}": "is_synthetic_empire = yes",
     r"NO[RT]\s*=\s*\{\s*has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*\}": "is_homicidal = no",
     r"(?:OR\s*=\s*\{\s*)?has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*\}?": [r"(OR\s*=\s*\{\s*)?has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?(?(1)\s*\})", "is_homicidal = yes"],
+    r"NOT\s*=\s*\{\s*check_variable\s*=\s*\{\s*which\s*=\s*\"?\w+\"?\s+value\s*=\s*[^{}#\s=]\s*\}\s*\}": [r"NOT\s*=\s*\{\s*(check_variable\s*=\s*\{\s*which\s*=\s*\"?\w+\"?\s+value)\s*=\s*([^{}#\s=])\s*\}\s*\}", r"\1 != \2 }"],
+
     # >3.1
     #but not used for starbases
     r"is_space_station\s*=\s*no\s*icon_frame\s*=\s*\d+": [r"(is_space_station\s*=\s*no\s*)icon_frame\s*=\s*([1-9][0-2]?)", ("common\\ship_sizes",
         lambda p: p.group(1)+"icon = ship_size_"+{"1":"military_1","2":"military_1","3":"military_2","4":"military_4","5":"military_8","6":"military_16","7":"military_32","8":"science","9":"constructor","10":"colonizer","11":"transport","12":"space_monster"}[p.group(2)])],
         
     r"\s+which\s*=\s*\"?\w+\"?\s+value\s*[<=>]+\s*(?:prev|from|root|event_target:[^\.\s])+\s*\}": [r"(\s+which\s*=\s*\"?(\w+)\"?\s+value\s*[<=>]+\s*(prev|from|root|event_target:[^\.\s])+)", r"\1.\2"],
-    r"\s+spawn_megastructure\s*=\s*\{[^{}#]+": [r"(\s+)location\s*=\s*([\w\._:]+)", r"\1coords_from = \2"]
+    r"\s+spawn_megastructure\s*=\s*\{[^{}#]+": [r"(\s+)location\s*=\s*([\w\._:]+)", r"\1coords_from = \2"],
+
 }
+
+if code_cosmetic:
+    targets3[r"([\s\.]+(PREV|FROM|ROOT|THIS)+)"] = lambda p: p.group(1).lower() # r"([\s\.]+(PREV|FROM|ROOT|THIS)+)": lambda p: p.group(1).lower(), 
+    targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
+    targets3[r"#([^\s#])"] = r"# \1" # r"#([^\s#])": r"# \1", # format comment
+    targets4[r"\s*\n{2,}"] = "\n\n" # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
+
 
 def mBox(mtype, text):
     tk.Tk().withdraw()
