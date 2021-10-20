@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ###    @author FirePrince
-###    @revision 2021/10/20
+###    @revision 2021/10/21
 ###    USAGE: You need install https://pyyaml.org/wiki/PyYAMLDocumentation for Python3.x
 ###    ATTENTION: You must customize the vars localModPath and local_OVERHAUL
 ###    TODO: Renaming (already translated) keys is not working
@@ -24,7 +24,7 @@ import yaml
 # import codecs
 import errno, winreg
 try: from winreg import *
-except: print("Not running windows")
+except: print("Not running Windows")
 
 #============== Initialise global variables ===============
 # Write here your mod folder name and languages to replace/update
@@ -52,14 +52,14 @@ def tr(s):
     s = re.sub(r'^ *#[^\n]+$', '', s, flags=re.M|re.ASCII) # remove comments line
     # s = re.sub(r':\d \"\"\s*$', ": ""\n", s, flags=re.M|re.ASCII)
     s = re.sub(r'([^\d][^\n]|[\d][^\s])\"([ .?!,\w]{1,3})\"([^\n])', r'\1’\2’\3', s, flags=re.M|re.ASCII)
-    s = re.sub(r'(^ [^\s:#]*?\:)\d* +\"([^\n]*?)\"\s*$', r"\1«\2»", s, flags=re.M|re.ASCII) # not working always, but it should (as other works so it is a bug)
-    # s = re.sub(r'^( [\w\._]+):\d+ +\"', r"\1:«", s, flags=re.M|re.ASCII)
-    # s = re.sub(r'\"\s*$', r"»", s, flags=re.M|re.ASCII)
+    s = re.sub(r'(^ [^\s:#]*?\:)\d* +\"([^\n]*?)\"\s*$', r"\1²\2³", s, flags=re.M|re.ASCII) # not working always, but it should (as other works so it is a bug)
+    # s = re.sub(r'^( [\w\._]+):\d+ +\"', r"\1:²", s, flags=re.M|re.ASCII)
+    # s = re.sub(r'\"\s*$', r"³", s, flags=re.M|re.ASCII)
     # print(s)
-    s = s.replace("'", '’')
-    s = re.sub(r'([^:#"])\"+([^\n])', r'\1’\2', s) #   [\]\w« \.§!?,(){}$]{2}
+    s = s.replace("\\?'", '’')
+    s = re.sub(r'([^:#"])\\?\"+([^\n])', r'\1’\2', s) #   [\]\w² \.§!?,(){}$]{2}
     # s = s.replace(":", '…')
-    s = s.replace("«", ' "').replace("»", '"')
+    s = s.replace("²", ' "').replace("³", '"')
     # print(s)
     # s = re.sub(r':\d "+', ': "', s, flags=re.M|re.ASCII)
     return s
@@ -74,7 +74,7 @@ def getYAMLstream(lang, filename):
         return io.open(lang, "rb")  # "rb" , encoding='utf-8-sig'
 
 
-if loadVanillaLoc:
+if loadVanillaLoc and len(local_OVERHAUL) > 0:
     ### Read Stellaris path from registry
     loadVanillaLoc = ""
     if os.name == 'nt':
@@ -210,7 +210,7 @@ def trReverse(s):
     s = s.replace('\r\n', '\n')  # Windows
     s = s.replace('  ', ' ')
     s = re.sub(r'BRR *', r'\\n', s)
-    s = re.sub(regRev1, r' \g<1>:0 ', s)  # add 0 to keys
+    # s = re.sub(regRev1, r' \g<1>:0 ', s)  # add 0 to keys
     s = re.sub(re.compile(r'^"(l_\S+)":\n'), r'\1:\n', s)
     # s = s.replace("”", "\"")
     s = s.replace("’", "\'")
@@ -293,10 +293,11 @@ for filename in ymlfiles:
     if loadVanillaLoc and isinstance(doc, dict):
         # print("LOAD loadVanillaLoc")
         for k, v in doc.items():
-            if len(v) > 2:
+            if len(v) > 2 and not(v.startswith("$") and v.endswith("$")):
                 for vkey, vvalue in loadVanillaLoc:
                     if len(vvalue) > 2 and v == vvalue and not vvalue.startswith("$"):
                         doc[k] = '$'+ vkey +'$'
+                        break
                         print(k, "REPLACED with vanilla", vkey)
 
     # for doc in dictionary:
@@ -328,6 +329,7 @@ for filename in ymlfiles:
             print("Key ERROR on file", filename.replace("english", lang), "try to fix", type(langStream))
             # Fix it!?
             langStream["l_"+lang] = langStream.pop(next(iter(langStream))) # old list(langStream.keys())[0]
+            changed = True
             # continue
 
         langDict = langStream["l_"+lang]
