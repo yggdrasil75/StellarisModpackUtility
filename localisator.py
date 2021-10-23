@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ###    @author FirePrince
-###    @revision 2021/10/21
+###    @revision 2021/10/23
 ###    USAGE: You need install https://pyyaml.org/wiki/PyYAMLDocumentation for Python3.x
 ###    ATTENTION: You must customize the vars localModPath and local_OVERHAUL
 ###    TODO: Renaming (already translated) keys is not working
@@ -30,7 +30,7 @@ except: print("Not running Windows")
 # Write here your mod folder name and languages to replace/update
 localModPath = ["distant_stars_overhaul", ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
 
-loadVanillaLoc = True # replaces exact matching strings with vanilla ones
+loadVanillaLoc = True # BETA: replaces exact matching strings with vanilla ones
 # loadDependingMods = False # replaces exact matching strings with ones from the depending mod(s)
 
 ymlfiles = '*.yml' # you can also use single names
@@ -51,8 +51,8 @@ def tr(s):
     s = re.sub(r' *#[^\n"]*$', '', s, flags=re.M|re.ASCII) # remove comments end
     s = re.sub(r'^ *#[^\n]+$', '', s, flags=re.M|re.ASCII) # remove comments line
     # s = re.sub(r':\d \"\"\s*$', ": ""\n", s, flags=re.M|re.ASCII)
+    s = re.sub(r'(^ +[^\s:#]*?\:)\d* +\"([^\n]*?)\"\s*$', r"\1²\2³", s, flags=re.M|re.ASCII) # not working always, but it should (as other works so it is a bug)
     s = re.sub(r'([^\d][^\n]|[\d][^\s])\"([ .?!,\w]{1,3})\"([^\n])', r'\1’\2’\3', s, flags=re.M|re.ASCII)
-    s = re.sub(r'(^ [^\s:#]*?\:)\d* +\"([^\n]*?)\"\s*$', r"\1²\2³", s, flags=re.M|re.ASCII) # not working always, but it should (as other works so it is a bug)
     # s = re.sub(r'^( [\w\._]+):\d+ +\"', r"\1:²", s, flags=re.M|re.ASCII)
     # s = re.sub(r'\"\s*$', r"³", s, flags=re.M|re.ASCII)
     # print(s)
@@ -60,7 +60,7 @@ def tr(s):
     s = re.sub(r'([^:#"])\\?\"+([^\n])', r'\1’\2', s) #   [\]\w² \.§!?,(){}$]{2}
     # s = s.replace(":", '…')
     s = s.replace("²", ' "').replace("³", '"')
-    # print(s)
+    # print(s.encode())
     # s = re.sub(r':\d "+', ': "', s, flags=re.M|re.ASCII)
     return s
 
@@ -76,8 +76,12 @@ def getYAMLstream(lang, filename):
 
 if loadVanillaLoc and len(local_OVERHAUL) > 0:
     ### Read Stellaris path from registry
-    loadVanillaLoc = ""
-    if os.name == 'nt':
+    loadVanillaLoc = os.getcwd()
+
+    if os.path.exists(os.path.normpath(os.path.join(loadVanillaLoc, "localisation"))):
+        loadVanillaLoc = os.path.normpath(os.path.join(loadVanillaLoc, "localisation"))
+    elif os.name == 'nt':
+        loadVanillaLoc = ""
         aReg =  winreg.HKEY_CURRENT_USER
         proc_arch = os.environ['PROCESSOR_ARCHITECTURE'].lower()
         proc_arch64 = os.environ['PROCESSOR_ARCHITEW6432'].lower()
@@ -95,12 +99,12 @@ if loadVanillaLoc and len(local_OVERHAUL) > 0:
                 if len(loadVanillaLoc) > 0 and os.path.isdir(loadVanillaLoc): break
                 else:
                     try:
-                        if winreg.QueryValueEx(skey, 'DisplayName')[0].startswith("Stellaris") and len(winreg.QueryValueEx(skey, 'InstallLocation')[0]) > 0:
+                        if winreg.QueryValueEx(skey, 'DisplayName')[0] == "Stellaris" and len(winreg.QueryValueEx(skey, 'InstallLocation')[0]) > 0:
                             loadVanillaLoc = winreg.QueryValueEx(skey, 'InstallLocation')[0]
                             if len(loadVanillaLoc) > 0:
                                 loadVanillaLoc = os.path.normpath(loadVanillaLoc)
                                 if os.path.isdir(loadVanillaLoc):
-                                    # print("REG", loadVanillaLoc, winreg.QueryValueEx(skey, 'DisplayName')[0])
+                                    print("REG", loadVanillaLoc, winreg.QueryValueEx(skey, 'DisplayName')[0])
                                     break
                                 else: loadVanillaLoc = ""
                     except OSError as e:
@@ -111,34 +115,40 @@ if loadVanillaLoc and len(local_OVERHAUL) > 0:
     else:
         loadVanillaLoc = os.path.expanduser("~/.steam/steam/steamapps/common/Stellaris")
 
-    if len(loadVanillaLoc) > 0 and os.path.isdir(loadVanillaLoc):
+    print(loadVanillaLoc, os.path.exists(os.path.join(loadVanillaLoc, "localisation")))
+        
+
+    if len(loadVanillaLoc) > 0 and os.path.isdir(loadVanillaLoc) and os.path.exists(os.path.join(loadVanillaLoc, "localisation")):
         loadVanillaLoc = os.path.join(loadVanillaLoc, "localisation")
+
+
+        os.chdir(loadVanillaLoc)
+        print(loadVanillaLoc)
+        vanillafiles = glob.iglob(os.path.join('english', ymlfiles), recursive=False)
+        # vanillafiles = ["english\\l_english.yml"] # TEST
+        loadVanillaLoc = {}
+
+        for filename in vanillafiles:
+            print(filename)
+            streamEn = getYAMLstream("english", filename)
+            streamEn = streamEn.read()
+            # FIX VANILLA
+            if filename == "english\\l_english.yml":
+                if isinstance(streamEn, bytes):
+                    streamEn = streamEn.decode('utf-8-sig')
+                streamEn = streamEn.replace('android_occupation_army_desc:0 ""', 'android_occupation_army_desc: "')
+
+            streamEn = yaml.safe_load(tr(streamEn))
+            streamEn = streamEn["l_english"]
+            if isinstance(streamEn, dict):
+                loadVanillaLoc.update(streamEn)
+            else:
+                print("XAML TYPE ERROR", type(streamEn),streamEn)
+                # loadVanillaLoc.extend(streamEn)
     else:
-        raise Exception('ERROR: Unable to locate the Stellaris path.')
-
-    os.chdir(loadVanillaLoc)
-    print(loadVanillaLoc)
-    vanillafiles = glob.iglob(os.path.join('english', ymlfiles), recursive=False)
-    # vanillafiles = ["english\\l_english.yml"] # TEST
-    loadVanillaLoc = {}
-
-    for filename in vanillafiles:
-        print(filename)
-        streamEn = getYAMLstream("english", filename)
-        streamEn = streamEn.read()
-        # FIX VANILLA
-        if filename == "english\\l_english.yml":
-            if isinstance(streamEn, bytes):
-                streamEn = streamEn.decode('utf-8-sig')
-            streamEn = streamEn.replace('android_occupation_army_desc:0 ""', 'android_occupation_army_desc: "')
-
-        streamEn = yaml.safe_load(tr(streamEn))
-        streamEn = streamEn["l_english"]
-        if isinstance(streamEn, dict):
-            loadVanillaLoc.update(streamEn)
-        else:
-            print("XAML TYPE ERROR", type(streamEn),streamEn)
-            # loadVanillaLoc.extend(streamEn)
+        loadVanillaLoc = False
+        print('ERROR: Unable to locate the Stellaris path. loadVanillaLoc = False')
+        # raise Exception('ERROR: Unable to locate the Stellaris path.')
 
 # ymlfiles = '*.yml'
 
@@ -198,7 +208,7 @@ localModPath = os.path.join(settingsPath, "mod", localModPath, "localisation")
 
 os.chdir(localModPath)
 
-regRev1 = re.compile(r'^ +\"([^:"\s]+)\": ', re.MULTILINE)
+regRev1 = re.compile(r'^ +\"([^:"\s]+)\": ', re.MULTILINE) # remove quote marks from keys
 regRev2 = re.compile(r'(?:\'|([^:"]{2}))\'?$', re.MULTILINE)
 
 
@@ -207,11 +217,11 @@ def trReverse(s):
     # print(type(s))
     if isinstance(s, bytes):
         s = s.decode('utf-8-sig')
-    s = s.replace('\r\n', '\n')  # Windows
+    # s = s.replace('\r\n', '\n')  # Windows
     s = s.replace('  ', ' ')
     s = re.sub(r'BRR *', r'\\n', s)
-    # s = re.sub(regRev1, r' \g<1>:0 ', s)  # add 0 to keys
-    s = re.sub(re.compile(r'^"(l_\S+)":\n'), r'\1:\n', s)
+    s = re.sub(regRev1, r' \g<1>: ', s)  # (not add digits to keys)
+    s = re.sub(re.compile(r'^"(l_\S+)": *?\n'), r'\1:\n', s)
     # s = s.replace("”", "\"")
     s = s.replace("’", "\'")
     # s = s.replace("…", ':')
@@ -287,18 +297,18 @@ for filename in ymlfiles:
     # print("New document:", type(dictionary))
     doc = dictionary["l_english"]
     # print(type(doc), isinstance(doc, dict)) True
-    print(type(loadVanillaLoc), isinstance(loadVanillaLoc, dict)) # type(loadVanillaLoc) == dict
+    # print(type(loadVanillaLoc), isinstance(loadVanillaLoc, dict)) # type(loadVanillaLoc) == dict class 'dict_items'
 
     # Replace with Vanilla
     if loadVanillaLoc and isinstance(doc, dict):
-        # print("LOAD loadVanillaLoc")
-        for k, v in doc.items():
-            if len(v) > 2 and not(v.startswith("$") and v.endswith("$")):
-                for vkey, vvalue in loadVanillaLoc:
-                    if len(vvalue) > 2 and v == vvalue and not vvalue.startswith("$"):
+        # print("LOAD loadVanillaLoc", type(loadVanillaLoc)) # = dict_items
+        for vkey, vvalue in loadVanillaLoc:
+            if len(vvalue) > 2 and not vvalue.startswith("$") and len(vvalue) < 60:
+                for k, v in doc.items():
+                    if len(v) > 2 and not(v.startswith("$") and v.endswith("$")) and len(v) < 60 and v == vvalue:
                         doc[k] = '$'+ vkey +'$'
-                        break
                         print(k, "REPLACED with vanilla", vkey)
+                        # break
 
     # for doc in dictionary:
     for lang in range(1, len(localizations)):
@@ -328,8 +338,8 @@ for filename in ymlfiles:
         if not "l_"+lang in langStream: # not langStream.startswith("l_"+lang):
             print("Key ERROR on file", filename.replace("english", lang), "try to fix", type(langStream))
             # Fix it!?
-            langStream["l_"+lang] = langStream.pop(next(iter(langStream))) # old list(langStream.keys())[0]
             changed = True
+            langStream["l_"+lang] = langStream.pop(next(iter(langStream))) # old list(langStream.keys())[0]
             # continue
 
         langDict = langStream["l_"+lang]
@@ -342,16 +352,14 @@ for filename in ymlfiles:
                 if key not in langDict or value == "" or langDict[key] in ("", "REPLACE_ME") or (lang in local_OVERHAUL and langDict[key] != value) and not (key_IGNORE != "" and key.startswith(key_IGNORE)):
                     langDict[key] = value
                     changed = True
-                    print("Fixed document " +
-                          filename.replace("english", lang), key, value)
+                    print("Fixed document " + filename.replace("english", lang), key, value.encode())
                     # break
                 # else: print(bytes(key + ":0 " + langDict[key], "utf-8").decode("utf-8"))
             for key in list(langDict.keys()):
                 if key not in doc:
                     del langDict[key]
                     changed = True
-                    print(key, "removed from document " +
-                          filename.replace("english", lang))
+                    print(key, "removed from document " + filename.replace("english", lang))
 
         if changed:
             # dictionary = doc.copy()
