@@ -1,5 +1,5 @@
 # @author FirePrince
-# @revision 2021/10/19
+# @revision 2021/11/02
 # @Thanks to OldEnt for his detailed rundowns.
 
 # ============== Import libs ===============
@@ -14,7 +14,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 
 # ============== Initialize global variables ===============
-code_cosmetic = False
+code_cosmetic = True # optional
 # mod_path = os.path.dirname(os.getcwd())
 mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
 
@@ -34,10 +34,10 @@ removedTargets = [
 1 scope removed."""
     # this are only warnings, commands which cannot be easily replaced
     # < 3.1
-    r"\s(any|every|random)_(research|mining)_station", # = 2 trigger & 4 effects
+    r"\s(any|every|random)_(research|mining)_station\b", # = 2 trigger & 4 effects
     r"\sobservation_outpost\s*=\s*\{\s*limit",
-    r"\s+pop_can_live_on_planet", # r"\1can_live_on_planet", needs planet target
-    r"(\s+)count_armies", # (scope split: depending on planet/country)
+    r"\s+pop_can_live_on_planet\b", # r"\1can_live_on_planet", needs planet target
+    r"(\s+)count_armies\b", # (scope split: depending on planet/country)
     (["common\\bombardment_stances", "common\\ship_sizes"], r"^\s+icon_frame\s*=\s*\d+"), # [6-9]  # icon_frame: now only used for starbases. Value of 2 or more means it shows up on the galaxy map, 1-5 denote which icon it uses on starbase sprite sheets (e.g. gfx/interface/icons/starbase_ship_sizes.dds)
 
     # PRE TEST
@@ -50,12 +50,13 @@ removedTargets = [
     r"\s+which\s*=\s*\"?\w+\"?\s+value\s*[<=>]\s*\{\s*scope\s*=", # var from 3.0
     # re.compile(r"\s+which\s*=\s*\"?\w+\"?\s+value\s*[<=>]\s*(prev|from|root|event_target:[^\.\s]+)+\s*\}", re.I), # var from 3.0
 
-
     # < 3.0
-    r"\sproduced_energy",
-    r"\s(ship|army|colony|station)_maintenance",
-    r"\s(construction|trade|federation)_expenses",
+    r"\sproduced_energy\b",
+    r"\s(ship|army|colony|station)_maintenance\b",
+    r"\s(construction|trade|federation)_expenses\b",
     r"\s+has_(population|migration)_control\s*=\s*(yes|no)",
+    r"\s(any|every|random)_planet\b", # split in owner and galaxy scope
+    r"\s(any|every|random)_ship\b", # split in owner and galaxy scope
     # < 2.0
     r"\s+can_support_spaceport\s*=\s*(yes|no)"
 ]
@@ -65,7 +66,7 @@ removedTargets = [
 #     r"job_replicator_add = \d":["if = {limit = {has_authority = auth_machine_intelligence} job_replicator_add = ", "} if = {limit = {has_country_flag = synthetic_empire} job_roboticist_add = ","}"]
 # }
 
-## > 3.0.* (only one-liner)
+### > 3.0.* (only one-liner)
 targets3 = {
     r"\tsurveyed\s*=\s*\{": r"\tset_surveyed = {",
     r"(\s+)set_surveyed\s*=\s*(yes|no)": r"\1surveyed = \2",
@@ -248,9 +249,13 @@ targets4 = {
 }
 
 if code_cosmetic:
-    targets3[r"([\s\.]+(PREV|FROM|ROOT|THIS)+)"] = lambda p: p.group(1).lower() # r"([\s\.]+(PREV|FROM|ROOT|THIS)+)": lambda p: p.group(1).lower(), 
-    targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
+    targets3[r"([\s\.]+(PREV|FROM|ROOT|THIS)+)"] = lambda p: p.group(1).lower() # r"([\s\.]+(PREV|FROM|ROOT|THIS)+)": lambda p: p.group(1).lower(),  ## targets3[re.compile(r"([\s\.]+(PREV|FROM|ROOT|THIS)+)", re.I)] = lambda p: p.group(1).lower()
+    targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs 
+    targets3[r"# {2,3}(\w)"] = lambda p: "# "+p.group(1).upper() # format comment
     targets3[r"#([^\s#])"] = r"# \1" # r"#([^\s#])": r"# \1", # format comment
+    targets3[r"# +([A-Z][^\n={}\[\]# ]+? [\w,\.;\'\/\\+\- ]+? \w+ \w+ \w+)$"] = r"# \1." # set comment punctuation mark
+    ## targets3[r"# *([A-Z][\w ={}]+?)\.$"] = r"# \1" # remove comment punctuation mark
+    targets3[r"# +(\w)([^\n#]+[\.!?])$"] = lambda p: "# " + p.group(1).upper() + p.group(2) # format comment
     targets4[r"\s*\n{2,}"] = "\n\n" # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
 
 
@@ -365,7 +370,7 @@ def modfix(file_list):
                                 line = re.sub(pattern, repl, line, flags=0) # , flags=re.I
                                 # line = line.replace(t, r)
                                 changed = True
-                                print("\tUpdated file: %s at line %i with %s" % (basename, i, line.strip()))
+                                print("\tUpdated file: %s at line %i with %s" % (basename, i, line.strip().encode()))
                     out += line
 
                 for pattern, repl in targets4.items():
