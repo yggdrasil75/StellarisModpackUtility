@@ -1,5 +1,5 @@
 # @author FirePrince
-# @revision 2021/11/02
+# @revision 2021/11/14
 # @Thanks to OldEnt for his detailed rundowns.
 
 # ============== Import libs ===============
@@ -14,7 +14,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 
 # ============== Initialize global variables ===============
-code_cosmetic = True # optional
+code_cosmetic = False # optional
 # mod_path = os.path.dirname(os.getcwd())
 mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
 
@@ -98,7 +98,7 @@ targets3 = {
     r"(\s+has_(?:population|migration)_control)\s*=\s*(yes|no)": r"\1 = { value = \2 country = prev.owner }", # NOT SURE
 
     ## Since Megacorp: change_species_characteristics was false documented until 3.2
-    r"[\s#]+(pops_can_be_colonizers|pops_can_migrate|pops_can_reproduce|pops_can_join_factions|can_generate_leaders|pops_can_be_slaves|pops_have_happiness|pops_auto_growth|pop_maintenance)\s*=\s*(yes|no)\s*": "",
+    r"[\s#]+(pops_can_(be_colonizers|migrate|reproduce|join_factions|be_slaves)|can_generate_leaders|pops_have_happiness|pops_auto_growth|pop_maintenance)\s*=\s*(yes|no)\s*": "",
 ### somewhat older
     r"(\s+)ship_upkeep_mult\s*=": r"\1ships_upkeep_mult =",     
     r"(\s+)add_(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro)\s*=\s*(\d+|@\w+)": r"\1add_resource = { \2 = \3 }",
