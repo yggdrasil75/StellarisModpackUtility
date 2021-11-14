@@ -97,7 +97,9 @@ targets3 = {
     r"(\s+)any_system_planet\s*=\s*\{\s*is_capital\s*=\s*(yes|no)\s*\}": r"\1is_capital_system = \2",
     r"(\s+has_(?:population|migration)_control)\s*=\s*(yes|no)": r"\1 = { value = \2 country = prev.owner }", # NOT SURE
 
-    ## somewhat older
+    ## Since Megacorp: change_species_characteristics was false documented until 3.2
+    r"[\s#]+(pops_can_be_colonizers|pops_can_migrate|pops_can_reproduce|pops_can_join_factions|can_generate_leaders|pops_can_be_slaves|pops_have_happiness|pops_auto_growth|pop_maintenance)\s*=\s*(yes|no)\s*": "",
+### somewhat older
     r"(\s+)ship_upkeep_mult\s*=": r"\1ships_upkeep_mult =",     
     r"(\s+)add_(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro)\s*=\s*(\d+|@\w+)": r"\1add_resource = { \2 = \3 }",
 ### > 3.1.* beta
@@ -237,6 +239,8 @@ targets4 = {
     r"NO[RT]\s*=\s*\{\s*has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*\}": "is_homicidal = no",
     r"(?:OR\s*=\s*\{\s*)?has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*\}?": [r"(OR\s*=\s*\{\s*)?has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_valid_civic\s*=\s*\"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?(?(1)\s*\})", "is_homicidal = yes"],
     r"NOT\s*=\s*\{\s*check_variable\s*=\s*\{\s*which\s*=\s*\"?\w+\"?\s+value\s*=\s*[^{}#\s=]\s*\}\s*\}": [r"NOT\s*=\s*\{\s*(check_variable\s*=\s*\{\s*which\s*=\s*\"?\w+\"?\s+value)\s*=\s*([^{}#\s=])\s*\}\s*\}", r"\1 != \2 }"],
+    # r"change_species_characteristics\s*=\s*\{\s*?[^{}\n]*?
+    r"[\s#]+new_pop_resource_requirement\s*=\s*\{[^{}]+\}\s*": [r"([\s#]+new_pop_resource_requirement\s*=\s*\{[^{}]+\}[ \t]*)", ""],
 
     # >3.1
     #but not used for starbases
@@ -251,11 +255,11 @@ targets4 = {
 if code_cosmetic:
     targets3[r"([\s\.]+(PREV|FROM|ROOT|THIS)+)"] = lambda p: p.group(1).lower() # r"([\s\.]+(PREV|FROM|ROOT|THIS)+)": lambda p: p.group(1).lower(),  ## targets3[re.compile(r"([\s\.]+(PREV|FROM|ROOT|THIS)+)", re.I)] = lambda p: p.group(1).lower()
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs 
-    targets3[r"# {2,3}(\w)"] = lambda p: "# "+p.group(1).upper() # format comment
-    targets3[r"#([^\s#])"] = r"# \1" # r"#([^\s#])": r"# \1", # format comment
+    targets3[r"# {2,3}([a-z])(\w+ +[^=])"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
+    targets3[r"#([^\-\s#])"] = r"# \1" # r"#([^\s#])": r"# \1", # format comment
     targets3[r"# +([A-Z][^\n={}\[\]# ]+? [\w,\.;\'\/\\+\- ]+? \w+ \w+ \w+)$"] = r"# \1." # set comment punctuation mark
     ## targets3[r"# *([A-Z][\w ={}]+?)\.$"] = r"# \1" # remove comment punctuation mark
-    targets3[r"# +(\w)([^\n#]+[\.!?])$"] = lambda p: "# " + p.group(1).upper() + p.group(2) # format comment
+    targets3[r"# +([a-z])(\w+ +[^;:\s#=]+[\.!?])$"] = lambda p: "# " + p.group(1).upper() + p.group(2) # format comment
     targets4[r"\s*\n{2,}"] = "\n\n" # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
 
 
