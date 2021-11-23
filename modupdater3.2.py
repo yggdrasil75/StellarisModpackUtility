@@ -1,4 +1,5 @@
 # @author FirePrince
+# @version: 3.2.2
 # @revision 2021/11/23
 # @Thanks to OldEnt for his detailed rundowns.
 
@@ -18,7 +19,7 @@ code_cosmetic = False # True/False optional
 # mod_path = os.path.dirname(os.getcwd())
 mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
 
-mod_outpath = ""
+mod_outpath = ''
 
 # if not sys.version_info.major == 3 and sys.version_info.minor >= 6:
 #     print("Python 3.6 or higher is required.")
@@ -107,11 +108,10 @@ targets3 = {
     ## Since Megacorp removed: change_species_characteristics was false documented until 3.2
     r"[\s#]+(pops_can_(be_colonizers|migrate|reproduce|join_factions|be_slaves)|can_generate_leaders|pops_have_happiness|pops_auto_growth|pop_maintenance)\s*=\s*(yes|no)\s*": "",
 ### somewhat older
-    r"(\s+)ship_upkeep_mult\s*=": r"\1ships_upkeep_mult =",     
+    r"(\s+)ship_upkeep_mult\s*=": r"\1ships_upkeep_mult =",
     r"(\s+)add_(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro)\s*=\s*(\d+|@\w+)": r"\1add_resource = { \2 = \3 }",
 ### > 3.1.* beta
     r"(\s+set_)(primitive)\s*=\s*yes": r"\1country_type = \2",
-
     # r"(\s+)count_armies": r"\1count_owned_army", # count_planet_army (scope split: depending on planet/country)
     # r"(\s+)(icon_frame\s*=\s*[0-5])": "", # remove
     r"text_icon\s*=\s*military_size_space_creature": ("common\\ship_sizes", "icon = ship_size_space_monster"),
@@ -122,88 +122,88 @@ targets3 = {
     r"^\s+robotic\s*=\s*(yes|no)[ \t]*\n": ("common\\species_classes", ""),
     r"^(\s+icon)_frame\s*=\s*([1-9][0-4]?)": ("common\\armies", lambda p:
         p.group(1)+" = GFX_army_type_"+{
-        "1": "defensive",
-        "2": "assault",
-        "3": "rebel",
-        "4": "robot",
-        "5": "primitive",
-        "6": "gene_warrior",
-        "7": "clone",
-        "8": "xenomorph",
-        "9": "psionic",
-        "10": "slave",
-        "11": "machine_assault",
-        "12": "machine_defensive",
-        "13": "undead",
-        "14": "imperial"
+            "1": "defensive",
+            "2": "assault",
+            "3": "rebel",
+            "4": "robot",
+            "5": "primitive",
+            "6": "gene_warrior",
+            "7": "clone",
+            "8": "xenomorph",
+            "9": "psionic",
+            "10": "slave",
+            "11": "machine_assault",
+            "12": "machine_defensive",
+            "13": "undead",
+            "14": "imperial"
         }[p.group(2)]),
    r"^(\s+icon)_frame\s*=\s*(\d+)": ("common\\planet_classes", lambda p:
-        p.group(1)+" = GFX_planet_type_"+{ 
-        "1": "desert",
-        "2": "arid",
-        "3": "tundra",
-        "4": "continental",
-        "5": "tropical",
-        "6": "ocean",
-        "7": "arctic",
-        "8": "gaia",
-        "9": "barren_cold",
-        "10": "barren",
-        "11": "toxic",
-        "12": "molten",
-        "13": "frozen",
-        "14": "gas_giant",
-        "15": "machine",
-        "16": "hive",
-        "17": "nuked",
-        "18": "asteroid",
-        "19": "alpine",
-        "20": "savannah",
-        "21": "ringworld",
-        "22": "habitat",
-        "23": "shrouded",
-        "25": "city",
-        "26": "m_star",
-        "27": "f_g_star",
-        "28": "k_star",
-        "29": "a_b_star",
-        "30": "pulsar",
-        "31": "neutron_star",
-        "32": "black_hole"
+        p.group(1)+" = GFX_planet_type_"+{
+            "1": "desert",
+            "2": "arid",
+            "3": "tundra",
+            "4": "continental",
+            "5": "tropical",
+            "6": "ocean",
+            "7": "arctic",
+            "8": "gaia",
+            "9": "barren_cold",
+            "10": "barren",
+            "11": "toxic",
+            "12": "molten",
+            "13": "frozen",
+            "14": "gas_giant",
+            "15": "machine",
+            "16": "hive",
+            "17": "nuked",
+            "18": "asteroid",
+            "19": "alpine",
+            "20": "savannah",
+            "21": "ringworld",
+            "22": "habitat",
+            "23": "shrouded",
+            "25": "city",
+            "26": "m_star",
+            "27": "f_g_star",
+            "28": "k_star",
+            "29": "a_b_star",
+            "30": "pulsar",
+            "31": "neutron_star",
+            "32": "black_hole"
         }[p.group(2)]),
    r"^(\s+icon)\s*=\s*(\d+)": ("common\\colony_types", lambda p:
-        p.group(1)+" = GFX_colony_type_"+{ 
-        "1": "urban", 
-        "2": "mine", 
-        "3": "farm", 
-        "4": "generator", 
-        "5": "foundry", 
-        "6": "factory", 
-        "7": "refinery", 
-        "8": "research", 
-        "9": "fortress", 
-        "10": "capital", 
-        "11": "normal_colony", 
-        "12": "habitat", 
-        "13": "rural", 
-        "14": "resort", 
-        "15": "penal", 
-        "16": "primitive", 
-        "17": "dying", 
-        "18": "workers", 
-        "19": "habitat_energy", 
-        "20": "habitat_leisure", 
-        "21": "habitat_trade", 
-        "22": "habitat_research", 
-        "23": "habitat_mining", 
-        "24": "habitat_fortress", 
-        "25": "habitat_foundry", 
-        "26": "habitat_factory", 
-        "27": "habitat_refinery", 
-        "28": "bureaucratic", 
-        "29": "picker", 
-        "30": "fringe", 
-        "31": "industrial"
+        p.group(1)+" = GFX_colony_type_"+{
+            "1": "urban",
+            "2": "mine",
+            "3": "farm",
+            "4": "generator",
+            "5": "foundry",
+            "6": "factory",
+            "7": "refinery",
+            "8": "research",
+            "9": "fortress",
+            "10": "capital",
+            "11": "normal_colony",
+            "12": "habitat",
+            "13": "rural",
+            "14": "resort",
+            "15": "penal",
+            "16": "primitive",
+            "17": "dying",
+            "18": "workers",
+            "19": "habitat_energy",
+            "20": "habitat_leisure",
+            "21": "habitat_trade",
+            "22": "habitat_research",
+            "23": "habitat_mining",
+            "24": "habitat_fortress",
+            "25": "habitat_foundry",
+            "26": "habitat_factory",
+            "27": "habitat_refinery",
+            "28": "bureaucratic",
+            "29": "picker",
+            "30": "fringe",
+            "31": "industrial"
         }[p.group(2)]),
     r"(\s+modifier)\s*=\s*\{\s*mult": r"\1 = { factor",
     # r"(\s+)pop_can_live_on_planet": r"\1can_live_on_planet", needs planet target
@@ -211,7 +211,6 @@ targets3 = {
     r"\bhas_non_swapped_tradition": "has_active_tradition",
     r"\bhas_swapped_tradition":     "has_active_tradition",
     r"\bis_for_colonizeable":       "is_for_colonizable",
-    r"\bcolonizeable_planet":       "colonizable_planet",
     r"\bcolonizeable_planet":       "colonizable_planet",
     ### 3.2
     # r"\bis_planet_class\s*=\s*pc_ringworld_habitable": "is_ringworld = yes",
@@ -232,9 +231,9 @@ targets4 = {
     ### Boolean operator merge
     # NAND <=> OR = { NOT
     r"\s+OR\s*=\s*\{(?:\s*NOT\s*=\s*\{[^{}#]*?\})+\s*\}[ \t]*\n": [r"^(\s+)OR\s*=\s*\{\s*?\n(?:(\s+)NOT\s*=\s*\{\s*)?([^{}#]*?)\s*\}(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?", r"\1NAND = {\n\2\3\4\5\6\7\8\9\10\11\12\13\14\15"], # up to 7 items (sub-trigger)
-    # NOR <=> AND = { NOT 
+    # NOR <=> AND = { NOT
     r"\s+AND\s*=\s*\{\s+(?:\s+NOT\s*=\s*\{\s*(?:[^{}#]+|\w+\s*=\s*{[^{}#]+\s*\})\s*\}){2,}\s*\}": [r"^(\s+)AND\s*=\s*\{\s*?\n(?:(\s+)NOT\s*=\s*\{\s*([^{}#]+|\w+\s*=\s*\{[^{}#]+\s*\})\s*\})(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]+|\w+\s*=\s*\{[^{}#]+\s*\})\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]+|\w+\s*=\s*\{[^{}#]+\s*\})\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]+|\w+\s*=\s*\{[^{}#]+\s*\})\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]+|\w+\s*=\s*\{[^{}#]+\s*\})\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]+|\w+\s*=\s*\{[^{}#]+\s*\})\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]+|\w+\s*=\s*\{[^{}#]+\s*\})\s*\})?", r"\1NOR = {\n\2\3\4\5\6\7\8\9\10\11\12\13\14\15"], # up to 7 items (sub-trigger)
-    # NOR <=> (AND) = { NOT 
+    # NOR <=> (AND) = { NOT
     r"(?<![ \t]OR)\s+=\s*\{\s+(?:[^{}#\n]+\n)*(?:\s+NO[RT]\s*=\s*\{\s*[^{}#]+?\s*\}){2,}": [r"(\t*)NO[RT]\s*=\s*\{\s*([^{}#]+?)\s*\}\s*NO[RT]\s*=\s*\{\s*([^{}#]+?)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"], # only 2 items (sub-trigger) (?<!\sOR) Negative Lookbehind
     # NAND <=> NOT = { AND
     r"\s+NO[RT]\s*=\s*\{\s*AND\s*=\s*\{[^{}#]*?\}\s*\}": [r"(\t*)NO[RT]\s*=\s*\{\s*AND\s*=\s*\{[ \t]*\n(?:\t([^{}#\n]+\n))?(?:\t([^{}#\n]+\n))?(?:\t([^{}#\n]+\n))?(?:\t([^{}#\n]+\n))?\s*\}[ \t]*\n", r"\1NAND = {\n\2\3\4\5"], # only 4 items (sub-trigger)
@@ -269,7 +268,7 @@ targets4 = {
 
 if code_cosmetic:
     targets3[r"([\s\.]+(PREV|FROM|ROOT|THIS)+)"] = lambda p: p.group(1).lower() # r"([\s\.]+(PREV|FROM|ROOT|THIS)+)": lambda p: p.group(1).lower(),  ## targets3[re.compile(r"([\s\.]+(PREV|FROM|ROOT|THIS)+)", re.I)] = lambda p: p.group(1).lower()
-    targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs 
+    targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
     targets3[r"#([^\-\s#])"] = r"# \1" # r"#([^\s#])": r"# \1", # format comment
     targets3[r"# +([A-Z][^\n=<>{}\[\]# ]+? [\w,\.;\'\/\\+\- ]+? \w+ \w+ \w+)$"] = r"# \1." # set comment punctuation mark
