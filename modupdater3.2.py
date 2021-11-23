@@ -215,8 +215,10 @@ targets3 = {
     r"\bcolonizeable_planet":       "colonizable_planet",
     ### 3.2
     # r"\bis_planet_class\s*=\s*pc_ringworld_habitable": "is_ringworld = yes",
+    r"\s+free_guarantee_days\s*=\s*\d+":  "",
     r"\badd_tech_progress_effect":  "add_tech_progress",
-    r"\bgive_scaled_tech_bonus_effect": "add_monthly_resource_mult"
+    r"\bgive_scaled_tech_bonus_effect": "add_monthly_resource_mult",
+    r"\bclear_uncharted_space\s*=\s*\{\s*from\s*=\s*([^\n{}# ])\s*\}": r"clear_uncharted_space = \1"
 }
 
 
