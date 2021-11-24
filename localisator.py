@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ###    @author FirePrince
-###    @revision 2021/11/23
+###    @revision 2021/11/24
 ###    USAGE: You need install https://pyyaml.org/wiki/PyYAMLDocumentation for Python3.x
 ###    ATTENTION: You must customize the vars localModPath and local_OVERHAUL
 ###    TODO: Renaming (already translated) keys is not working
+###    TODO: Cache loadVanillaLoc
 
 #============== Import libs ===============
 import os
@@ -28,12 +29,11 @@ except: print("Not running Windows")
 
 #============== Initialise global variables ===============
 # Write here your mod folder name and languages to replace/update
-defaultLang = 'english'
 localModPath = ["distant_stars_overhaul", ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
 
 loadVanillaLoc = False # BETA: replaces exact matching strings with vanilla ones
 # loadDependingMods = False # replaces exact matching strings with ones from the depending mod(s)
-
+defaultLang = 'english'
 ymlfiles = '*.yml' # you can also use single names
 # ymlfiles = 'CrisisManagerMenu_l_english.yml'
 
@@ -158,8 +158,8 @@ if loadVanillaLoc and len(local_OVERHAUL) > 0:
 # ymlfiles = '*.yml'
 
 # def abort(message):
-# 	mBox('abort', message, 0)
-# 	sys.exit(1)
+#   mBox('abort', message, 0)
+#   sys.exit(1)
 
 
 def mBox(mtype, text):
@@ -191,17 +191,10 @@ settingsPath = [
 settingsPath = [s for s in settingsPath if os.path.isfile(
     os.path.join(s, mods_registry))]
 
-no_subfolder = False
-if os.path.exists(defaultLang):
-    ymlfiles = glob.iglob(os.path.join(defaultLang, ymlfiles), recursive=False)
-else:
-    ymlfiles = glob.iglob('*l_'+defaultLang+'.yml', recursive=False)
-    no_subfolder = True
-
 # for s in settingsPath:
-# 	if os.path.isfile(os.path.join(s, mods_registry)):
-# 		settingsPath[0] = s
-# 		break
+#   if os.path.isfile(os.path.join(s, mods_registry)):
+#       settingsPath[0] = s
+#       break
 print(settingsPath)
 
 if len(settingsPath) > 0:
@@ -220,6 +213,13 @@ os.chdir(localModPath)
 regRev1 = re.compile(r'^ +\"([^:"\s]+)\": ', re.MULTILINE) # remove quote marks from keys
 regRev2 = re.compile(r'(?:\'|([^:"]{2}))\'?$', re.MULTILINE)
 
+no_subfolder = False
+if os.path.exists(defaultLang):
+    print("default language exists:", defaultLang)
+    ymlfiles = glob.iglob(os.path.join(defaultLang, ymlfiles), recursive=False)
+else:
+    ymlfiles = glob.iglob('*l_'+defaultLang+'.yml', recursive=False)
+    no_subfolder = True
 
 def trReverse(s):
     "Paradox workaround"
@@ -293,10 +293,10 @@ for filename in ymlfiles:
     # print(streamEn)
     dictionary = {}
     # try:
-    # 	print(type(dictionary),dictionary)
-    # 	# print(dictionary["ï»¿l_english"])
+    #   print(type(dictionary),dictionary)
+    #   # print(dictionary["ï»¿l_english"])
     # except yaml.YAMLError as exc:
-    # 	print(exc)
+    #   print(exc)
     # doc = yaml.load_all(stream, Loader=yaml.FullLoader)
     # doc = yaml.dump(dictionary) # ["\u00ef\u00bb\u00bfl_english"]
     # doc = json.dumps(dictionary) # ["\u00ef\u00bb\u00bfl_english"]
@@ -334,7 +334,7 @@ for filename in ymlfiles:
             elif lang == "braz_por" and "spanish" not in local_OVERHAUL:
                 stream = streamEn.replace(b'l_spanish', bytes('l_'+lang, "utf-8"))
             else:
-                stream = streamEn.replace(b'l_'+defaultLang, bytes('l_'+lang, "utf-8"))
+                stream = streamEn.replace(bytes('l_'+defaultLang, "utf-8"), bytes('l_'+lang, "utf-8"))
             # copy file with new header
             writeStream(lang, stream, filename)
             continue
