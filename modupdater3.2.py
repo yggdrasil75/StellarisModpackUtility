@@ -36,18 +36,18 @@ removedTargets = [
     # This are only warnings, commands which cannot be easily replaced
 
     # 3.2
-    r"\bslot\s*=\s*0", # \sset_starbase_module\s*=\s*\{ now starts with 1
+    r"\sslot\s*=\s*0", # \sset_starbase_module\s*=\s*\{ now starts with 1
     r"[^# \t]\s+is_planet_class\s*=\s*pc_ringworld_habitable", # possible should be replaced with "is_ringworld = yes",
     # r"\sadd_tech_progress_effect\s*=\s*", # replaced with add_tech_progress
     # r"\sgive_scaled_tech_bonus_effect\s*=\s*", # replaced with add_monthly_resource_mult
-    ("common\\districts", r"\bdistricts_build_district\b"), # scripted trigger
-    ("common\\pop_jobs", r"\b(drone|worker|specialist|ruler)_job_check_trigger\b"), # scripted trigger
+    ("common\\districts", r"\sdistricts_build_district\b"), # scripted trigger
+    ("common\\pop_jobs", r"\s(drone|worker|specialist|ruler)_job_check_trigger\b"), # scripted trigger
 
     # 3.1
-    r"\b(any|every|random)_(research|mining)_station\b", # = 2 trigger & 4 effects
-    r"\bobservation_outpost\s*=\s*\{\s*limit",
-    r"\bpop_can_live_on_planet\b", # r"\1can_live_on_planet", needs planet target
-    r"\bcount_armies\b", # (scope split: depending on planet/country)
+    r"\s(any|every|random)_(research|mining)_station\b", # = 2 trigger & 4 effects
+    r"\sobservation_outpost\s*=\s*\{\s*limit",
+    r"\spop_can_live_on_planet\b", # r"\1can_live_on_planet", needs planet target
+    r"\scount_armies\b", # (scope split: depending on planet/country)
     (["common\\bombardment_stances", "common\\ship_sizes"], r"^\s+icon_frame\s*=\s*\d+"), # [6-9]  # icon_frame: now only used for starbases. Value of 2 or more means it shows up on the galaxy map, 1-5 denote which icon it uses on starbase sprite sheets (e.g. gfx/interface/icons/starbase_ship_sizes.dds)
 
     # PRE TEST
@@ -57,18 +57,18 @@ removedTargets = [
     # r"\s+count_diplo_ties",
     # r"\s+has_non_swapped_tradition",
     # r"\s+has_swapped_tradition",
-    r"\bwhich\s*=\s*\"?\w+\"?\s+value\s*[<=>]\s*\{\s*scope\s*=", # var from 3.0
+    r"\swhich\s*=\s*\"?\w+\"?\s+value\s*[<=>]\s*\{\s*scope\s*=", # var from 3.0
     # re.compile(r"\s+which\s*=\s*\"?\w+\"?\s+value\s*[<=>]\s*(prev|from|root|event_target:[^\.\s]+)+\s*\}", re.I), # var from 3.0
 
     # < 3.0
-    r"\bproduced_energy\b",
-    r"\b(ship|army|colony|station)_maintenance\b",
-    r"\b(construction|trade|federation)_expenses\b",
-    r"\bhas_(population|migration)_control\s*=\s*(yes|no)",
-    r"\b(any|every|random)_planet\b", # split in owner and galaxy and system scope
-    r"\b(any|every|random)_ship\b", # split in owner and galaxy and system scope
+    r"\sproduced_energy\b",
+    r"\s(ship|army|colony|station)_maintenance\b",
+    r"\s(construction|trade|federation)_expenses\b",
+    r"\shas_(population|migration)_control\s*=\s*(yes|no)",
+    r"\s(any|every|random)_planet\b", # split in owner and galaxy and system scope
+    r"\s(any|every|random)_ship\b", # split in owner and galaxy and system scope
     # < 2.0
-    r"\bcan_support_spaceport\s*=\s*(yes|no)"
+    r"\scan_support_spaceport\s*=\s*(yes|no)"
 ]
 
 # targets2 = {
@@ -246,7 +246,7 @@ targets4 = {
     r"\s(?:every|random|count)_country\s*=\s*\{[^{}#]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default|has_special_project)": [r"(\s(?:every|random|count))_country\s*=\s*(\{[^{}#]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default|has_special_project))", r"\1_playable_country = \2"],
     r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*[\w\._:]+\s*\}\s*\}": [r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w\._:]+)\s*\}\s*\}", r"{ is_owned_by = \1 }"],
     r"NO[RT]\s*=\s*\{\s*is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s*\}": "is_fallen_empire = no",
-    r"(?:OR\s*=\s*\{)?\s{4,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s+\}?": [r"(OR\s*=\s*\{)?\s{4,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)(\s+)is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)(?(1)\s*\})", "is_fallen_empire = yes"],
+    r"(?:OR\s*=\s*\{)?\s{4,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s+\}?": [r"(OR\s*=\s*\{)?\s{4,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)(\s+)is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)(?(1)\s*\})", r"\2is_fallen_empire = yes"],
     r"NO[RT]\s*=\s*\{\s*is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = no",
     r"OR\s*=\s*\{\s*is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = yes",
     r"NO[RT]\s*=\s*\{\s*(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+\}": "is_synthetic_empire = no",
