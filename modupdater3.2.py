@@ -1,6 +1,6 @@
 # @author FirePrince
 # @version: 3.2.2
-# @revision 2021/11/23
+# @revision 2021/11/24
 # @Thanks to OldEnt for his detailed rundowns.
 
 # ============== Import libs ===============
@@ -36,16 +36,18 @@ removedTargets = [
     # This are only warnings, commands which cannot be easily replaced
 
     # 3.2
-    r"\sslot\s*=\s*0", # \sset_starbase_module\s*=\s*\{ now starts with 1
+    r"\bslot\s*=\s*0", # \sset_starbase_module\s*=\s*\{ now starts with 1
     r"[^# \t]\s+is_planet_class\s*=\s*pc_ringworld_habitable", # possible should be replaced with "is_ringworld = yes",
     # r"\sadd_tech_progress_effect\s*=\s*", # replaced with add_tech_progress
     # r"\sgive_scaled_tech_bonus_effect\s*=\s*", # replaced with add_monthly_resource_mult
+    ("common\\districts", r"\bdistricts_build_district\b"), # scripted trigger
+    ("common\\pop_jobs", r"\b(drone|worker|specialist|ruler)_job_check_trigger\b"), # scripted trigger
 
     # 3.1
-    r"\s(any|every|random)_(research|mining)_station\b", # = 2 trigger & 4 effects
-    r"\sobservation_outpost\s*=\s*\{\s*limit",
-    r"\s+pop_can_live_on_planet\b", # r"\1can_live_on_planet", needs planet target
-    r"(\s+)count_armies\b", # (scope split: depending on planet/country)
+    r"\b(any|every|random)_(research|mining)_station\b", # = 2 trigger & 4 effects
+    r"\bobservation_outpost\s*=\s*\{\s*limit",
+    r"\bpop_can_live_on_planet\b", # r"\1can_live_on_planet", needs planet target
+    r"\bcount_armies\b", # (scope split: depending on planet/country)
     (["common\\bombardment_stances", "common\\ship_sizes"], r"^\s+icon_frame\s*=\s*\d+"), # [6-9]  # icon_frame: now only used for starbases. Value of 2 or more means it shows up on the galaxy map, 1-5 denote which icon it uses on starbase sprite sheets (e.g. gfx/interface/icons/starbase_ship_sizes.dds)
 
     # PRE TEST
@@ -55,18 +57,18 @@ removedTargets = [
     # r"\s+count_diplo_ties",
     # r"\s+has_non_swapped_tradition",
     # r"\s+has_swapped_tradition",
-    r"\s+which\s*=\s*\"?\w+\"?\s+value\s*[<=>]\s*\{\s*scope\s*=", # var from 3.0
+    r"\bwhich\s*=\s*\"?\w+\"?\s+value\s*[<=>]\s*\{\s*scope\s*=", # var from 3.0
     # re.compile(r"\s+which\s*=\s*\"?\w+\"?\s+value\s*[<=>]\s*(prev|from|root|event_target:[^\.\s]+)+\s*\}", re.I), # var from 3.0
 
     # < 3.0
-    r"\sproduced_energy\b",
-    r"\s(ship|army|colony|station)_maintenance\b",
-    r"\s(construction|trade|federation)_expenses\b",
-    r"\s+has_(population|migration)_control\s*=\s*(yes|no)",
-    r"\s(any|every|random)_planet\b", # split in owner and galaxy and system scope
-    r"\s(any|every|random)_ship\b", # split in owner and galaxy and system scope
+    r"\bproduced_energy\b",
+    r"\b(ship|army|colony|station)_maintenance\b",
+    r"\b(construction|trade|federation)_expenses\b",
+    r"\bhas_(population|migration)_control\s*=\s*(yes|no)",
+    r"\b(any|every|random)_planet\b", # split in owner and galaxy and system scope
+    r"\b(any|every|random)_ship\b", # split in owner and galaxy and system scope
     # < 2.0
-    r"\s+can_support_spaceport\s*=\s*(yes|no)"
+    r"\bcan_support_spaceport\s*=\s*(yes|no)"
 ]
 
 # targets2 = {
@@ -225,9 +227,9 @@ targets3 = {
 targets4 = {
     # key (pre match without group): arr (search, replace) or str (if no group)
     r"\s+random_system_planet\s*=\s*\{\s*limit\s*=\s*\{\s*is_star\s*=\s*yes\s*\}": [r"(\s+)random_system_planet\s*=\s*\{\s*limit\s*=\s*\{\s*is_star\s*=\s*yes\s*\}", r"\1star = {"],
-    r"\screate_leader\s*=\s*\{[^{}]+?\s+type\s*=\s*\w+": [r"(\screate_leader\s*=\s*\{[^{}]+?\s+)type\s*=\s*(\w+)", r"\1class = \2"],
+    r"\bcreate_leader\s*=\s*\{[^{}]+?\s+type\s*=\s*\w+": [r"(create_leader\s*=\s*\{[^{}]+?\s+)type\s*=\s*(\w+)", r"\1class = \2"],
     r"NO[RT]\s*=\s*\{\s*has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+\}": [r"NO[RT]\s*=\s*\{\s*has_ethic\s*=\s*\"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:\1|\2)|fanatic_(?:\1|\2))\"?\s+\}", r"is_\1\2 = no"],
-    r"(?:\s+OR\s*=\s*\{)?\s*has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*\}?": [r"(\s+OR\s*=\s*\{)?(\n\s*?)(?(1)\t)has_ethic\s*=\s*\"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*?has_ethic\s*=\s*\"?ethic_(?:(?:\2|\3)|fanatic_(?:\2|\3))\"?\s*?(?(1)\})", r"\2is_\3\4 = yes"], # r"\4is_ethics_aligned = { ARG1 = \2\3 }",
+    r"(?:\s+OR\s*=\s*\{)?\s*has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*\}?": [r"(\s+OR\s*=\s*\{)?(\n\s*?)?(?(1)\t)has_ethic\s*=\s*\"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*?has_ethic\s*=\s*\"?ethic_(?:(?:\2|\3)|fanatic_(?:\2|\3))\"?\s*?(?(1)\})", r"\2is_\3\4 = yes"], # r"\4is_ethics_aligned = { ARG1 = \2\3 }",
     ### Boolean operator merge
     # NAND <=> OR = { NOT
     r"\s+OR\s*=\s*\{(?:\s*NOT\s*=\s*\{[^{}#]*?\})+\s*\}[ \t]*\n": [r"^(\s+)OR\s*=\s*\{\s*?\n(?:(\s+)NOT\s*=\s*\{\s*)?([^{}#]*?)\s*\}(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT\s*=\s*\{\s*([^{}#]*?)\s*\})?", r"\1NAND = {\n\2\3\4\5\6\7\8\9\10\11\12\13\14\15"], # up to 7 items (sub-trigger)
@@ -257,12 +259,14 @@ targets4 = {
 
     # >3.1
     #but not used for starbases
-    r"is_space_station\s*=\s*no\s*icon_frame\s*=\s*\d+": [r"(is_space_station\s*=\s*no\s*)icon_frame\s*=\s*([1-9][0-2]?)", ("common\\ship_sizes",
+    r"\bis_space_station\s*=\s*no\s*icon_frame\s*=\s*\d+": [r"(is_space_station\s*=\s*no\s*)icon_frame\s*=\s*([1-9][0-2]?)", ("common\\ship_sizes",
         lambda p: p.group(1)+"icon = ship_size_"+{"1":"military_1","2":"military_1","3":"military_2","4":"military_4","5":"military_8","6":"military_16","7":"military_32","8":"science","9":"constructor","10":"colonizer","11":"transport","12":"space_monster"}[p.group(2)])],
     r"\s+which\s*=\s*\"?\w+\"?\s+value\s*[<=>]+\s*(?:prev|from|root|event_target:[^\.\s])+\s*\}": [r"(\s+which\s*=\s*\"?(\w+)\"?\s+value\s*[<=>]+\s*(prev|from|root|event_target:[^\.\s])+)", r"\1.\2"],
     r"\s+spawn_megastructure\s*=\s*\{[^{}#]+": [r"(\s+)location\s*=\s*([\w\._:]+)", r"\1coords_from = \2"],
+    # >3.2
     r"\bNO[RT]\s*=\s*\{\s*is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s*\}": [r"\bNO[RT]\s*=\s*\{\s*is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s*\}", r"is_artificial = no"],
     r"\bis_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\b": [r"\bis_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\b", r"is_artificial = yes"],
+    r"\n\s+possible\s*=\s*\{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)(?:drone|worker|specialist|ruler)_job_check_trigger\s*=\s*yes\s*": [r"(\s+)(possible\s*=\s*\{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?))(drone|worker|specialist|ruler)_job_check_trigger\s*=\s*yes\s*",("common\\pop_jobs", r"\1possible_precalc = can_fill_\4_job\1\2")], # only with 6 possible prior lines 
 
 }
 
