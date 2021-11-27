@@ -1,6 +1,6 @@
 # @author FirePrince
 # @version: 3.2.2
-# @revision 2021/11/24
+# @revision 2021/11/27
 # @Thanks to OldEnt for his detailed rundowns.
 
 # ============== Import libs ===============
@@ -219,7 +219,10 @@ targets3 = {
     r"\s+free_guarantee_days\s*=\s*\d+":  "",
     r"\badd_tech_progress_effect":  "add_tech_progress",
     r"\bgive_scaled_tech_bonus_effect": "add_monthly_resource_mult",
-    r"\bclear_uncharted_space\s*=\s*\{\s*from\s*=\s*([^\n{}# ])\s*\}": r"clear_uncharted_space = \1"
+    r"\bclear_uncharted_space\s*=\s*\{\s*from\s*=\s*([^\n{}# ])\s*\}": r"clear_uncharted_space = \1",
+    r"\bhomeworld\s*=\s*": ("common\\governments\\civics", r"starting_colony = "),
+    r"^(\t|    )energy\s*=\s*(\d+)": ("common\\terraform", r"\1resources = {\n\1\1category = terraforming\n\1\1cost = { energy = \2 }\n\1}"),
+    
 }
 
 
@@ -275,7 +278,7 @@ if code_cosmetic:
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
     targets3[r"#([^\-\s#])"] = r"# \1" # r"#([^\s#])": r"# \1", # format comment
-    targets3[r"# +([A-Z][^\n=<>{}\[\]# ]+? [\w,\.;\'\/\\+\- ]+? \w+ \w+ \w+)$"] = r"# \1." # set comment punctuation mark
+    targets3[r"# +([A-Z][^\n=<>{}\[\]# ]+? [\w,\.;\'\/\\+\- ()&]+? \w+ \w+ \w+)$"] = r"# \1." # set comment punctuation mark
     targets3[r"# ([a-z])(\w+ +[^;:\s#=<>]+ [^\n]+?[\.!?])$"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
     ## targets3[r"# *([A-Z][\w ={}]+?)\.$"] = r"# \1" # remove comment punctuation mark
     targets4[r"\s*\n{2,}"] = "\n\n" # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
