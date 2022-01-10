@@ -1,5 +1,6 @@
 ###     Made by ShadowTrolll
-# @revision 2021/10/17 + tier number + tech multiline (by FirePrince)
+# @revision 2022/01/10 + Options + scripts merged + fix KeyError (by FirePrince)
+# @revision 2021/10/17 + tier nr + tech multiline (by FirePrince)
 
 #===============  Options  ================
 # switch subbing tech key with localisation on
