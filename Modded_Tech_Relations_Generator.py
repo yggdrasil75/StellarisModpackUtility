@@ -4,7 +4,7 @@
 
 #===============  Options  ================
 # switch subbing tech key with localisation on
-techKeysOnly = True # True
+techKeysOnly = False # True
 # if not techKeysOnly=True display both
 techKeys = True # True
 
