@@ -1,65 +1,98 @@
 ###     Made by ShadowTrolll
-# @revision 2022/01/10 + Options + scripts merged + fix KeyError (by FirePrince)
+# @revision 2022/01/15 + Options + scripts merged + fix KeyError (by FirePrince)
 # @revision 2021/10/17 + tier nr + tech multiline (by FirePrince)
-
-#===============  Options  ================
-# switch subbing tech key with localisation on
-techKeysOnly = False # True
-# if not techKeysOnly=True display both
-techKeys = True # True
 
 #============== Import libs ===============
 import json
 import os
 import re
-try:
-    from winreg import *
-except:
-    print("Not running windows")
+try: from winreg import *
+except: print("Not running windows")
 
 #============== Initialise global variables ===============
-modsDir = ""
-stellarisDir = ""
-selectedEncoding = 'UTF-8'
-forbiddenFileChars = ['<','>',':','"','/','\\','|','?','*']
+#===============  Options  ================
+# switch subbing tech key with localisation on
+techKeysOnly = False # True
+# if not techKeysOnly=True display both
+techKeysToo = True # True
+techTiers = True
+loadVanillaTech = False
 
+modsDir = ''
+stellarisDir = ''
+selectedEncoding = 'UTF-8'
+forbiddenFileChars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
+workshopDir = r'\\steamapps\\workshop\content\\281990'
+steamStellarisDir = r'\\steamapps\\common\\Stellaris'
 
 #============== Load config ===============
-scriptConfig = {}
-with open("config.json", 'r') as file:
-    scriptConfig = json.loads(file.read().replace('\\','/'))
+scriptConfig = {
+    "stellarisPath": stellarisDir,
+    "modsPath": modsDir,
+    "loadVanillaTech": str(loadVanillaTech)
+}
 
-print("Welcome to Stellaris modded tech tree exporter by ShadowTrolll#0811!")
+if os.path.isfile('config.json'):
+    try:
+        with open('config.json', 'r') as file:
+            scriptConfig = json.loads(file.read().replace('\\', '/'))
+    except IOError:
+        print("ERROR_NOT_FOUND config.json, load defaults")
+else: print("config.json not found, load defaults")
+
+print("Welcome to Stellaris modded tech tree exporter by ShadowTrolll!")
 
 #============== Set paths ===============
-if (os.name == 'nt'):
+if os.name == 'nt' and len(modsDir) < 1 or not os.path.isdir(modsDir):
+    modsDir = ''
+    stellarisDir = ''
     try:
-        keyPath = r'SOFTWARE\WOW6432Node\Valve\Steam'
+        keyPath = r'SOFTWARE\\WOW6432Node\\Valve\\Steam'
         key = OpenKey(HKEY_LOCAL_MACHINE, keyPath)
         steamDir = QueryValueEx(key, "InstallPath")[0]
         CloseKey(key)
-        modsDir = steamDir + r'\steamapps\workshop\content\281990'
-        stellarisDir = steamDir + r'\steamapps\common\Stellaris'
-    except:
+        with open(steamDir + '\\steamapps\\libraryfolders.vdf', 'r') as file:
+            file = file.read()
+            file = re.findall(r'\s+\"path\"\s+(.*?)\n', file)
+            if file and isinstance(file, list) and len(file) > 0:
+                # print(file)
+                for md in file:
+                    print(md)
+                    md = md.replace('"', '').replace('\\\\', '\\')
+                    if os.path.isdir(md):
+                        if os.path.isdir(md + steamStellarisDir):
+                            stellarisDir = md + steamStellarisDir # os.path.join(md, steamStellarisDir)
+                            print("Stellaris Dir FOUND IN REGISTRY", stellarisDir)
+                        md += workshopDir
+                        if os.path.isdir(md):
+                            modsDir = md
+                            print("Mod Dir FOUND IN REGISTRY", modsDir)
+                            break
+
+            else:
+                modsDir = steamDir + workshopDir
+                stellarisDir = steamDir + steamStellarisDir
+
+    except IOError:
         modsDir = "ERROR_NOT_FOUND"
         stellarisDir = "ERROR_NOT_FOUND"
 else:
-    modsDir = os.path.expanduser("~/.steam/steam/steamapps/workshop/content/281990")
-    stellarisDir = os.path.expanduser("~/.steam/steam/steamapps/common/Stellaris")
+    modsDir = os.path.expanduser('~\\.steam\\steam' + workshopDir)
+    stellarisDir = os.path.expanduser('~\\.steam\\steam' + steamStellarisDir)
 
-if not scriptConfig["stellarisPath"] == "default":
+if len(scriptConfig["stellarisPath"]) > 0 and scriptConfig["stellarisPath"] != "default":
     stellarisDir = scriptConfig["stellarisPath"]
 
-if not scriptConfig["modsPath"] == "default":
+if len(scriptConfig["modsPath"]) > 0 and scriptConfig["modsPath"] != "default":
     modsDir = scriptConfig["modsPath"]
 
 #============== Make sure paths exist, DOESNT CHECK CONTENT! ===============
 while not os.path.isdir(modsDir):
-    print ("\nFolder does not exist: " + modsDir)
+    print("\nMod folder does not exist: " + modsDir)
     modsDir = input("Mods directory could not be found, please enter the FULL path to your Stellaris workshop directory (the folder that contains a lot of numbers): ").strip()
 
 while not os.path.isdir(os.path.join(stellarisDir, 'localisation', 'english')):
-    print ("\nFolder does not contain necessary files: " + stellarisDir)
+    print("\nStellaris folder does not contain necessary files: " + stellarisDir)
     stellarisDir = input("Stellaris install directory could not be found, please enter the FULL path to it (the folder with stellaris.exe)").strip()
 
 #============== 'Fix' mod specific string quirks ===============
@@ -70,7 +103,7 @@ modFixes = [
     ]
 def fixTechNames(name, techNames):
     tmp_splitParts = name.split('$')
-    name = name.replace('$','')
+    name = name.replace('$', '')
     for fix in modFixes:
         name = name.replace(fix, '')
     for tmp_part in tmp_splitParts:
@@ -80,7 +113,7 @@ def fixTechNames(name, techNames):
 
 #============== Main handling functions ===============
 def loadTechNames(filePath):
-    with open(filePath, 'r', encoding = selectedEncoding, errors = 'replace') as file:
+    with open(filePath, 'r', encoding=selectedEncoding, errors='replace') as file:
         nameDict = {}
         for line in file:
             line = line.lstrip()
@@ -91,28 +124,28 @@ def loadTechNames(filePath):
                 linePart0 = lineParts.pop(0)
                 if linePart0.startswith(" "):
                     linePart0 = linePart0[1:]
-                linePart0 = linePart0.strip().replace("\"", "")
+                linePart0 = linePart0.strip().replace('\"', '')
 
-                linePartsRest = ""
+                linePartsRest = ''
                 linePartsCount = 0
                 for linePart in lineParts:
                     if linePart.startswith("0"):
                         linePart = linePart[1:]
                     if linePart.startswith(" "):
                         linePart = linePart[1:]
-                    linePart = linePart.rstrip().replace("\"", "")
+                    linePart = linePart.rstrip().replace('\"', '')
                     if linePartsCount > 0:
                         linePartsRest += ": "
                     linePartsRest += linePart
-                    linePartsCount+= 1
+                    linePartsCount += 1
 
                 nameDict[linePart0] = linePartsRest
         return nameDict
 
 # techNames = type dict
 def handleTechFile(filePath, techNames):
-    techArray = { "---": [] }
-    with open(filePath, 'r', encoding = selectedEncoding, errors = 'replace') as file:
+    techArray = {"---": []}
+    with open(filePath, 'r', encoding=selectedEncoding, errors='replace') as file:
         lastTech = "---"
         tier = False
         splitLine = []
@@ -120,13 +153,13 @@ def handleTechFile(filePath, techNames):
             #line = line.lstrip() # can't as we scan with indention
             ### add tier nr
             # if line.startswith('tier'):
-            if re.search(r"^\s*tier", line):
+            if techTiers and re.search(r"^\s*tier", line):
                 tier = re.search(r'\btier\s*=\s*"?(\d+)\"?', line)
                 if tier and lastTech in techArray:
                     tier = tier.group(1)
                     try:
                         techArray[lastTech].insert(1, int(tier)) # len([[tech_name]) > 0
-                    except:
+                    except ValueError:
                         print(lastTech + " has no translation")
 
             if re.search(r"^\s*prerequisites", line) or len(splitLine) > 0:
@@ -139,22 +172,22 @@ def handleTechFile(filePath, techNames):
                 if "prerequisites" in splitLine[0]:
                     splitLine.pop(0)
                 for tech_key in splitLine:
-                    if "#" == tech_key:
+                    if tech_key == "#":
                         splitLine = ["#"]
                         continue
                     elif "#" in tech_key:
                         tech_key = tech_key.split('#')[0]
                         splitLine = ["#"]
                     if len(tech_key) > 4:
-                        tech_key = tech_key.replace("\"", "")
-                        # tech_key = re.sub(r"[\" ]*", "", tech_key, re.A)
+                        tech_key = tech_key.replace('\"', '')
+                        # tech_key = re.sub(r"[\" ]*", '', tech_key, re.A)
                         # print("\tafter", tech_key)
                         if tech_key in techNames:
                             if not techKeysOnly:
                                 tech_name = techNames[tech_key]
                                 while '$' in tech_name:
                                     tech_name = fixTechNames(tech_name, techNames)
-                                if techKeys:
+                                if techKeysToo:
                                     tech_name += " (%s)" % tech_key
                             else:
                                 tech_name = tech_key
@@ -164,7 +197,7 @@ def handleTechFile(filePath, techNames):
                 continue
             reprLine = repr(line)
             if not any(s in reprLine for s in (r'\t', '@')) and len(reprLine) > 5 and not line.startswith(" ") and not line.startswith('#'):
-                tech_key = (line.split("="))[0].strip().replace('"','')
+                tech_key = (line.split("="))[0].strip().replace('"', '')
                 if tech_key in techNames:
                     tech_name = techNames[tech_key]
                     while '$' in tech_name:
@@ -177,68 +210,68 @@ def handleTechFile(filePath, techNames):
 
 #============== Seek mods with technology ===============
 techMods = []
-print ("Working in directory: " + modsDir)
+print("Working in directory: " + modsDir)
 for item in os.listdir(modsDir):
     modPath = os.path.join(modsDir, item)
     if os.path.isdir(modPath):
         if os.path.isdir(os.path.join(modPath, 'common', 'technology')):
             techMods.append(item)
 
-print ("\nIndentified mods with technologies:")
-print (techMods)
+print("\nIndentified mods with technologies:")
+print(techMods)
 
 #============== Load localization files ===============
 englishTechNames = {}
 for root, dirs, files in os.walk(os.path.join(stellarisDir, 'localisation', 'english')):
     for name in files:
         if "english" in name:
-            print ("\tLoading localization from file: " + os.path.join(root, name))
+            print("\tLoading localization from file: " + os.path.join(root, name))
             englishTechNames.update(loadTechNames(os.path.join(root, name)))
 
 for mod in techMods:
     for root, dirs, files in os.walk(os.path.join(modsDir, mod, 'localisation')):
-            for name in files:
-                if "english" in name:
-                    print ("\tLoading localization from file: " + os.path.join(root, name))
-                    englishTechNames.update(loadTechNames(os.path.join(root, name)))
+        for name in files:
+            if "english" in name:
+                print("\tLoading localization from file: " + os.path.join(root, name))
+                englishTechNames.update(loadTechNames(os.path.join(root, name)))
 
 #============== Main script ===============
 jsonOut = {}
 
 if scriptConfig["loadVanillaTech"].lower() == "true":
-    print ("Handling vanilla techs")
+    print("Handling vanilla techs")
     jsonOut["Vanilla"] = {}
     for techFile in os.listdir(os.path.join(stellarisDir, 'common', 'technology')):
         if os.path.isfile(os.path.join(stellarisDir, 'common', 'technology', techFile)):
-            print ("\tHandling file: " + techFile)
+            print("\tHandling file: " + techFile)
             jsonOut["Vanilla"][techFile] = handleTechFile(os.path.join(stellarisDir, 'common', 'technology', techFile), englishTechNames)
 
 for mod in techMods:
-    modName = ""
+    modName = ''
     try:
-        with open(os.path.join(modsDir, mod, r'descriptor.mod'), 'r', encoding = selectedEncoding, errors = 'replace') as file:
+        with open(os.path.join(modsDir, mod, r'descriptor.mod'), 'r', encoding=selectedEncoding, errors='replace') as file:
             for line in file:
                 if "name" in line:
-                    modName = line.strip()[6:-1].replace("\"", "") + " [" + mod + "]"
-    except:
+                    modName = line.strip()[6:-1].replace('\"', '') + " [" + mod + "]"
+    except ValueError:
         modName = "NO MOD NAME FOUND" + " [" + mod + "]"
 
-    print (("\nHandling mod: " + modName).encode(errors='replace'))
+    print(("\nHandling mod: " + modName).encode(errors='replace'))
     techFiles = []
     jsonOut[modName] = {}
     modTechPath = os.path.join(modsDir, mod, 'common', 'technology')
     for techFile in os.listdir(modTechPath):
         if os.path.isfile(os.path.join(modTechPath, techFile)):
-            print ("\tHandling file: " + techFile)
+            print("\tHandling file: " + techFile)
             jsonOut[modName][techFile] = handleTechFile(os.path.join(modTechPath, techFile), englishTechNames)
 
 #============== Write output to file and handle script end ===============
-print ("\nWriting tech data to Tech Relations.json")
-jsonFile = open("Tech Relations.json", "w", encoding = selectedEncoding, errors = 'replace')
-jsonString = json.dumps(jsonOut, indent = 4)
+print("\nWriting tech data to Tech Relations.json")
+jsonFile = open("Tech Relations.json", "w", encoding=selectedEncoding, errors='replace')
+jsonString = json.dumps(jsonOut, indent=4)
 jsonFile.write(jsonString)
 jsonFile.close()
-print ("Done! The file can be found under " + os.getcwd())
+print("Done! The file can be found under " + os.getcwd())
 
 # if os.path.isfile(os.path.join(os.getcwd(), "2_Export_relations_into_Trees.py")):
 #     input("Press enter to continue to the second script or close this window to exit...\nPS: If you want to support me, you can do as at  https://www.buymeacoffee.com/ShadowTrolll")
@@ -250,19 +283,19 @@ hasVanillaTech = False
 vanillaContent = {}
 vanillaTechs = []
 vanillaTechsWithPrereq = {}
-exportStringGL = ""
+exportStringGL = ''
 modTechs = []
 modTechsWithPrereq = {}
-forbiddenFileChars = ['<','>',':','"','/','\\','|','?','*']
+forbiddenFileChars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
 
 class stellarisTech:
     def __init__(self, techName, prereq):
         self.techName = str(techName) # str
         self.prereq = prereq # array
 
-    def exportPrereq(self, level = 0):
+    def exportPrereq(self,level=0):
         global exportStringGL
-        levelIndent = ""
+        levelIndent = ''
         for x in range(level):
             levelIndent += "\t"
         exportStringGL += (levelIndent + self.techName + "\n")
@@ -291,9 +324,9 @@ def export_relations_into_trees(jsonContent):
     global hasVanillaTech
     if not jsonContent:
         jsonContent = {}
-        with open('Tech Relations.json', 'r', encoding = 'UTF-8') as file:
+        with open('Tech Relations.json', 'r', encoding='UTF-8') as file:
             jsonContent = json.loads(file.read())
-    print(type(jsonContent))
+    # print(type(jsonContent)) dict
 
     if "Vanilla" in jsonContent:
         hasVanillaTech = True
@@ -304,7 +337,7 @@ def export_relations_into_trees(jsonContent):
         os.mkdir('Tech Trees by mod')
 
     if hasVanillaTech:
-        print ("\nProcessing vanilla techs ")
+        print("\nProcessing vanilla techs ")
         for file in vanillaContent:
             print("\tProcessing file: " + file)
             for technology in vanillaContent[file]:
@@ -315,36 +348,38 @@ def export_relations_into_trees(jsonContent):
                 vanillaTechs.append(stellarisTech(technology, vanillaContent[file][technology]))
 
     for mod in jsonContent:
-        print (("\nProcessing mod: " + mod).encode(errors='replace'))
+        print(("\nProcessing mod: " + mod).encode(errors='replace'))
         modTechs = []
         for file in jsonContent[mod]:
             print("\tProcessing file: " + file)
             for tech_key in jsonContent[mod][file]:
                 techArr = jsonContent[mod][file][tech_key]
                 print("\t\tProcessing technology: " + tech_key)
-                if len(techArr) > 1:
+                if len(techArr) > 0:
                     tech_name = techArr.pop(0)
-                    tier = techArr.pop(0)
-                    if type(tier) == int:
-                        tech_name += " (%i)" % (tier) # " (" + str(tier) + ")"
-                    if techKeysOnly:
-                        tech_name = tech_key
-                    elif techKeys and type(tech_name) == str:
-                        tech_name += " (%s)" % tech_key
+                    if isinstance(tech_name, str) and len(tech_name) > 3:
+                        if techTiers and len(techArr) > 0 and isinstance(techArr[0], int):
+                            tier = techArr.pop(0)
+                            if isinstance(tier, int):
+                                tech_name += " (%i)" % tier # " (" + str(tier) + ")"
+                        if techKeysOnly:
+                            tech_name = tech_key
+                        elif techKeysToo and isinstance(tech_name, str):
+                            tech_name += " (%s)" % tech_key
 
-                    if len(techArr) > 0:
-                        print("\t\t\tTechnology %s has prerequirements:" % (tech_name))
-                        modTechsWithPrereq[tech_name] = techArr
-                    modTechs.append(stellarisTech(tech_name, techArr))
+                        if len(techArr) > 0:
+                            print("\t\t\tTechnology %s has prerequirements:" % (tech_name))
+                            modTechsWithPrereq[tech_name] = techArr
+                        modTechs.append(stellarisTech(tech_name, techArr))
 
-        exportStringGL = ""
+        exportStringGL = ''
         for tech in modTechs:
             tech.exportPrereq()
             exportStringGL += "\n"
         validModName = mod.replace(":", " - ")
         for char in forbiddenFileChars:
             validModName = validModName.replace(char, '')
-        with open(os.path.join('Tech Trees by mod', (validModName + "_TREE_EXPORT.txt")), 'w', encoding = 'UTF-8') as file:
+        with open(os.path.join('Tech Trees by mod', (validModName + "_TREE_EXPORT.txt")), 'w', encoding='UTF-8') as file:
             file.write(exportStringGL)
 
     print('Done! Tech Trees can be found in the folder "Tech Trees by mod" under ' + os.getcwd())
