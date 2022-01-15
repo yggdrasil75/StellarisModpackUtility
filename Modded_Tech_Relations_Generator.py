@@ -14,12 +14,12 @@ except: print("Not running windows")
 # switch subbing tech key with localisation on
 techKeysOnly = False # True
 # if not techKeysOnly=True display both
-techKeysToo = True # True
+techKeysToo = True # False
 techTiers = True
 loadVanillaTech = False
 
-modsDir = ''
-stellarisDir = ''
+modsPath = ''
+stellarisPath = ''
 selectedEncoding = 'UTF-8'
 forbiddenFileChars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
 workshopDir = r'\\steamapps\\workshop\content\\281990'
@@ -27,9 +27,12 @@ steamStellarisDir = r'\\steamapps\\common\\Stellaris'
 
 #============== Load config ===============
 scriptConfig = {
-    "stellarisPath": stellarisDir,
-    "modsPath": modsDir,
-    "loadVanillaTech": str(loadVanillaTech)
+    "stellarisPath": stellarisPath,
+    "modsPath": modsPath,
+    "loadVanillaTech": str(loadVanillaTech),
+    "techKeysOnly": str(techKeysOnly),
+    "techKeysToo": str(techKeysToo),
+    "techTiers": str(techTiers)
 }
 
 if os.path.isfile('config.json'):
@@ -43,9 +46,9 @@ else: print("config.json not found, load defaults")
 print("Welcome to Stellaris modded tech tree exporter by ShadowTrolll!")
 
 #============== Set paths ===============
-if os.name == 'nt' and len(modsDir) < 1 or not os.path.isdir(modsDir):
-    modsDir = ''
-    stellarisDir = ''
+if os.name == 'nt' and len(modsPath) < 1 or not os.path.isdir(modsPath):
+    modsPath = ''
+    stellarisPath = ''
     try:
         keyPath = r'SOFTWARE\\WOW6432Node\\Valve\\Steam'
         key = OpenKey(HKEY_LOCAL_MACHINE, keyPath)
@@ -61,39 +64,42 @@ if os.name == 'nt' and len(modsDir) < 1 or not os.path.isdir(modsDir):
                     md = md.replace('"', '').replace('\\\\', '\\')
                     if os.path.isdir(md):
                         if os.path.isdir(md + steamStellarisDir):
-                            stellarisDir = md + steamStellarisDir # os.path.join(md, steamStellarisDir)
-                            print("Stellaris Dir FOUND IN REGISTRY", stellarisDir)
+                            stellarisPath = md + steamStellarisDir # os.path.join(md, steamStellarisDir)
+                            print("Stellaris Dir FOUND IN REGISTRY", stellarisPath)
                         md += workshopDir
                         if os.path.isdir(md):
-                            modsDir = md
-                            print("Mod Dir FOUND IN REGISTRY", modsDir)
+                            modsPath = md
+                            print("Mod Dir FOUND IN REGISTRY", modsPath)
                             break
 
             else:
-                modsDir = steamDir + workshopDir
-                stellarisDir = steamDir + steamStellarisDir
+                modsPath = steamDir + workshopDir
+                stellarisPath = steamDir + steamStellarisDir
 
     except IOError:
-        modsDir = "ERROR_NOT_FOUND"
-        stellarisDir = "ERROR_NOT_FOUND"
+        modsPath = "ERROR_NOT_FOUND"
+        stellarisPath = "ERROR_NOT_FOUND"
 else:
-    modsDir = os.path.expanduser('~\\.steam\\steam' + workshopDir)
-    stellarisDir = os.path.expanduser('~\\.steam\\steam' + steamStellarisDir)
+    modsPath = os.path.expanduser('~\\.steam\\steam' + workshopDir)
+    stellarisPath = os.path.expanduser('~\\.steam\\steam' + steamStellarisDir)
 
-if len(scriptConfig["stellarisPath"]) > 0 and scriptConfig["stellarisPath"] != "default":
-    stellarisDir = scriptConfig["stellarisPath"]
+for cfg_item in scriptConfig:
+    if scriptConfig[cfg_item] and len(scriptConfig[cfg_item]) > 0 and scriptConfig[cfg_item] != "default":
+        exec("%s = %s" % (cfg_item, scriptConfig[cfg_item]))
 
-if len(scriptConfig["modsPath"]) > 0 and scriptConfig["modsPath"] != "default":
-    modsDir = scriptConfig["modsPath"]
+# if len(scriptConfig["stellarisPath"]) > 0 and scriptConfig["stellarisPath"] != "default":
+#     stellarisPath = scriptConfig["stellarisPath"]
+# if len(scriptConfig["modsPath"]) > 0 and scriptConfig["modsPath"] != "default":
+#     modsPath = scriptConfig["modsPath"]
 
 #============== Make sure paths exist, DOESNT CHECK CONTENT! ===============
-while not os.path.isdir(modsDir):
-    print("\nMod folder does not exist: " + modsDir)
-    modsDir = input("Mods directory could not be found, please enter the FULL path to your Stellaris workshop directory (the folder that contains a lot of numbers): ").strip()
+while not os.path.isdir(modsPath):
+    print("\nMod folder does not exist: " + modsPath)
+    modsPath = input("Mods directory could not be found, please enter the FULL path to your Stellaris workshop directory (the folder that contains a lot of numbers): ").strip()
 
-while not os.path.isdir(os.path.join(stellarisDir, 'localisation', 'english')):
-    print("\nStellaris folder does not contain necessary files: " + stellarisDir)
-    stellarisDir = input("Stellaris install directory could not be found, please enter the FULL path to it (the folder with stellaris.exe)").strip()
+while not os.path.isdir(os.path.join(stellarisPath, 'localisation', 'english')):
+    print("\nStellaris folder does not contain necessary files: " + stellarisPath)
+    stellarisPath = input("Stellaris install directory could not be found, please enter the FULL path to it (the folder with stellaris.exe)").strip()
 
 #============== 'Fix' mod specific string quirks ===============
 modFixes = [
@@ -210,9 +216,9 @@ def handleTechFile(filePath, techNames):
 
 #============== Seek mods with technology ===============
 techMods = []
-print("Working in directory: " + modsDir)
-for item in os.listdir(modsDir):
-    modPath = os.path.join(modsDir, item)
+print("Working in directory: " + modsPath)
+for item in os.listdir(modsPath):
+    modPath = os.path.join(modsPath, item)
     if os.path.isdir(modPath):
         if os.path.isdir(os.path.join(modPath, 'common', 'technology')):
             techMods.append(item)
@@ -222,14 +228,14 @@ print(techMods)
 
 #============== Load localization files ===============
 englishTechNames = {}
-for root, dirs, files in os.walk(os.path.join(stellarisDir, 'localisation', 'english')):
+for root, dirs, files in os.walk(os.path.join(stellarisPath, 'localisation', 'english')):
     for name in files:
         if "english" in name:
             print("\tLoading localization from file: " + os.path.join(root, name))
             englishTechNames.update(loadTechNames(os.path.join(root, name)))
 
 for mod in techMods:
-    for root, dirs, files in os.walk(os.path.join(modsDir, mod, 'localisation')):
+    for root, dirs, files in os.walk(os.path.join(modsPath, mod, 'localisation')):
         for name in files:
             if "english" in name:
                 print("\tLoading localization from file: " + os.path.join(root, name))
@@ -241,15 +247,15 @@ jsonOut = {}
 if scriptConfig["loadVanillaTech"].lower() == "true":
     print("Handling vanilla techs")
     jsonOut["Vanilla"] = {}
-    for techFile in os.listdir(os.path.join(stellarisDir, 'common', 'technology')):
-        if os.path.isfile(os.path.join(stellarisDir, 'common', 'technology', techFile)):
+    for techFile in os.listdir(os.path.join(stellarisPath, 'common', 'technology')):
+        if os.path.isfile(os.path.join(stellarisPath, 'common', 'technology', techFile)):
             print("\tHandling file: " + techFile)
-            jsonOut["Vanilla"][techFile] = handleTechFile(os.path.join(stellarisDir, 'common', 'technology', techFile), englishTechNames)
+            jsonOut["Vanilla"][techFile] = handleTechFile(os.path.join(stellarisPath, 'common', 'technology', techFile), englishTechNames)
 
 for mod in techMods:
     modName = ''
     try:
-        with open(os.path.join(modsDir, mod, r'descriptor.mod'), 'r', encoding=selectedEncoding, errors='replace') as file:
+        with open(os.path.join(modsPath, mod, r'descriptor.mod'), 'r', encoding=selectedEncoding, errors='replace') as file:
             for line in file:
                 if "name" in line:
                     modName = line.strip()[6:-1].replace('\"', '') + " [" + mod + "]"
@@ -259,7 +265,7 @@ for mod in techMods:
     print(("\nHandling mod: " + modName).encode(errors='replace'))
     techFiles = []
     jsonOut[modName] = {}
-    modTechPath = os.path.join(modsDir, mod, 'common', 'technology')
+    modTechPath = os.path.join(modsPath, mod, 'common', 'technology')
     for techFile in os.listdir(modTechPath):
         if os.path.isfile(os.path.join(modTechPath, techFile)):
             print("\tHandling file: " + techFile)
