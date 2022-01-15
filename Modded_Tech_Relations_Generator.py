@@ -7,7 +7,7 @@ import json
 import os
 import re
 try: from winreg import *
-except: print("Not running windows")
+except: print("Not running Windows")
 
 #============== Initialise global variables ===============
 #===============  Options  ================
@@ -43,7 +43,7 @@ if os.path.isfile('config.json'):
         print("ERROR_NOT_FOUND config.json, load defaults")
 else: print("config.json not found, load defaults")
 
-print("Welcome to Stellaris modded tech tree exporter by ShadowTrolll!")
+print("Welcome to Stellaris modded tech tree exporter by ShadowTrolll.")
 
 #============== Set paths ===============
 if os.name == 'nt' and len(modsPath) < 1 or not os.path.isdir(modsPath):
@@ -60,7 +60,7 @@ if os.name == 'nt' and len(modsPath) < 1 or not os.path.isdir(modsPath):
             if file and isinstance(file, list) and len(file) > 0:
                 # print(file)
                 for md in file:
-                    print(md)
+                    # print(md)
                     md = md.replace('"', '').replace('\\\\', '\\')
                     if os.path.isdir(md):
                         if os.path.isdir(md + steamStellarisDir):
@@ -83,14 +83,19 @@ else:
     modsPath = os.path.expanduser('~\\.steam\\steam' + workshopDir)
     stellarisPath = os.path.expanduser('~\\.steam\\steam' + steamStellarisDir)
 
-for cfg_item in scriptConfig:
-    if scriptConfig[cfg_item] and len(scriptConfig[cfg_item]) > 0 and scriptConfig[cfg_item] != "default":
-        exec("%s = %s" % (cfg_item, scriptConfig[cfg_item]))
 
-# if len(scriptConfig["stellarisPath"]) > 0 and scriptConfig["stellarisPath"] != "default":
-#     stellarisPath = scriptConfig["stellarisPath"]
-# if len(scriptConfig["modsPath"]) > 0 and scriptConfig["modsPath"] != "default":
-#     modsPath = scriptConfig["modsPath"]
+
+if scriptConfig["stellarisPath"] and len(scriptConfig["stellarisPath"]) > 0 and scriptConfig["stellarisPath"] != "default":
+    stellarisPath = scriptConfig["stellarisPath"]
+    del scriptConfig["stellarisPath"]
+
+if scriptConfig["modsPath"] and len(scriptConfig["modsPath"]) > 0 and scriptConfig["modsPath"] != "default":
+    modsPath = scriptConfig["modsPath"]
+    del scriptConfig["modsPath"]
+
+for cfg_item in scriptConfig:
+    if scriptConfig[cfg_item] and len(scriptConfig[cfg_item]) > 0:
+        exec("%s = %r" % (cfg_item, (scriptConfig[cfg_item].lower() == "true")))
 
 #============== Make sure paths exist, DOESNT CHECK CONTENT! ===============
 while not os.path.isdir(modsPath):
@@ -244,7 +249,7 @@ for mod in techMods:
 #============== Main script ===============
 jsonOut = {}
 
-if scriptConfig["loadVanillaTech"].lower() == "true":
+if loadVanillaTech:
     print("Handling vanilla techs")
     jsonOut["Vanilla"] = {}
     for techFile in os.listdir(os.path.join(stellarisPath, 'common', 'technology')):
