@@ -71,11 +71,9 @@ if os.name == 'nt' and len(modsPath) < 1 or not os.path.isdir(modsPath):
                             modsPath = md
                             print("Mod Dir FOUND IN REGISTRY", modsPath)
                             break
-
             else:
                 modsPath = steamDir + workshopDir
                 stellarisPath = steamDir + steamStellarisDir
-
     except IOError:
         modsPath = "ERROR_NOT_FOUND"
         stellarisPath = "ERROR_NOT_FOUND"
@@ -93,7 +91,7 @@ if scriptConfig["modsPath"] and len(scriptConfig["modsPath"]) > 0 and scriptConf
     modsPath = scriptConfig["modsPath"]
     del scriptConfig["modsPath"]
 
-for cfg_item in scriptConfig:
+for cfg_item in scriptConfig: # Convert items to single vars
     if scriptConfig[cfg_item] and len(scriptConfig[cfg_item]) > 0:
         exec("%s = %r" % (cfg_item, (scriptConfig[cfg_item].lower() == "true")))
 
@@ -304,7 +302,7 @@ class stellarisTech:
         self.techName = str(techName) # str
         self.prereq = prereq # array
 
-    def exportPrereq(self,level=0):
+    def exportPrereq(self, level=0):
         global exportStringGL
         levelIndent = ''
         for x in range(level):
