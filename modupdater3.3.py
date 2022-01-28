@@ -34,8 +34,7 @@ removedTargets = [
     426 modifiers removed/renamed.
     1 scope removed.
     """
-    # This are only warnings, commands which cannot be easily replaced
-
+    # This are only warnings, commands which cannot be easily replaced.
     # 3.2
     r"\sslot\s*=\s*0", # \sset_starbase_module\s*=\s*\{ now starts with 1
     r"[^# \t]\s+is_planet_class\s*=\s*pc_ringworld_habitable", # possible should be replaced with "is_ringworld = yes",
@@ -69,7 +68,11 @@ removedTargets = [
     r"\s(any|every|random)_planet\b", # split in owner and galaxy and system scope
     r"\s(any|every|random)_ship\b", # split in owner and galaxy and system scope
     # < 2.0
-    r"\scan_support_spaceport\s*=\s*(yes|no)"
+    r"\scan_support_spaceport\s*=\s*(yes|no)",
+    # 3.3
+    ("common\\buildings", r"\sbuilding_basic_income_check\s*="), # replaced buildings ai
+    ("common\\buildings", r"\sbuilding_relaxed_basic_income_check\s*="), # replaced buildings ai
+    ("common\\buildings", r"\sbuildings_upgrade_allow\s*="), # replaced buildings ai
 ]
 
 # targets2 = {
