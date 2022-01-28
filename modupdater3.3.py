@@ -15,7 +15,9 @@ from tkinter import filedialog
 from tkinter import messagebox
 
 # ============== Initialize global variables ===============
-code_cosmetic = False # True/False optional
+only_warning = False # True/False optional (if True, implies code_cosmetic = False)
+code_cosmetic = False # True/False optional (only if only_warning = False)
+
 # mod_path = os.path.dirname(os.getcwd())
 mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
 
@@ -35,9 +37,10 @@ removedTargets = [
     1 scope removed.
     """
     # This are only warnings, commands which cannot be easily replaced.
+    # Format: tuple is with folder (folder, regexp/list); list is with a specific message (regexp, msg)
     # 3.2
     r"\sslot\s*=\s*0", # \sset_starbase_module\s*=\s*\{ now starts with 1
-    r"[^# \t]\s+is_planet_class\s*=\s*pc_ringworld_habitable", # possible should be replaced with "is_ringworld = yes",
+    [r"[^# \t]\s+is_planet_class\s*=\s*pc_ringworld_habitable", 'could possibly be replaced with "is_ringworld = yes"'], # ,
     # r"\sadd_tech_progress_effect\s*=\s*", # replaced with add_tech_progress
     # r"\sgive_scaled_tech_bonus_effect\s*=\s*", # replaced with add_monthly_resource_mult
     ("common\\districts", r"\sdistricts_build_district\b"), # scripted trigger
@@ -48,7 +51,7 @@ removedTargets = [
     r"\sobservation_outpost\s*=\s*\{\s*limit",
     r"\spop_can_live_on_planet\b", # r"\1can_live_on_planet", needs planet target
     r"\scount_armies\b", # (scope split: depending on planet/country)
-    (["common\\bombardment_stances", "common\\ship_sizes"], r"^\s+icon_frame\s*=\s*\d+"), # [6-9]  # icon_frame: now only used for starbases. Value of 2 or more means it shows up on the galaxy map, 1-5 denote which icon it uses on starbase sprite sheets (e.g. gfx/interface/icons/starbase_ship_sizes.dds)
+    (["common\\bombardment_stances", "common\\ship_sizes"], [r"^\s+icon_frame\s*=\s*\d+", '"icon_frame" now only used for starbases']), # [6-9]  # Value of 2 or more means it shows up on the galaxy map, 1-5 denote which icon it uses on starbase sprite sheets (e.g. gfx/interface/icons/starbase_ship_sizes.dds)
 
     # PRE TEST
     # r"\sspaceport\W", # scope replace?
@@ -282,7 +285,7 @@ targets4 = {
 
 }
 
-if code_cosmetic:
+if code_cosmetic and not only_warning:
     targets3[r"([\s\.]+(PREV|FROM|ROOT|THIS)+)"] = lambda p: p.group(1).lower() # r"([\s\.]+(PREV|FROM|ROOT|THIS)+)": lambda p: p.group(1).lower(),  ## targets3[re.compile(r"([\s\.]+(PREV|FROM|ROOT|THIS)+)", re.I)] = lambda p: p.group(1).lower()
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
@@ -330,7 +333,10 @@ def parse_dir():
         return False
     if len(mod_outpath) < 1 or not os.path.isdir(mod_outpath) or mod_outpath == mod_path:
         mod_outpath = mod_path
-        print('Warning: Mod files will be overwritten!')
+        if only_warning:
+            print('Attention: files are ONLY checked!')
+        else:
+            print('Warning: Mod files will be overwritten!')
     else:
         mod_outpath = os.path.normpath(mod_outpath)
 
@@ -382,14 +388,19 @@ def modfix(file_list):
                         # for line in file_contents:
                         # print(line)
                         for rt in removedTargets:
+                            msg = ''
                             if type(rt) == tuple:
                                 # print(type(subfolder), subfolder, rt[0])
                                 if subfolder in rt[0]:
-                                    rt = re.search(rt[1], line) # , flags=re.I
+                                    rt = rt[1] # , flags=re.I
                                 else: rt = False
-                            else: rt = re.search(rt, line) # , flags=re.I
+                            if type(rt) == list and len(rt) > 1:
+                                msg = ' (' + rt[1] + ')'
+                                rt = rt[0]
                             if rt:
-                                print("\tWARNING outdated removed syntax: %s in line %i file %s" % ( rt.group(0), i, basename) )
+                                rt = re.search(rt, line) # , flags=re.I
+                            if rt:
+                                print(" WARNING outdated removed syntax%s: %s in line %i file %s\n" % (msg, rt.group(0), i, basename) )
                         for pattern, repl in targets3.items():
                             # print(line)
                             # print(pattern, repl)
@@ -405,7 +416,7 @@ def modfix(file_list):
                                 line = re.sub(pattern, repl, line, flags=0) # , flags=re.I
                                 # line = line.replace(t, r)
                                 changed = True
-                                print("\tUpdated file: %s at line %i with %s" % (basename, i, line.strip().encode()))
+                                print("\tUpdated file: %s at line %i with %s\n" % (basename, i, line.strip().encode()))
                     out += line
 
                 for pattern, repl in targets4.items():
@@ -435,7 +446,7 @@ def modfix(file_list):
                                     out = out.replace(tar, replace)
                                     changed = True
 
-                if changed:
+                if changed and not only_warning:
                     structure = os.path.normpath(os.path.join(mod_outpath, subfolder))
                     out_file = os.path.join(structure, basename)
                     print('\tWrite file:', out_file)
@@ -458,7 +469,7 @@ def modfix(file_list):
         #     if not os.path.isdir(structure):
         #         os.mkdir(structure)
         # else: print("NO TXT?", _file)
-    print("Done!")
+    print("\nDone!")
 
 parse_dir()  # mod_path, mod_outpath
 # input("\nPRESS ANY KEY TO EXIT!")
