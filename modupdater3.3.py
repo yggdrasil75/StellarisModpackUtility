@@ -73,9 +73,8 @@ removedTargets = [
     # < 2.0
     r"\scan_support_spaceport\s*=\s*(yes|no)",
     # 3.3 TODO
-    ("common\\buildings", r"\sbuilding_basic_income_check\s*="), # replaced buildings ai
-    ("common\\buildings", r"\sbuilding_relaxed_basic_income_check\s*="), # replaced buildings ai
-    ("common\\buildings", r"\sbuildings_upgrade_allow\s*="), # replaced buildings ai
+    ("common\\buildings", r"\sbuilding(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*="), # replaced buildings ai
+    # [r"\bnum_\w+\s*[<=>]+\s*[a-z]+[\s}], 'no scope alone'"], #  [^\d{$@] too rare
 ]
 
 # targets2 = {
@@ -232,6 +231,8 @@ targets3 = {
     r"\bhomeworld\s*=\s*": ("common\\governments\\civics", r"starting_colony = "),
     r"^((?:\t|    )parent\s*=\s*planet_jobs)\b": ("common\\economic_categories", r"\1_productive"),
     r"^(\t|    )energy\s*=\s*(\d+|@\w+)": ("common\\terraform", r"\1resources = {\n\1\1category = terraforming\n\1\1cost = { energy = \2 }\n\1}"),
+    ### 3.3
+    r"\s+building(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*=\s*(?:yes|no)\n?": ("common\\buildings", ''), 
 }
 
 
