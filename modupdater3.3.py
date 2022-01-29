@@ -1,6 +1,6 @@
 # @author FirePrince
 # @version: 3.3.b
-# @revision 2022/01/28
+# @revision 2022/01/29
 # @Thanks OldEnt for detailed rundowns.
 
 # ============== Import libs ===============
@@ -14,7 +14,7 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
 
-# ============== Initialize global variables ===============
+# ============== Initialize global parameter/variables ===============
 only_warning = False # True/False optional (if True, implies code_cosmetic = False)
 code_cosmetic = False # True/False optional (only if only_warning = False)
 
@@ -37,7 +37,7 @@ removedTargets = [
     1 scope removed.
     """
     # This are only warnings, commands which cannot be easily replaced.
-    # Format: tuple is with folder (folder, regexp/list); list is with a specific message (regexp, msg)
+    # Format: tuple is with folder (folder, regexp/list); list is with a specific message [regexp, msg]
     # 3.2
     r"\sslot\s*=\s*0", # \sset_starbase_module\s*=\s*\{ now starts with 1
     [r"[^# \t]\s+is_planet_class\s*=\s*pc_ringworld_habitable", 'could possibly be replaced with "is_ringworld = yes"'], # ,
@@ -72,7 +72,7 @@ removedTargets = [
     r"\s(any|every|random)_ship\b", # split in owner and galaxy and system scope
     # < 2.0
     r"\scan_support_spaceport\s*=\s*(yes|no)",
-    # 3.3
+    # 3.3 TODO
     ("common\\buildings", r"\sbuilding_basic_income_check\s*="), # replaced buildings ai
     ("common\\buildings", r"\sbuilding_relaxed_basic_income_check\s*="), # replaced buildings ai
     ("common\\buildings", r"\sbuildings_upgrade_allow\s*="), # replaced buildings ai
@@ -281,7 +281,7 @@ targets4 = {
     r"\n\s+possible\s*=\s*\{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)(?:drone|worker|specialist|ruler)_job_check_trigger\s*=\s*yes\s*": [r"(\s+)(possible\s*=\s*\{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?))(drone|worker|specialist|ruler)_job_check_trigger\s*=\s*yes\s*",("common\\pop_jobs", r"\1possible_precalc = can_fill_\4_job\1\2")], # only with 6 possible prior lines
     r"[^b]\n\s+possible\s*=\s*\{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)complex_specialist_job_check_trigger\s*=\s*yes\s*": [r"(\s+)(possible\s*=\s*\{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)complex_specialist_job_check_trigger\s*=\s*yes\s*)",("common\\pop_jobs", r"\1possible_precalc = can_fill_specialist_job\1\2")], # only with 6 possible prior lines
     # >3.2
-    r"\bany_\w+\s*=\s*\{[^{}]+?\bcount\b": [r"\bany_(\w+\s*=\s*\{[^{}]+?\bcount\b)", r"count_\1"], # too rare!?
+    r"\bany_\w+\s*=\s*\{[^{}]+?\bcount\s*[<=>]+\s*[^{}\s]+\s+[^{}]*\}": [r"\bany_(\w+)\s*=\s*\{\s*(?:([^{}]+?)\s+(\bcount\s*[<=>]+\s*[^{}\s]+)|(\bcount\s*[<=>]+\s*[^{}\s]+)\s+([^{}]*))\s+\}", r"count_\1 = { limit = { \2\5 } \3\4 }"], # too rare!? only simple supported TODO
 
 }
 
