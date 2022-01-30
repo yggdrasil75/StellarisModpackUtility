@@ -2,6 +2,7 @@
 # @version: 3.3.b
 # @revision 2022/01/29
 # @Thanks OldEnt for detailed rundowns.
+# @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 
 # ============== Import libs ===============
 import os  # io for high level usage
@@ -19,11 +20,11 @@ only_warning  = False # True/False optional (if True, implies code_cosmetic = Fa
 code_cosmetic = False # True/False optional (only if only_warning = False)
 only_actual   = False # speedup search to only last relevant version
 
-# mod_path = os.path.dirname(os.getcwd())
-mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
-
 stellaris_version = '3.3.b'
 mod_outpath = ''
+
+# mod_path = os.path.dirname(os.getcwd())
+mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
 
 # if not sys.version_info.major == 3 and sys.version_info.minor >= 6:
 #     print("Python 3.6 or higher is required.")
@@ -33,14 +34,15 @@ mod_outpath = ''
 
 # for performance reason option
 if only_actual:
-    removedTargets_last = [
+    removedTargets = [
         # "",
-        ("common\\buildings", r"\sbuilding(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*=") # replaced buildings ai
+        ("common\\buildings", r"\sbuilding(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*="), # replaced buildings ai
+        [r"\bnum_\w+\s*[<=>]+\s*[a-z]+[\s}]", 'no scope alone'], #  [^\d{$@] too rare (could also be auto fixed)
     ]
-    targets3_last = {
+    targets3 = {
         r"\s+building(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*=\s*(?:yes|no)\n?": ("common\\buildings", ''),
     }
-    targets4_last = {
+    targets4 = {
         r"\bany_\w+\s*=\s*\{[^{}]+?\bcount\s*[<=>]+\s*[^{}\s]+\s+[^{}]*\}": [r"\bany_(\w+)\s*=\s*\{\s*(?:([^{}]+?)\s+(\bcount\s*[<=>]+\s*[^{}\s]+)|(\bcount\s*[<=>]+\s*[^{}\s]+)\s+([^{}]*))\s+\}", r"count_\1 = { limit = { \2\5 } \3\4 }"], # too rare!? only simple supported TODO  
     }
 else:
@@ -313,11 +315,6 @@ else:
         # >3.2
         r"\bany_\w+\s*=\s*\{[^{}]+?\bcount\s*[<=>]+\s*[^{}\s]+\s+[^{}]*\}": [r"\bany_(\w+)\s*=\s*\{\s*(?:([^{}]+?)\s+(\bcount\s*[<=>]+\s*[^{}\s]+)|(\bcount\s*[<=>]+\s*[^{}\s]+)\s+([^{}]*))\s+\}", r"count_\1 = { limit = { \2\5 } \3\4 }"], # too rare!? only simple supported TODO
     }
-
-if only_actual:
-    removedTargets = removedTargets_last
-    targets3 = targets3_last
-    targets4 = targets4_last
 
 if code_cosmetic and not only_warning:
     targets3[r"([\s\.]+(PREV|FROM|ROOT|THIS)+)"] = lambda p: p.group(1).lower() # r"([\s\.]+(PREV|FROM|ROOT|THIS)+)": lambda p: p.group(1).lower(),  ## targets3[re.compile(r"([\s\.]+(PREV|FROM|ROOT|THIS)+)", re.I)] = lambda p: p.group(1).lower()
