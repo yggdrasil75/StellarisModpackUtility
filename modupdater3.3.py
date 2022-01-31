@@ -3,6 +3,7 @@
 # @revision 2022/01/29
 # @Thanks OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
+# ToDo: full path mod folder
 
 # ============== Import libs ===============
 import os  # io for high level usage
@@ -10,15 +11,15 @@ import glob
 import re
 
 # from pathlib import Path
-import sys
+# import sys
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
 
 # ============== Initialize global parameter/variables ===============
-only_warning  = False # True/False optional (if True, implies code_cosmetic = False)
+only_warning = False # True/False optional (if True, implies code_cosmetic = False)
 code_cosmetic = False # True/False optional (only if only_warning = False)
-only_actual   = False # speedup search to only last relevant version
+only_actual = False # speedup search to only last relevant version
 
 stellaris_version = '3.3.b'
 mod_outpath = ''
@@ -31,7 +32,6 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 #     print("You are using Python {}.{}.".format(sys.version_info.major, sys.version_info.minor))
 #     sys.exit(1)
 
-
 # for performance reason option
 if only_actual:
     removedTargets = [
@@ -41,9 +41,10 @@ if only_actual:
     ]
     targets3 = {
         r"\s+building(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*=\s*(?:yes|no)\n?": ("common\\buildings", ''),
+        r"\bGFX_ship_part_auto_repair": (["common\\component_sets", "common\\component_templates"], 'GFX_ship_part_ship_part_nanite_repair_system'), # because icons.gfx
     }
     targets4 = {
-        r"\bany_\w+\s*=\s*\{[^{}]+?\bcount\s*[<=>]+\s*[^{}\s]+\s+[^{}]*\}": [r"\bany_(\w+)\s*=\s*\{\s*(?:([^{}]+?)\s+(\bcount\s*[<=>]+\s*[^{}\s]+)|(\bcount\s*[<=>]+\s*[^{}\s]+)\s+([^{}]*))\s+\}", r"count_\1 = { limit = { \2\5 } \3\4 }"], # too rare!? only simple supported TODO  
+        r"\bany_\w+\s*=\s*\{[^{}]+?\bcount\s*[<=>]+\s*[^{}\s]+\s+[^{}]*\}": [r"\bany_(\w+)\s*=\s*\{\s*(?:([^{}]+?)\s+(\bcount\s*[<=>]+\s*[^{}\s]+)|(\bcount\s*[<=>]+\s*[^{}\s]+)\s+([^{}]*))\s+\}", r"count_\1 = { limit = { \2\5 } \3\4 }"], # too rare!? only simple supported TODO
     }
 else:
     # >= 3.0.*
@@ -92,7 +93,7 @@ else:
         r"\scan_support_spaceport\s*=\s*(yes|no)",
         # 3.3
         ("common\\buildings", r"\sbuilding(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*="), # replaced buildings ai
-        [r"\bnum_\w+\s*[<=>]+\s*[a-z]+[\s}]", 'no scope alone'], #  [^\d{$@] too rare
+        # [r"\bnum_\w+\s*[<=>]+\s*[a-z]+[\s}]", 'no scope alone'], #  [^\d{$@] too rare
     ]
 
     # targets2 = {
@@ -133,12 +134,12 @@ else:
 
         ## Since Megacorp removed: change_species_characteristics was false documented until 3.2
         r"[\s#]+(pops_can_(be_colonizers|migrate|reproduce|join_factions|be_slaves)|can_generate_leaders|pops_have_happiness|pops_auto_growth|pop_maintenance)\s*=\s*(yes|no)\s*": "",
-    ### somewhat older
+        ### somewhat older
         r"(\s+)ship_upkeep_mult\s*=": r"\1ships_upkeep_mult =",
         r"\b(contact_rule\s*=\s*)script_only": ("common\\country_types", r"\1on_action_only"),
 
         r"(\s+)add_(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro)\s*=\s*(\d+|@\w+)": r"\1add_resource = { \2 = \3 }",
-    ### > 3.1.* beta
+        ### > 3.1.* beta
         r"(\s+set_)(primitive)\s*=\s*yes": r"\1country_type = \2",
         # r"(\s+)count_armies": r"\1count_owned_army", # count_planet_army (scope split: depending on planet/country)
         # r"(\s+)(icon_frame\s*=\s*[0-5])": "", # remove
@@ -148,91 +149,94 @@ else:
         r"text_icon\s*=\s*military_size_": ("common\\ship_sizes", "icon = ship_size_military_"),
         # r"\s+icon_frame\s*=\s*\d": (["common\\bombardment_stances", "common\\ship_sizes"], ""), used for starbase
         r"^\s+robotic\s*=\s*(yes|no)[ \t]*\n": ("common\\species_classes", ""),
-        r"^(\s+icon)_frame\s*=\s*([1-9][0-4]?)": ("common\\armies", lambda p:
-            p.group(1)+" = GFX_army_type_"+{
-                "1": "defensive",
-                "2": "assault",
-                "3": "rebel",
-                "4": "robot",
-                "5": "primitive",
-                "6": "gene_warrior",
-                "7": "clone",
-                "8": "xenomorph",
-                "9": "psionic",
-                "10": "slave",
-                "11": "machine_assault",
-                "12": "machine_defensive",
-                "13": "undead",
-                "14": "imperial"
-            }[p.group(2)]),
-       r"^(\s+icon)_frame\s*=\s*(\d+)": ("common\\planet_classes", lambda p:
-            p.group(1)+" = GFX_planet_type_"+{
-                "1": "desert",
-                "2": "arid",
-                "3": "tundra",
-                "4": "continental",
-                "5": "tropical",
-                "6": "ocean",
-                "7": "arctic",
-                "8": "gaia",
-                "9": "barren_cold",
-                "10": "barren",
-                "11": "toxic",
-                "12": "molten",
-                "13": "frozen",
-                "14": "gas_giant",
-                "15": "machine",
-                "16": "hive",
-                "17": "nuked",
-                "18": "asteroid",
-                "19": "alpine",
-                "20": "savannah",
-                "21": "ringworld",
-                "22": "habitat",
-                "23": "shrouded",
-                "25": "city",
-                "26": "m_star",
-                "27": "f_g_star",
-                "28": "k_star",
-                "29": "a_b_star",
-                "30": "pulsar",
-                "31": "neutron_star",
-                "32": "black_hole"
-            }[p.group(2)]),
-       r"^(\s+icon)\s*=\s*(\d+)": ("common\\colony_types", lambda p:
-            p.group(1)+" = GFX_colony_type_"+{
-                "1": "urban",
-                "2": "mine",
-                "3": "farm",
-                "4": "generator",
-                "5": "foundry",
-                "6": "factory",
-                "7": "refinery",
-                "8": "research",
-                "9": "fortress",
-                "10": "capital",
-                "11": "normal_colony",
-                "12": "habitat",
-                "13": "rural",
-                "14": "resort",
-                "15": "penal",
-                "16": "primitive",
-                "17": "dying",
-                "18": "workers",
-                "19": "habitat_energy",
-                "20": "habitat_leisure",
-                "21": "habitat_trade",
-                "22": "habitat_research",
-                "23": "habitat_mining",
-                "24": "habitat_fortress",
-                "25": "habitat_foundry",
-                "26": "habitat_factory",
-                "27": "habitat_refinery",
-                "28": "bureaucratic",
-                "29": "picker",
-                "30": "fringe",
-                "31": "industrial"
-            }[p.group(2)]),
+        r"^(\s+icon)_frame\s*=\s*([1-9][0-4]?)":
+            ("common\\armies", lambda p:
+             p.group(1) + " = GFX_army_type_" + {
+                 "1": "defensive",
+                 "2": "assault",
+                 "3": "rebel",
+                 "4": "robot",
+                 "5": "primitive",
+                 "6": "gene_warrior",
+                 "7": "clone",
+                 "8": "xenomorph",
+                 "9": "psionic",
+                 "10": "slave",
+                 "11": "machine_assault",
+                 "12": "machine_defensive",
+                 "13": "undead",
+                 "14": "imperial"
+             }[p.group(2)]),
+        r"^(\s+icon)_frame\s*=\s*(\d+)":
+            ("common\\planet_classes", lambda p:
+             p.group(1) + " = GFX_planet_type_" + {
+                 "1": "desert",
+                 "2": "arid",
+                 "3": "tundra",
+                 "4": "continental",
+                 "5": "tropical",
+                 "6": "ocean",
+                 "7": "arctic",
+                 "8": "gaia",
+                 "9": "barren_cold",
+                 "10": "barren",
+                 "11": "toxic",
+                 "12": "molten",
+                 "13": "frozen",
+                 "14": "gas_giant",
+                 "15": "machine",
+                 "16": "hive",
+                 "17": "nuked",
+                 "18": "asteroid",
+                 "19": "alpine",
+                 "20": "savannah",
+                 "21": "ringworld",
+                 "22": "habitat",
+                 "23": "shrouded",
+                 "25": "city",
+                 "26": "m_star",
+                 "27": "f_g_star",
+                 "28": "k_star",
+                 "29": "a_b_star",
+                 "30": "pulsar",
+                 "31": "neutron_star",
+                 "32": "black_hole"
+             }[p.group(2)]),
+        r"^(\s+icon)\s*=\s*(\d+)":
+            ("common\\colony_types", lambda p:
+             p.group(1)+" = GFX_colony_type_"+{
+                 "1": "urban",
+                 "2": "mine",
+                 "3": "farm",
+                 "4": "generator",
+                 "5": "foundry",
+                 "6": "factory",
+                 "7": "refinery",
+                 "8": "research",
+                 "9": "fortress",
+                 "10": "capital",
+                 "11": "normal_colony",
+                 "12": "habitat",
+                 "13": "rural",
+                 "14": "resort",
+                 "15": "penal",
+                 "16": "primitive",
+                 "17": "dying",
+                 "18": "workers",
+                 "19": "habitat_energy",
+                 "20": "habitat_leisure",
+                 "21": "habitat_trade",
+                 "22": "habitat_research",
+                 "23": "habitat_mining",
+                 "24": "habitat_fortress",
+                 "25": "habitat_foundry",
+                 "26": "habitat_factory",
+                 "27": "habitat_refinery",
+                 "28": "bureaucratic",
+                 "29": "picker",
+                 "30": "fringe",
+                 "31": "industrial"
+             }[p.group(2)]),
         r"(\s+modifier)\s*=\s*\{\s*mult": r"\1 = { factor",
         # r"(\s+)pop_can_live_on_planet": r"\1can_live_on_planet", needs planet target
         r"\bcount_diplo_ties":          "count_relation",
@@ -250,7 +254,7 @@ else:
         r"^((?:\t|    )parent\s*=\s*planet_jobs)\b": ("common\\economic_categories", r"\1_productive"),
         r"^(\t|    )energy\s*=\s*(\d+|@\w+)": ("common\\terraform", r"\1resources = {\n\1\1category = terraforming\n\1\1cost = { energy = \2 }\n\1}"),
         ### 3.3
-        r"\s+building(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*=\s*(?:yes|no)\n?": ("common\\buildings", ''), 
+        r"\s+building(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*=\s*(?:yes|no)\n?": ("common\\buildings", ''),
     }
 
 
@@ -290,28 +294,30 @@ else:
 
         # >=3.1
         #but not used for starbases
-        r"\bis_space_station\s*=\s*no\s*icon_frame\s*=\s*\d+": [r"(is_space_station\s*=\s*no\s*)icon_frame\s*=\s*([1-9][0-2]?)", ("common\\ship_sizes", lambda p:
-            p.group(1)+"icon = ship_size_"+{
-                "1": "military_1",
-                "2": "military_1",
-                "3": "military_2",
-                "4": "military_4",
-                "5": "military_8",
-                "6": "military_16",
-                "7": "military_32",
-                "8": "science",
-                "9": "constructor",
-                "10": "colonizer",
-                "11": "transport",
-                "12": "space_monster"
-            }[p.group(2)])],
+        r"\bis_space_station\s*=\s*no\s*icon_frame\s*=\s*\d+":
+            [r"(is_space_station\s*=\s*no\s*)icon_frame\s*=\s*([1-9][0-2]?)",
+             ("common\\ship_sizes", lambda p:
+              p.group(1) + "icon = ship_size_" + {
+                  "1": "military_1",
+                  "2": "military_1",
+                  "3": "military_2",
+                  "4": "military_4",
+                  "5": "military_8",
+                  "6": "military_16",
+                  "7": "military_32",
+                  "8": "science",
+                  "9": "constructor",
+                  "10": "colonizer",
+                  "11": "transport",
+                  "12": "space_monster"
+              }[p.group(2)])],
         r"\s+which\s*=\s*\"?\w+\"?\s+value\s*[<=>]+\s*(?:prev|from|root|event_target:[^\.\s])+\s*\}": [r"(\s+which\s*=\s*\"?(\w+)\"?\s+value\s*[<=>]+\s*(prev|from|root|event_target:[^\.\s])+)", r"\1.\2"],
         r"\s+spawn_megastructure\s*=\s*\{[^{}#]+": [r"(\s+)location\s*=\s*([\w\._:]+)", r"\1coords_from = \2"],
-        # >=3.2
+        # >= 3.2
         r"\bNO[RT]\s*=\s*\{\s*is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s*\}": [r"\bNO[RT]\s*=\s*\{\s*is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s*\}", r"is_artificial = no"],
         r"\bis_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\b": [r"\bis_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\b", r"is_artificial = yes"],
-        r"\n\s+possible\s*=\s*\{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)(?:drone|worker|specialist|ruler)_job_check_trigger\s*=\s*yes\s*": [r"(\s+)(possible\s*=\s*\{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?))(drone|worker|specialist|ruler)_job_check_trigger\s*=\s*yes\s*",("common\\pop_jobs", r"\1possible_precalc = can_fill_\4_job\1\2")], # only with 6 possible prior lines
-        r"[^b]\n\s+possible\s*=\s*\{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)complex_specialist_job_check_trigger\s*=\s*yes\s*": [r"(\s+)(possible\s*=\s*\{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)complex_specialist_job_check_trigger\s*=\s*yes\s*)",("common\\pop_jobs", r"\1possible_precalc = can_fill_specialist_job\1\2")], # only with 6 possible prior lines
+        r"\n\s+possible\s*=\s*\{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)(?:drone|worker|specialist|ruler)_job_check_trigger\s*=\s*yes\s*": [r"(\s+)(possible\s*=\s*\{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?))(drone|worker|specialist|ruler)_job_check_trigger\s*=\s*yes\s*", ("common\\pop_jobs", r"\1possible_precalc = can_fill_\4_job\1\2")], # only with 6 possible prior lines
+        r"[^b]\n\s+possible\s*=\s*\{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)complex_specialist_job_check_trigger\s*=\s*yes\s*": [r"(\s+)(possible\s*=\s*\{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)complex_specialist_job_check_trigger\s*=\s*yes\s*)", ("common\\pop_jobs", r"\1possible_precalc = can_fill_specialist_job\1\2")], # only with 6 possible prior lines
         # >3.2
         r"\bany_\w+\s*=\s*\{[^{}]+?\bcount\s*[<=>]+\s*[^{}\s]+\s+[^{}]*\}": [r"\bany_(\w+)\s*=\s*\{\s*(?:([^{}]+?)\s+(\bcount\s*[<=>]+\s*[^{}\s]+)|(\bcount\s*[<=>]+\s*[^{}\s]+)\s+([^{}]*))\s+\}", r"count_\1 = { limit = { \2\5 } \3\4 }"], # too rare!? only simple supported TODO
     }
@@ -388,7 +394,7 @@ def modfix(file_list):
         if os.path.isfile(_file) and re.search(r"\.txt$", _file):
             subfolder = os.path.relpath(_file, mod_path)
             file_contents = ""
-            print("\tCheck file:",_file)
+            print("\tCheck file:", _file)
             with open(_file, 'r', encoding='utf-8', errors='ignore') as txtfile:
                 # out = txtfile.read() # full_fille
                 # try:
@@ -420,34 +426,39 @@ def modfix(file_list):
                         # print(line)
                         for rt in removedTargets:
                             msg = ''
-                            if type(rt) == tuple:
+                            if isinstance(rt, tuple):
                                 # print(type(subfolder), subfolder, rt[0])
                                 if subfolder in rt[0]:
                                     rt = rt[1] # , flags=re.I
                                 else: rt = False
-                            if type(rt) == list and len(rt) > 1:
+                            if isinstance(rt, list) and len(rt) > 1:
                                 msg = ' (' + rt[1] + ')'
                                 rt = rt[0]
                             if rt:
                                 rt = re.search(rt, line) # , flags=re.I
                             if rt:
-                                print(" WARNING outdated removed syntax%s: %s in line %i file %s\n" % (msg, rt.group(0), i, basename) )
+                                print(" WARNING outdated removed syntax%s: %s in line %i file %s\n" % (msg, rt.group(0), i, basename))
                         for pattern, repl in targets3.items():
                             # print(line)
                             # print(pattern, repl)
                             # check valid folder
                             rt = False
-                            if type(repl) == tuple:
+                            if isinstance(repl, tuple):
                                 folder, repl = repl
-                                if subfolder in folder:
-                                    rt = re.search(pattern, line) # , flags=re.I
+                                if isinstance(folder, list):
+                                    for fo in folder:
+                                        if subfolder in fo: rt = True
+                                elif subfolder in folder:
+                                    rt = True
                                 else: rt = False
-                            else: rt = re.search(pattern, line)
+                            else: rt = True
                             if rt: # , flags=re.I # , count=0, flags=0
-                                line = re.sub(pattern, repl, line, flags=0) # , flags=re.I
-                                # line = line.replace(t, r)
-                                changed = True
-                                print("\tUpdated file: %s at line %i with %s\n" % (basename, i, line.strip().encode()))
+                                rt = re.search(pattern, line) # , flags=re.I
+                                if rt:
+                                    line = re.sub(pattern, repl, line, flags=0) # , flags=re.I
+                                    # line = line.replace(t, r)
+                                    changed = True
+                                    print("\tUpdated file: %s at line %i with %s\n" % (basename, i, line.strip().encode()))
                     out += line
 
                 for pattern, repl in targets4.items():
@@ -459,19 +470,22 @@ def modfix(file_list):
                             # check valid folder
                             rt = False
                             replace = repl
-                            if type(repl) == list and type(repl[1]) == tuple:
+                            if isinstance(repl, list) and isinstance(repl[1], tuple):
                                 folder, repl = repl[1]
                                 replace[1] = repl
                                 repl = replace
-                                print(type(repl), repl)
-                                if subfolder in folder: rt = True
+                                # print(type(repl), repl)
+                                if isinstance(folder, list):
+                                    for fo in folder:
+                                        if subfolder in fo: rt = True
+                                elif subfolder in folder: rt = True
                                 else: rt = False
                             else: rt = True
                             if rt:
                                 # print(type(repl), tar, type(tar))
-                                if type(repl) == list:
+                                if isinstance(repl, list):
                                     replace = re.sub(repl[0], repl[1], tar, flags=re.I|re.M|re.A)
-                                if type(repl) == str or (type(tar) != tuple and tar in out and tar != replace):
+                                if isinstance(repl, str) or (not isinstance(tar, tuple) and tar in out and tar != replace):
                                     print("Match:\n", tar)
                                     print("Multiline replace:\n", replace) # repr(
                                     out = out.replace(tar, replace)
