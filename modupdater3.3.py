@@ -1,6 +1,6 @@
 # @author FirePrince
 # @version: 3.3.b
-# @revision 2022/01/29
+# @revision 2022/02/03
 # @Thanks OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # ToDo: full path mod folder
@@ -42,6 +42,8 @@ if only_actual:
     targets3 = {
         r"\s+building(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*=\s*(?:yes|no)\n?": ("common\\buildings", ''),
         r"\bGFX_ship_part_auto_repair": (["common\\component_sets", "common\\component_templates"], 'GFX_ship_part_ship_part_nanite_repair_system'), # because icons.gfx
+        r"\bcountry_election_influence_cost_mult": ("common\\governments", 'country_election_cost_mult'),
+        r"\bhas_civic\s*=\s*civic_reanimated_armies": 'is_reanimator = yes',
     }
     targets4 = {
         r"\bany_\w+\s*=\s*\{[^{}]+?\bcount\s*[<=>]+\s*[^{}\s]+\s+[^{}]*\}": [r"\bany_(\w+)\s*=\s*\{\s*(?:([^{}]+?)\s+(\bcount\s*[<=>]+\s*[^{}\s]+)|(\bcount\s*[<=>]+\s*[^{}\s]+)\s+([^{}]*))\s+\}", r"count_\1 = { limit = { \2\5 } \3\4 }"], # too rare!? only simple supported TODO
@@ -138,7 +140,7 @@ else:
         r"(\s+)ship_upkeep_mult\s*=": r"\1ships_upkeep_mult =",
         r"\b(contact_rule\s*=\s*)script_only": ("common\\country_types", r"\1on_action_only"),
 
-        r"(\s+)add_(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro)\s*=\s*(\d+|@\w+)": r"\1add_resource = { \2 = \3 }",
+        r"(\s+)add_(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research)))\s*=\s*(\d+|@\w+)": r"\1add_resource = { \2 = \3 }",
         ### > 3.1.* beta
         r"(\s+set_)(primitive)\s*=\s*yes": r"\1country_type = \2",
         # r"(\s+)count_armies": r"\1count_owned_army", # count_planet_army (scope split: depending on planet/country)
@@ -332,6 +334,8 @@ if code_cosmetic and not only_warning:
     ## targets3[r"# *([A-Z][\w ={}]+?)\.$"] = r"# \1" # remove comment punctuation mark
     targets4[r"\s*\n{2,}"] = "\n\n" # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
     targets4[r"\brandom_country\s*=\s*\{\s*limit\s*=\s*\{\s*is_country_type\s*=\s*global_event\s*\}"] = "event_target:global_event_country = {"
+    targets4[r"(?:\s+add_resource\s*=\s*\{\s*\w+\s*=\s*[^{}#]+\s*\})+"] = [r"(\s+add_resource\s*=\s*\{)(\s*\w+\s*=\s*[^\s{}#]+)\s*\}\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\}(?(3)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(4)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(5)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(6)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(7)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?", r"\1\2\3\4\5\6\7 }"] # 6 items 
+    
 
 
 def mBox(mtype, text):
