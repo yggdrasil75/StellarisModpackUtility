@@ -297,9 +297,6 @@ else:
         # r"change_species_characteristics\s*=\s*\{\s*?[^{}\n]*?
         r"[\s#]+new_pop_resource_requirement\s*=\s*\{[^{}]+\}\s*": [r"([\s#]+new_pop_resource_requirement\s*=\s*\{[^{}]+\}[ \t]*)", ""],
         # needs now dot scope
-        r"\bset_variable\s*=\s*\{\s*which\s*=\s*\"?\w+\"?\s+value\s*=\s*(?:event_target:[^\d:{}#\s=\.]+|[^\d:{}#\s=\.]+)\s*\}": [r"set_variable\s*=\s*\{\s*which\s*=\s*\"?(\w+)\"?\s+value\s*=\s*(event_target:\w+|\w+)\s*\}", r"set_variable = { which = \1 value = \2.\1 }"],
-        # temp fix r"\bset_variable\s*=\s*\{\s*which\s*=\s*\"?\w+\"?\s+value\s*=\s*\d+\.[^\d:{}#\s=\.]+\s*\}": [r"set_variable\s*=\s*\{\s*which\s*=\s*\"?(\w+)\"?\s+value\s*=\s*(\d+)\.[^\d:{}#\s=]+\s*\}", r"set_variable = { which = \1 value = \2 }"],
-
 
         # >=3.1
         #but not used for starbases
@@ -320,7 +317,8 @@ else:
                   "11": "transport",
                   "12": "space_monster"
               }[p.group(2)])],
-        r"\s+which\s*=\s*\"?\w+\"?\s+value\s*[<=>]+\s*(?:prev|from|root|event_target:[^\.\s])+\s*\}": [r"(\s+which\s*=\s*\"?(\w+)\"?\s+value\s*[<=>]+\s*(prev|from|root|event_target:[^\.\s])+)", r"\1.\2"],
+        r"\{\s*which\s*=\s*\"?\w+\"?\s+value\s*[<=>]+\s*(?:prev|from|root|event_target:[^\.\s])+\s*\}": [r"(\s*which\s*=\s*\"?(\w+)\"?\s+value\s*[<=>]+\s*(prev|from|root|event_target:[^\.\s])+)", r"\1.\2"],
+        r"\bset_variable\s*=\s*\{\s*which\s*=\s*\"?\w+\"?\s+value\s*=\s*(?:event_target:[^\d:{}#\s=\.]+|(prev\.?|from\.?|root|this|megastructure|planet|country|owner|space_owner|ship|pop|fleet|galactic_object|leader|army|ambient_object|species|pop_faction|war|federation|starbase|deposit|sector|archaeological_site|first_contact|spy_network|espionage_operation|espionage_asset)+)\s*\}": [r"set_variable\s*=\s*\{\s*which\s*=\s*\"?(\w+)\"?\s+value\s*=\s*(event_target:\w+|\w+)\s*\}", r"set_variable = { which = \1 value = \2.\1 }"],
         r"\s+spawn_megastructure\s*=\s*\{[^{}#]+": [r"(\s+)location\s*=\s*([\w\._:]+)", r"\1coords_from = \2"],
         # >= 3.2
         r"\bNO[RT]\s*=\s*\{\s*is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s*\}": [r"\bNO[RT]\s*=\s*\{\s*is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s*\}", r"is_artificial = no"],
