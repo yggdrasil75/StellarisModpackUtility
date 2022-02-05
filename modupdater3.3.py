@@ -21,7 +21,7 @@ only_warning = False # True/False optional (if True, implies code_cosmetic = Fal
 code_cosmetic = False # True/False optional (only if only_warning = False)
 only_actual = False # speedup search to only last relevant version
 
-stellaris_version = '3.3.b'
+stellaris_version = '3.3.0 Beta'
 mod_outpath = ''
 
 # mod_path = os.path.dirname(os.getcwd())
@@ -33,6 +33,7 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 #     sys.exit(1)
 
 # for performance reason option
+# 3.3 TODO soldier_job_check_trigger
 if only_actual:
     removedTargets = [
         # "",
@@ -68,8 +69,8 @@ else:
         ("common\\pop_jobs", r"\s(drone|worker|specialist|ruler)_job_check_trigger\b"), # scripted trigger
 
         # 3.1
-        r"\s(any|every|random)_(research|mining)_station\b", # = 2 trigger & 4 effects
-        r"\sobservation_outpost\s*=\s*\{\s*limit",
+        [r"\b(any|every|random)_(research|mining)_station\b", 'use just mining_station/research_station instead'], # = 2 trigger & 4 effects
+        [r"\sobservation_outpost\s*=\s*\{\s*limit", 'is now a scope (from planet) rather than a trigger/effect'],
         r"\spop_can_live_on_planet\b", # r"\1can_live_on_planet", needs planet target
         r"\scount_armies\b", # (scope split: depending on planet/country)
         (["common\\bombardment_stances", "common\\ship_sizes"], [r"^\s+icon_frame\s*=\s*\d+", '"icon_frame" now only used for starbases']), # [6-9]  # Value of 2 or more means it shows up on the galaxy map, 1-5 denote which icon it uses on starbase sprite sheets (e.g. gfx/interface/icons/starbase_ship_sizes.dds)
@@ -139,7 +140,7 @@ else:
         ### somewhat older
         r"(\s+)ship_upkeep_mult\s*=": r"\1ships_upkeep_mult =",
         r"\b(contact_rule\s*=\s*)script_only": ("common\\country_types", r"\1on_action_only"),
-
+        r"\b(any|every|random)_(research|mining)_station\b": r"\2_station",
         r"(\s+)add_(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research)))\s*=\s*(\d+|@\w+)": r"\1add_resource = { \2 = \3 }",
         ### > 3.1.* beta
         r"(\s+set_)(primitive)\s*=\s*yes": r"\1country_type = \2",
@@ -293,6 +294,10 @@ else:
         r"NOT\s*=\s*\{\s*check_variable\s*=\s*\{\s*which\s*=\s*\"?\w+\"?\s+value\s*=\s*[^{}#\s=]\s*\}\s*\}": [r"NOT\s*=\s*\{\s*(check_variable\s*=\s*\{\s*which\s*=\s*\"?\w+\"?\s+value)\s*=\s*([^{}#\s=])\s*\}\s*\}", r"\1 != \2 }"],
         # r"change_species_characteristics\s*=\s*\{\s*?[^{}\n]*?
         r"[\s#]+new_pop_resource_requirement\s*=\s*\{[^{}]+\}\s*": [r"([\s#]+new_pop_resource_requirement\s*=\s*\{[^{}]+\}[ \t]*)", ""],
+        # needs now dot scope
+        r"\bset_variable\s*=\s*\{\s*which\s*=\s*\"?\w+\"?\s+value\s*=\s*(?:event_target:[^\d:{}#\s=\.]+|[^\d:{}#\s=\.]+)\s*\}": [r"set_variable\s*=\s*\{\s*which\s*=\s*\"?(\w+)\"?\s+value\s*=\s*(event_target:\w+|\w+)\s*\}", r"set_variable = { which = \1 value = \2.\1 }"],
+        # temp fix r"\bset_variable\s*=\s*\{\s*which\s*=\s*\"?\w+\"?\s+value\s*=\s*\d+\.[^\d:{}#\s=\.]+\s*\}": [r"set_variable\s*=\s*\{\s*which\s*=\s*\"?(\w+)\"?\s+value\s*=\s*(\d+)\.[^\d:{}#\s=]+\s*\}", r"set_variable = { which = \1 value = \2 }"],
+
 
         # >=3.1
         #but not used for starbases
