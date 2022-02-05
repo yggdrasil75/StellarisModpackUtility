@@ -1,6 +1,6 @@
 # @author FirePrince
 # @version: 3.3.b
-# @revision 2022/02/03
+# @revision 2022/02/05
 # @Thanks OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # ToDo: full path mod folder
@@ -104,9 +104,11 @@ else:
     #     r"job_replicator_add = \d":["if = {limit = {has_authority = auth_machine_intelligence} job_replicator_add = ", "} if = {limit = {has_country_flag = synthetic_empire} job_roboticist_add = ","}"]
     # }
 
-    ### > 3.0.* (only one-liner)
+    ### >= 3.0.* (only one-liner)
     targets3 = {
-        r"\tsurveyed\s*=\s*\{": r"\tset_surveyed = {",
+
+        r"\b(first_contact_)attack_not_allowed": r"\1cautious",
+        r"\bsurveyed\s*=\s*\{": r"set_surveyed = {",
         r"(\s+)set_surveyed\s*=\s*(yes|no)": r"\1surveyed = \2",
         r"has_completed_special_project\s+": "has_completed_special_project_in_log ",
         r"has_failed_special_project\s+": "has_failed_special_project_in_log ",
