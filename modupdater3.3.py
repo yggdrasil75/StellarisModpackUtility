@@ -1,9 +1,9 @@
-# @author FirePrince
+# @author: FirePrince
 # @version: 3.3.b
-# @revision 2022/02/05
-# @Thanks OldEnt for detailed rundowns.
+# @revision: 2022/02/08
+# @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
-# ToDo: full path mod folder
+# @ToDo: full path mod folder
 
 # ============== Import libs ===============
 import os  # io for high level usage
@@ -18,10 +18,10 @@ from tkinter import messagebox
 
 # ============== Initialize global parameter/variables ===============
 only_warning = False # True/False optional (if True, implies code_cosmetic = False)
-code_cosmetic = False # True/False optional (only if only_warning = False)
-only_actual = False # speedup search to only last relevant version
+code_cosmetic = True # True/False optional (only if only_warning = False)
+only_actual = True # speedup search (from previous relevant) to actual version
 
-stellaris_version = '3.3.0 Beta'
+stellaris_version = '3.3.0'
 mod_outpath = ''
 
 # mod_path = os.path.dirname(os.getcwd())
@@ -32,13 +32,14 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 #     print("You are using Python {}.{}.".format(sys.version_info.major, sys.version_info.minor))
 #     sys.exit(1)
 
-# for performance reason option
+# For performance reason option
 # 3.3 TODO soldier_job_check_trigger
 if only_actual:
     removedTargets = [
         # "",
         ("common\\buildings", r"\sbuilding(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*="), # replaced buildings ai
         [r"\bnum_\w+\s*[<=>]+\s*[a-z]+[\s}]", 'no scope alone'], #  [^\d{$@] too rare (could also be auto fixed)
+        [r"\n\s+NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}", 'can be merged to NOR if not in an OR'], #  [^\d{$@] too rare (could also be auto fixed)
     ]
     targets3 = {
         r"\s+building(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*=\s*(?:yes|no)\n?": ("common\\buildings", ''),
@@ -47,6 +48,7 @@ if only_actual:
         r"\bhas_civic\s*=\s*civic_reanimated_armies": 'is_reanimator = yes',
     }
     targets4 = {
+        #r"\n\s+NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}": [r"([\t ]+)NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"], not valid if in OR
         r"\bany_\w+\s*=\s*\{[^{}]+?\bcount\s*[<=>]+\s*[^{}\s]+\s+[^{}]*\}": [r"\bany_(\w+)\s*=\s*\{\s*(?:([^{}]+?)\s+(\bcount\s*[<=>]+\s*[^{}\s]+)|(\bcount\s*[<=>]+\s*[^{}\s]+)\s+([^{}]*))\s+\}", r"count_\1 = { limit = { \2\5 } \3\4 }"], # too rare!? only simple supported TODO
     }
 else:
@@ -104,9 +106,8 @@ else:
     #     r"job_replicator_add = \d":["if = {limit = {has_authority = auth_machine_intelligence} job_replicator_add = ", "} if = {limit = {has_country_flag = synthetic_empire} job_roboticist_add = ","}"]
     # }
 
-    ### >= 3.0.* (only one-liner)
     targets3 = {
-
+        ### >= 3.0.* (only one-liner)
         r"\b(first_contact_)attack_not_allowed": r"\1cautious",
         r"\bsurveyed\s*=\s*\{": r"set_surveyed = {",
         r"(\s+)set_surveyed\s*=\s*(yes|no)": r"\1surveyed = \2",
@@ -263,8 +264,8 @@ else:
     }
 
 
-    # 3.0.* (multiline)
     targets4 = {
+        # 3.0.* (multiline)
         # key (pre match without group): arr (search, replace) or str (if no group)
         r"\s+random_system_planet\s*=\s*\{\s*limit\s*=\s*\{\s*is_star\s*=\s*yes\s*\}": [r"(\s+)random_system_planet\s*=\s*\{\s*limit\s*=\s*\{\s*is_star\s*=\s*yes\s*\}", r"\1star = {"],
         r"\bcreate_leader\s*=\s*\{[^{}]+?\s+type\s*=\s*\w+": [r"(create_leader\s*=\s*\{[^{}]+?\s+)type\s*=\s*(\w+)", r"\1class = \2"],
@@ -332,15 +333,20 @@ else:
 if code_cosmetic and not only_warning:
     targets3[r"([\s\.]+(PREV|FROM|ROOT|THIS)+)"] = lambda p: p.group(1).lower() # r"([\s\.]+(PREV|FROM|ROOT|THIS)+)": lambda p: p.group(1).lower(),  ## targets3[re.compile(r"([\s\.]+(PREV|FROM|ROOT|THIS)+)", re.I)] = lambda p: p.group(1).lower()
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
+    targets3[r"\s*days\s*=\s*-1"] = '' # default not needed anymore
     targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
     targets3[r"#([^\-\s#])"] = r"# \1" # r"#([^\s#])": r"# \1", # format comment
     targets3[r"# +([A-Z][^\n=<>{}\[\]# ]+? [\w,\.;\'\/\\+\- ()&]+? \w+ \w+ \w+)$"] = r"# \1." # set comment punctuation mark
     targets3[r"# ([a-z])(\w+ +[^;:\s#=<>]+ [^\n]+?[\.!?])$"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
+    # NOT NUM triggers. TODO <> ?
+    targets3[r"\bNOT\s*=\s*\{\s*(num_\w+|\w+?(?:_passed))\s*=\s*(\d+)\s*\}"] = r"\1 != \2"
     ## targets3[r"# *([A-Z][\w ={}]+?)\.$"] = r"# \1" # remove comment punctuation mark
-    targets4[r"\s*\n{2,}"] = "\n\n" # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
+    targets4[r"\n{3,}"] = "\n\n" # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
+    # WARNING not valid if in OR: NOR <=> AND = { NOT NOT } , # only 2 items (sub-trigger)  
+    targets4[r"\n\s+NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}"] = [r"([\t ]+)NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"] 
     targets4[r"\brandom_country\s*=\s*\{\s*limit\s*=\s*\{\s*is_country_type\s*=\s*global_event\s*\}"] = "event_target:global_event_country = {"
     targets4[r"(?:\s+add_resource\s*=\s*\{\s*\w+\s*=\s*[^{}#]+\s*\})+"] = [r"(\s+add_resource\s*=\s*\{)(\s*\w+\s*=\s*[^\s{}#]+)\s*\}\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\}(?(3)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(4)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(5)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(6)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(7)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?", r"\1\2\3\4\5\6\7 }"] # 6 items 
-    
+
 
 
 def mBox(mtype, text):
