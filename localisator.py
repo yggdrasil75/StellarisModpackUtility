@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ###    @author FirePrince
-###    @revision 2021/11/24
+###    @revision 2022/02/17
 ###    USAGE: You need install https://pyyaml.org/wiki/PyYAMLDocumentation for Python3.x
 ###    ATTENTION: You must customize the vars localModPath and local_OVERHAUL
 ###    TODO: Renaming (already translated) keys is not working
@@ -29,9 +29,14 @@ except: print("Not running Windows")
 
 #============== Initialise global variables ===============
 # Write here your mod folder name and languages to replace/update
-localModPath = ["distant_stars_overhaul", ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
+
+localModPath = ["ADeadlyTempest", ["french", "polish"]]
+
+# localModPath = ["c:\\Games\\steamapps\\workshop\\content\\281990\\2268189539\\", ["braz_por"]]
+# local_OVERHAUL = ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
 
 loadVanillaLoc = False # BETA: replaces exact matching strings with vanilla ones
+loadVanillaLocUpdateDefault = True # only true if loadVanillaLoc
 # loadDependingMods = False # replaces exact matching strings with ones from the depending mod(s)
 defaultLang = 'english'
 ymlfiles = '*.yml' # you can also use single names
@@ -158,8 +163,8 @@ if loadVanillaLoc and len(local_OVERHAUL) > 0:
 # ymlfiles = '*.yml'
 
 # def abort(message):
-#   mBox('abort', message, 0)
-#   sys.exit(1)
+# 	mBox('abort', message, 0)
+# 	sys.exit(1)
 
 
 def mBox(mtype, text):
@@ -181,6 +186,11 @@ def iBox(title, prefil): # , master
 mods_registry = "settings.txt"
 localizations = ["english", "german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
 
+# default needs first
+if defaultLang != localizations[0]:
+    localizations.remove(defaultLang)
+    localizations.insert(0, defaultLang)
+
 # Check Stellaris settings location
 settingsPath = [
     '.', '..',
@@ -192,9 +202,9 @@ settingsPath = [s for s in settingsPath if os.path.isfile(
     os.path.join(s, mods_registry))]
 
 # for s in settingsPath:
-#   if os.path.isfile(os.path.join(s, mods_registry)):
-#       settingsPath[0] = s
-#       break
+# 	if os.path.isfile(os.path.join(s, mods_registry)):
+# 		settingsPath[0] = s
+# 		break
 print(settingsPath)
 
 if len(settingsPath) > 0:
@@ -293,10 +303,10 @@ for filename in ymlfiles:
     # print(streamEn)
     dictionary = {}
     # try:
-    #   print(type(dictionary),dictionary)
-    #   # print(dictionary["ï»¿l_english"])
+    # 	print(type(dictionary),dictionary)
+    # 	# print(dictionary["ï»¿l_english"])
     # except yaml.YAMLError as exc:
-    #   print(exc)
+    # 	print(exc)
     # doc = yaml.load_all(stream, Loader=yaml.FullLoader)
     # doc = yaml.dump(dictionary) # ["\u00ef\u00bb\u00bfl_english"]
     # doc = json.dumps(dictionary) # ["\u00ef\u00bb\u00bfl_english"]
@@ -312,14 +322,25 @@ for filename in ymlfiles:
 
     # Replace with Vanilla
     if loadVanillaLoc and isinstance(doc, dict):
+        changed = False
         # print("LOAD loadVanillaLoc", type(loadVanillaLoc)) # = dict_items
         for vkey, vvalue in loadVanillaLoc:
             if len(vvalue) > 2 and not vvalue.startswith("$") and len(vvalue) < 60:
-                for k, v in doc.items():
-                    if len(v) > 2 and not(v.startswith("$") and v.endswith("$")) and len(v) < 60 and v == vvalue:
+                for k, v in doc.copy().items():
+                    if isinstance(vkey, str) and isinstance(k, str) and k.lower() == vkey.lower() and v == vvalue:
+                        del doc[k]
+                        changed = True
+                        print(k, "DELETED: same as vanilla", vkey)
+                    elif len(v) > 2 and not(v.startswith("$") and v.endswith("$")) and len(v) < 60 and v == vvalue:
                         doc[k] = '$'+ vkey +'$'
+                        changed = True
                         print(k, "REPLACED with vanilla", vkey)
                         # break
+        if changed and loadVanillaLocUpdateDefault:
+            loadVanillaLocUpdateDefault = True
+            localizations.append(defaultLang)
+        else: loadVanillaLocUpdateDefault = False
+        print("loadVanillaLocUpdateDefault:", loadVanillaLocUpdateDefault)
 
     # for doc in dictionary:
     for lang in range(1, len(localizations)):
@@ -359,25 +380,26 @@ for filename in ymlfiles:
             # continue
 
         langDict = langStream["l_"+lang]
-        #print("Dict document:", type(langStream), langStream)
+        print("Dict document:", type(langStream), lang, isinstance(langDict, dict))
 
         # for _, doc in dictionary.items():
         if isinstance(langDict, dict):
             for key, value in doc.items():
                 # print(key, value)
-                if key not in langDict or value == "" or langDict[key] in ("", "REPLACE_ME") or (lang in local_OVERHAUL and langDict[key] != value) and not (key_IGNORE != "" and key.startswith(key_IGNORE)):
+                if key not in langDict or value == "" or langDict[key] in ("", "REPLACE_ME") or (lang in local_OVERHAUL and langDict[key] != value) and not (key_IGNORE != "" and key.startswith(key_IGNORE)) or re.search(r"^\$[^$]+?\$$", value):
                     langDict[key] = value
                     changed = True
                     print("Fixed document " + filename.replace(defaultLang, lang), key, value.encode())
                     # break
                 # else: print(bytes(key + ":0 " + langDict[key], "utf-8").decode("utf-8"))
             for key in list(langDict.keys()):
+                # print(key)
                 if key not in doc:
                     del langDict[key]
                     changed = True
                     print(key, "removed from document " + filename.replace(defaultLang, lang))
 
-        if changed:
+        if changed or loadVanillaLocUpdateDefault:
             # dictionary = doc.copy()
             # dictionary.update(langDict)
             # langStream["l_"+lang] = dictionary
