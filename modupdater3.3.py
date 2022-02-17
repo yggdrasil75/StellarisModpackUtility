@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.3.b
-# @revision: 2022/02/08
+# @revision: 2022/02/17
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -19,7 +19,7 @@ from tkinter import messagebox
 # ============== Initialize global parameter/variables ===============
 only_warning = False # True/False optional (if True, implies code_cosmetic = False)
 code_cosmetic = False # True/False optional (only if only_warning = False)
-only_actual = True # speedup search (from previous relevant) to actual version
+only_actual = False # speedup search (from previous relevant) to actual version
 
 stellaris_version = '3.3.0'
 mod_outpath = ''
