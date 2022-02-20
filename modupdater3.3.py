@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.3.b
-# @revision: 2022/02/17
+# @revision: 2022/02/20
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -130,7 +130,7 @@ else:
         # "any_ship_in_system": "any_fleet_in_system", # works only sure for single size fleets
         r"spawn_megastructure\s*=\s*\{([^{}#]+)location\s*=": r"spawn_megastructure = {\1planet =",
         r"\s+planet\s*=\s*(solar_system|planet)[\s\n\r]*": "",  # REMOVE
-        r"any_system_within_border\s*=\s*\{\s*any_system_planet\s*=": "any_planet_within_border =",
+        r"(\n\s+)any_system_within_border\s*=\s*\{\s*any_system_planet\s*=\s*(.+?\s*\})\s*\}": r"\1any_planet_within_border = \2", # very rare, maybe put to cosmetic
         r"is_country_type\s*=\s*default\s+has_monthly_income\s*=\s*\{\s*resource = (\w+) value <=? \d": r"no_resource_for_component = { RESOURCE = \1",
         r"([^\._])(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w\._:]+)\s*\}": r"\1is_owned_by = \2",
         r"(\s+)is_(?:country|same_value)\s*=\s*([\w\._:]+\.(?:space_)?owner)": r"\1is_same_empire = \2",
@@ -269,7 +269,7 @@ else:
     targets4 = {
         # 3.0.* (multiline)
         # key (pre match without group): arr (search, replace) or str (if no group)
-        r"\s+random_system_planet\s*=\s*\{\s*limit\s*=\s*\{\s*is_star\s*=\s*yes\s*\}": [r"(\s+)random_system_planet\s*=\s*\{\s*limit\s*=\s*\{\s*is_star\s*=\s*yes\s*\}", r"\1star = {"],
+        # r"\s+random_system_planet\s*=\s*\{\s*limit\s*=\s*\{\s*is_star\s*=\s*yes\s*\}": [r"(\s+)random_system_planet\s*=\s*\{\s*limit\s*=\s*\{\s*is_star\s*=\s*yes\s*\}", r"\1star = {"], # TODO works only on single star systems
         r"\bcreate_leader\s*=\s*\{[^{}]+?\s+type\s*=\s*\w+": [r"(create_leader\s*=\s*\{[^{}]+?\s+)type\s*=\s*(\w+)", r"\1class = \2"],
         r"NO[RT]\s*=\s*\{\s*has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+\}": [r"NO[RT]\s*=\s*\{\s*has_ethic\s*=\s*\"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:\1|\2)|fanatic_(?:\1|\2))\"?\s+\}", r"is_\1\2 = no"],
         r"(?:\s+OR\s*=\s*\{)?\s*has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*\}?": [r"(\s+OR\s*=\s*\{)?(\s*?\n?\s*?)?(?(1)\t?)has_ethic\s*=\s*\"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*?has_ethic\s*=\s*\"?ethic_(?:(?:\4|\3)|fanatic_(?:\4|\3))\"?\s*?(?(1)\})", r"\2is_\3\4 = yes"], # r"\4is_ethics_aligned = { ARG1 = \2\3 }",
@@ -299,7 +299,8 @@ else:
         r"NOT\s*=\s*\{\s*check_variable\s*=\s*\{\s*which\s*=\s*\"?\w+\"?\s+value\s*=\s*[^{}#\s=]\s*\}\s*\}": [r"NOT\s*=\s*\{\s*(check_variable\s*=\s*\{\s*which\s*=\s*\"?\w+\"?\s+value)\s*=\s*([^{}#\s=])\s*\}\s*\}", r"\1 != \2 }"],
         # r"change_species_characteristics\s*=\s*\{\s*?[^{}\n]*?
         r"[\s#]+new_pop_resource_requirement\s*=\s*\{[^{}]+\}\s*": [r"([\s#]+new_pop_resource_requirement\s*=\s*\{[^{}]+\}[ \t]*)", ""],
-        # needs now dot scope
+        # very rare, maybe put to cosmetic
+        r"\n\s+any_system_within_border\s*=\s*\{\s*any_system_planet\s*=\s*\{\s*(\w+\s*=\s*\{[\w\W]+?\}|[\w\W]+?)\s*\}\s*\}": [r"(\n\s+)any_system_within_border\s*=\s*\{(\1\s*)any_system_planet\s*=\s*\{\1\s*([\w\W]+?)\s*\}\s*\1\}", r"\1any_planet_within_border = {\2\3\1}"],
 
         # >=3.1
         #but not used for starbases
