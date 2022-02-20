@@ -55,13 +55,13 @@ if only_actual:
     }
 else:
     # >= 3.0.*
+    """== 3.1 Quick stats ==
+    6 effects removed/renamed.
+    8 triggers removed/renamed.
+    426 modifiers removed/renamed.
+    1 scope removed.
+    """
     removedTargets = [
-        """== 3.1 Quick stats ==
-        6 effects removed/renamed.
-        8 triggers removed/renamed.
-        426 modifiers removed/renamed.
-        1 scope removed.
-        """
         # This are only warnings, commands which cannot be easily replaced.
         # Format: tuple is with folder (folder, regexp/list); list is with a specific message [regexp, msg]
         # 3.2
@@ -100,7 +100,8 @@ else:
         r"\scan_support_spaceport\s*=\s*(yes|no)",
         # 3.3
         ("common\\buildings", r"\sbuilding(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*="), # replaced buildings ai
-        # [r"\bnum_\w+\s*[<=>]+\s*[a-z]+[\s}]", 'no scope alone'], #  [^\d{$@] too rare
+        [r"\bnum_\w+\s*[<=>]+\s*[a-z]+[\s}]", 'no scope alone'], #  [^\d{$@] too rare (could also be auto fixed)
+        [r"\n\s+NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}", 'can be merged to NOR if not in an OR'], #  [^\d{$@] too rare (could also be auto fixed)
     ]
 
     # targets2 = {
@@ -130,7 +131,7 @@ else:
         # "any_ship_in_system": "any_fleet_in_system", # works only sure for single size fleets
         r"spawn_megastructure\s*=\s*\{([^{}#]+)location\s*=": r"spawn_megastructure = {\1planet =",
         r"\s+planet\s*=\s*(solar_system|planet)[\s\n\r]*": "",  # REMOVE
-        r"(\n\s+)any_system_within_border\s*=\s*\{\s*any_system_planet\s*=\s*(.+?\s*\})\s*\}": r"\1any_planet_within_border = \2", # very rare, maybe put to cosmetic
+        r"(\s+)any_system_within_border\s*=\s*\{\s*any_system_planet\s*=\s*(.*?\s*\})\s*\}": r"\1any_planet_within_border = \2", # very rare, maybe put to cosmetic
         r"is_country_type\s*=\s*default\s+has_monthly_income\s*=\s*\{\s*resource = (\w+) value <=? \d": r"no_resource_for_component = { RESOURCE = \1",
         r"([^\._])(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w\._:]+)\s*\}": r"\1is_owned_by = \2",
         r"(\s+)is_(?:country|same_value)\s*=\s*([\w\._:]+\.(?:space_)?owner)": r"\1is_same_empire = \2",
@@ -263,6 +264,10 @@ else:
         r"^(\t|    )energy\s*=\s*(\d+|@\w+)": ("common\\terraform", r"\1resources = {\n\1\1category = terraforming\n\1\1cost = { energy = \2 }\n\1}"),
         ### 3.3
         r"\s+building(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*=\s*(?:yes|no)\n?": ("common\\buildings", ''),
+        r"\bGFX_ship_part_auto_repair": (["common\\component_sets", "common\\component_templates"], 'GFX_ship_part_ship_part_nanite_repair_system'), # because icons.gfx
+        r"\bcountry_election_influence_cost_mult": ("common\\governments", 'country_election_cost_mult'),
+        r"\bhas_civic\s*=\s*civic_reanimated_armies": 'is_reanimator = yes',
+        # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
     }
 
 
@@ -300,7 +305,7 @@ else:
         # r"change_species_characteristics\s*=\s*\{\s*?[^{}\n]*?
         r"[\s#]+new_pop_resource_requirement\s*=\s*\{[^{}]+\}\s*": [r"([\s#]+new_pop_resource_requirement\s*=\s*\{[^{}]+\}[ \t]*)", ""],
         # very rare, maybe put to cosmetic
-        r"\n\s+any_system_within_border\s*=\s*\{\s*any_system_planet\s*=\s*\{\s*(\w+\s*=\s*\{[\w\W]+?\}|[\w\W]+?)\s*\}\s*\}": [r"(\n\s+)any_system_within_border\s*=\s*\{(\1\s*)any_system_planet\s*=\s*\{\1\s*([\w\W]+?)\s*\}\s*\1\}", r"\1any_planet_within_border = {\2\3\1}"],
+        r"\n\s+any_system_within_border\s*=\s*\{\s*any_system_planet\s*=\s*\{\s*(?:\w+\s*=\s*\{[\w\W]+?\}|[\w\W]+?)\s*\}\s*\}": [r"(\n\s+)any_system_within_border\s*=\s*\{(\1\s*)any_system_planet\s*=\s*\{\1\s*([\w\W]+?)\s*\}\s*\1\}", r"\1any_planet_within_border = {\2\3\1}"],
 
         # >=3.1
         #but not used for starbases
@@ -329,7 +334,9 @@ else:
         r"\bis_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\b": [r"\bis_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\b", r"is_artificial = yes"],
         r"\n\s+possible\s*=\s*\{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)(?:drone|worker|specialist|ruler)_job_check_trigger\s*=\s*yes\s*": [r"(\s+)(possible\s*=\s*\{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?))(drone|worker|specialist|ruler)_job_check_trigger\s*=\s*yes\s*", ("common\\pop_jobs", r"\1possible_precalc = can_fill_\4_job\1\2")], # only with 6 possible prior lines
         r"[^b]\n\s+possible\s*=\s*\{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)complex_specialist_job_check_trigger\s*=\s*yes\s*": [r"(\s+)(possible\s*=\s*\{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)complex_specialist_job_check_trigger\s*=\s*yes\s*)", ("common\\pop_jobs", r"\1possible_precalc = can_fill_specialist_job\1\2")], # only with 6 possible prior lines
-        # >3.2
+        # > 3.2
+         r"(?:random_weight|pop_attraction(_tag)?|country_attraction)\s+value\s*=": [r"\bvalue\b", ("common\\ethics", 'base')],
+        #r"\n\s+NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}": [r"([\t ]+)NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"], not valid if in OR
         r"\bany_\w+\s*=\s*\{[^{}]+?\bcount\s*[<=>]+\s*[^{}\s]+\s+[^{}]*\}": [r"\bany_(\w+)\s*=\s*\{\s*(?:([^{}]+?)\s+(\bcount\s*[<=>]+\s*[^{}\s]+)|(\bcount\s*[<=>]+\s*[^{}\s]+)\s+([^{}]*))\s+\}", r"count_\1 = { limit = { \2\5 } \3\4 }"], # too rare!? only simple supported TODO
     }
 
