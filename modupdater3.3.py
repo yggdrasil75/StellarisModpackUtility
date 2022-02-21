@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.3.b
-# @revision: 2022/02/20
+# @revision: 2022/02/21
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -20,6 +20,8 @@ from tkinter import messagebox
 only_warning = False # True/False optional (if True, implies code_cosmetic = False)
 code_cosmetic = False # True/False optional (only if only_warning = False)
 only_actual = False # speedup search (from previous relevant) to actual version
+also_old = False # pre 2.3 stuff 
+debug_mode = False # for dev
 
 stellaris_version = '3.3.0'
 mod_outpath = ''
@@ -129,7 +131,7 @@ else:
         r"count(_owned)?_pops\s*": "count_owned_pop ",
         r"count_(owned|fleet)_ships\s*": "count_owned_ship ", # 2.7
         # "any_ship_in_system": "any_fleet_in_system", # works only sure for single size fleets
-        r"spawn_megastructure\s*=\s*\{([^{}#]+)location\s*=": r"spawn_megastructure = {\1planet =",
+        r"spawn_megastructure\s*=\s*\{([^{}#]+)location\s*=": r"spawn_megastructure = {\1planet =", # s.a. multiline coords_from
         r"\s+planet\s*=\s*(solar_system|planet)[\s\n\r]*": "",  # REMOVE
         r"(\s+)any_system_within_border\s*=\s*\{\s*any_system_planet\s*=\s*(.*?\s*\})\s*\}": r"\1any_planet_within_border = \2", # very rare, maybe put to cosmetic
         r"is_country_type\s*=\s*default\s+has_monthly_income\s*=\s*\{\s*resource = (\w+) value <=? \d": r"no_resource_for_component = { RESOURCE = \1",
@@ -147,7 +149,7 @@ else:
         r"(\s+)ship_upkeep_mult\s*=": r"\1ships_upkeep_mult =",
         r"\b(contact_rule\s*=\s*)script_only": ("common\\country_types", r"\1on_action_only"),
         r"\b(any|every|random)_(research|mining)_station\b": r"\2_station",
-        r"(\s+)add_(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research)))\s*=\s*(\d+|@\w+)": r"\1add_resource = { \2 = \3 }",
+        r"(\s+)add_(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research)))\s*=\s*(-?@\w+|-?\d+)": r"\1add_resource = { \2 = \3 }",
         ### > 3.1.* beta
         r"(\s+set_)(primitive)\s*=\s*yes": r"\1country_type = \2",
         # r"(\s+)count_armies": r"\1count_owned_army", # count_planet_army (scope split: depending on planet/country)
@@ -246,7 +248,7 @@ else:
                  "30": "fringe",
                  "31": "industrial"
              }[p.group(2)]),
-        r"(\s+modifier)\s*=\s*\{\s*mult": r"\1 = { factor",
+        # r"(\s+modifier)\s*=\s*\{\s*mult": r"\1 = { factor", now multiline
         # r"(\s+)pop_can_live_on_planet": r"\1can_live_on_planet", needs planet target
         r"\bcount_diplo_ties":          "count_relation",
         r"\bhas_non_swapped_tradition": "has_active_tradition",
@@ -292,9 +294,11 @@ else:
         ### End boolean operator merge
         r"\sany_country\s*=\s*\{[^{}#]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default)": [r"(\s)any_country\s*=\s*(\{[^{}#]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default))", r"\1any_playable_country = \2"],
         r"\s(?:every|random|count)_country\s*=\s*\{[^{}#]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default|has_special_project)": [r"(\s(?:every|random|count))_country\s*=\s*(\{[^{}#]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default|has_special_project))", r"\1_playable_country = \2"],
+        r"\s(?:every|random|count|any)_playable_country\s*=\s*\{[^{}#]*(?:limit\s*=\s*\{\s*)?(?:is_country_type\s*=\s*default|CmtTriggerIsPlayableEmpire\s*=\s*yes|is_zofe_compatible\s*=\s*yes)\s*": [r"((?:every|random|count|any)_playable_country\s*=\s*\{[^{}#]*?(?:limit\s*=\s*\{\s*)?)(?:is_country_type\s*=\s*default|CmtTriggerIsPlayableEmpire\s*=\s*yes|is_zofe_compatible\s*=\s*yes)\s*", r"\1"],
+
         r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*[\w\._:]+\s*\}\s*\}": [r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w\._:]+)\s*\}\s*\}", r"{ is_owned_by = \1 }"],
         r"NO[RT]\s*=\s*\{\s*is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s*\}": "is_fallen_empire = no",
-        r"\s+(?:OR\s*=\s*\{)?\s{4,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s+\}?": [r"(\s+)(OR\s*=\s*\{)?\s{4,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)(?(1)\1\})", r"\1is_fallen_empire = yes"],
+        r"\s+(?:OR\s*=\s*\{)?\s{4,}is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s+\}?": [r"(\s+)(OR\s*=\s*\{)?(\s{4,})is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:fallen_empire|awakened_fallen_empire)(?(2)\1\})", r"\1\3is_fallen_empire = yes"],
         r"NO[RT]\s*=\s*\{\s*is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = no",
         r"OR\s*=\s*\{\s*is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+is_country_type\s*=\s*(?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = yes",
         r"NO[RT]\s*=\s*\{\s*(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+(?:has_authority\s*=\s*auth_machine_intelligence|has_country_flag\s*=\s*synthetic_empire)\s+\}": "is_synthetic_empire = no",
@@ -328,7 +332,8 @@ else:
               }[p.group(2)])],
         r"\{\s*which\s*=\s*\"?\w+\"?\s+value\s*[<=>]+\s*(?:prev|from|root|event_target:[^\.\s])+\s*\}": [r"(\s*which\s*=\s*\"?(\w+)\"?\s+value\s*[<=>]+\s*(prev|from|root|event_target:[^\.\s])+)", r"\1.\2"],
         r"\bset_variable\s*=\s*\{\s*which\s*=\s*\"?\w+\"?\s+value\s*=\s*(?:event_target:[^\d:{}#\s=\.]+|(prev\.?|from\.?|root|this|megastructure|planet|country|owner|space_owner|ship|pop|fleet|galactic_object|leader|army|ambient_object|species|pop_faction|war|federation|starbase|deposit|sector|archaeological_site|first_contact|spy_network|espionage_operation|espionage_asset)+)\s*\}": [r"set_variable\s*=\s*\{\s*which\s*=\s*\"?(\w+)\"?\s+value\s*=\s*(event_target:\w+|\w+)\s*\}", r"set_variable = { which = \1 value = \2.\1 }"],
-        r"\s+spawn_megastructure\s*=\s*\{[^{}#]+": [r"(\s+)location\s*=\s*([\w\._:]+)", r"\1coords_from = \2"],
+        r"\s+spawn_megastructure\s*=\s*\{[^{}#]+?location\s*=\s*[\w\._:]+": [r"(spawn_megastructure\s*=\s*\{[^{}#]+?)location\s*=\s*([\w\._:]+)", r"spawn_megastructure = {\1coords_from = \2"],
+        r"\s+modifier\s*=\s*\{\s*mult\b": [r"\bmult\b", "factor"],
         # >= 3.2
         r"\bNO[RT]\s*=\s*\{\s*is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s*\}": [r"\bNO[RT]\s*=\s*\{\s*is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s*\}", r"is_artificial = no"],
         r"\bis_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\b": [r"\bis_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\b", r"is_artificial = yes"],
@@ -339,6 +344,11 @@ else:
         #r"\n\s+NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}": [r"([\t ]+)NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"], not valid if in OR
         r"\bany_\w+\s*=\s*\{[^{}]+?\bcount\s*[<=>]+\s*[^{}\s]+\s+[^{}]*\}": [r"\bany_(\w+)\s*=\s*\{\s*(?:([^{}]+?)\s+(\bcount\s*[<=>]+\s*[^{}\s]+)|(\bcount\s*[<=>]+\s*[^{}\s]+)\s+([^{}]*))\s+\}", r"count_\1 = { limit = { \2\5 } \3\4 }"], # too rare!? only simple supported TODO
     }
+
+if also_old:
+    targets3[r"(?<!add_resource\s=\s\{)(\s+)(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research)))\s*([<=>]+\s*-?\s*(?:@\w+|\d+))"] = (["common\\scripted_triggers", "common\\scripted_effects", "events"], r"\1has_resource = { type = \2 amount \3 }")
+
+
 
 if code_cosmetic and not only_warning:
     targets3[r"([\s\.]+(PREV|FROM|ROOT|THIS)+)"] = lambda p: p.group(1).lower() # r"([\s\.]+(PREV|FROM|ROOT|THIS)+)": lambda p: p.group(1).lower(),  ## targets3[re.compile(r"([\s\.]+(PREV|FROM|ROOT|THIS)+)", re.I)] = lambda p: p.group(1).lower()
@@ -357,7 +367,6 @@ if code_cosmetic and not only_warning:
     targets4[r"\n\s+NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}"] = [r"([\t ]+)NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"] 
     targets4[r"\brandom_country\s*=\s*\{\s*limit\s*=\s*\{\s*is_country_type\s*=\s*global_event\s*\}"] = "event_target:global_event_country = {"
     targets4[r"(?:\s+add_resource\s*=\s*\{\s*\w+\s*=\s*[^{}#]+\s*\})+"] = [r"(\s+add_resource\s*=\s*\{)(\s*\w+\s*=\s*[^\s{}#]+)\s*\}\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\}(?(3)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(4)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(5)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(6)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(7)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?", r"\1\2\3\4\5\6\7 }"] # 6 items 
-
 
 
 def mBox(mtype, text):
@@ -516,6 +525,8 @@ def modfix(file_list):
                                     print("Multiline replace:\n", replace) # repr(
                                     out = out.replace(tar, replace)
                                     changed = True
+                                elif debug_mode:
+                                     print("DEBUG Blind Match:", tar, repl, type(repl), replace)
 
                 if changed and not only_warning:
                     structure = os.path.normpath(os.path.join(mod_outpath, subfolder))
