@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.3.b
-# @revision: 2022/02/21
+# @revision: 2022/02/23
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -21,7 +21,7 @@ only_warning = False # True/False optional (if True, implies code_cosmetic = Fal
 code_cosmetic = False # True/False optional (only if only_warning = False)
 only_actual = False # speedup search (from previous relevant) to actual version
 also_old = False # pre 2.3 stuff 
-debug_mode = False # for dev
+debug_mode = False # for dev print
 
 stellaris_version = '3.3.0'
 mod_outpath = ''
@@ -136,7 +136,7 @@ else:
         r"(\s+)any_system_within_border\s*=\s*\{\s*any_system_planet\s*=\s*(.*?\s*\})\s*\}": r"\1any_planet_within_border = \2", # very rare, maybe put to cosmetic
         r"is_country_type\s*=\s*default\s+has_monthly_income\s*=\s*\{\s*resource = (\w+) value <=? \d": r"no_resource_for_component = { RESOURCE = \1",
         r"([^\._])(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w\._:]+)\s*\}": r"\1is_owned_by = \2",
-        r"(\s+)is_(?:country|same_value)\s*=\s*([\w\._:]+\.(?:space_)?owner)": r"\1is_same_empire = \2",
+        r"(\s+)is_(?:country|same_value)\s*=\s*([\w\._:]+\.(?:space_)?owner(?:[\s}]|$))": r"\1is_same_empire = \2",
         r"(\s+)exists\s*=\s*(solar_system|planet)\.(?:space_)?owner": r"\1has_owner = yes",
         # code opts/cosmetic only
         r"(\s+)NOT\s*=\s*\{\s*([^\s]+)\s*=\s*yes\s*\}": r"\1\2 = no",
