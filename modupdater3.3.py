@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.3.1
-# @revision: 2022/02/23
+# @revision: 2022/02/24
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -47,6 +47,7 @@ if only_actual:
         r"\s+building(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*=\s*(?:yes|no)\n?": ("common\\buildings", ''),
         r"\bGFX_ship_part_auto_repair": (["common\\component_sets", "common\\component_templates"], 'GFX_ship_part_ship_part_nanite_repair_system'), # because icons.gfx
         r"\bcountry_election_influence_cost_mult": ("common\\governments", 'country_election_cost_mult'),
+        r"\bwould_work_job": ("common\\game_rules", 'can_work_specific_job'),
         r"\bhas_civic\s*=\s*civic_reanimated_armies": 'is_reanimator = yes',
         # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
     }
@@ -136,7 +137,7 @@ else:
         r"(\s+)any_system_within_border\s*=\s*\{\s*any_system_planet\s*=\s*(.*?\s*\})\s*\}": r"\1any_planet_within_border = \2", # very rare, maybe put to cosmetic
         r"is_country_type\s*=\s*default\s+has_monthly_income\s*=\s*\{\s*resource = (\w+) value <=? \d": r"no_resource_for_component = { RESOURCE = \1",
         r"([^\._])(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w\._:]+)\s*\}": r"\1is_owned_by = \2",
-        r"(\s+)is_(?:country|same_value)\s*=\s*([\w\._:]+\.(?:space_)?owner(?:[\s}]|$))": r"\1is_same_empire = \2",
+        r"(\s+)is_(?:country|same_value)\s*=\s*([\w\._:]+\.(?:controller|(?:space_)?owner)(?:[\s}]|$))": r"\1is_same_empire = \2",
         r"(\s+)exists\s*=\s*(solar_system|planet)\.(?:space_)?owner": r"\1has_owner = yes",
         # code opts/cosmetic only
         r"(\s+)NOT\s*=\s*\{\s*([^\s]+)\s*=\s*yes\s*\}": r"\1\2 = no",
@@ -268,6 +269,7 @@ else:
         r"\s+building(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*=\s*(?:yes|no)\n?": ("common\\buildings", ''),
         r"\bGFX_ship_part_auto_repair": (["common\\component_sets", "common\\component_templates"], 'GFX_ship_part_ship_part_nanite_repair_system'), # because icons.gfx
         r"\bcountry_election_influence_cost_mult": ("common\\governments", 'country_election_cost_mult'),
+        r"\bwould_work_job": ("common\\game_rules", 'can_work_specific_job'),
         r"\bhas_civic\s*=\s*civic_reanimated_armies": 'is_reanimator = yes',
         # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
     }
@@ -351,7 +353,7 @@ if also_old:
 
 
 if code_cosmetic and not only_warning:
-    targets3[r"([\s\.]+(PREV|FROM|ROOT|THIS)+)"] = lambda p: p.group(1).lower() # r"([\s\.]+(PREV|FROM|ROOT|THIS)+)": lambda p: p.group(1).lower(),  ## targets3[re.compile(r"([\s\.]+(PREV|FROM|ROOT|THIS)+)", re.I)] = lambda p: p.group(1).lower()
+    targets3[re.compile(r"([\s\.]+(PREV|FROM|ROOT|THIS)+)", re.I)] = lambda p: p.group(1).lower()
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"\s*days\s*=\s*-1"] = '' # default not needed anymore
     targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
@@ -362,7 +364,7 @@ if code_cosmetic and not only_warning:
     targets3[r"\bNOT\s*=\s*\{\s*(num_\w+|\w+?(?:_passed))\s*=\s*(\d+)\s*\}"] = r"\1 != \2"
     ## targets3[r"# *([A-Z][\w ={}]+?)\.$"] = r"# \1" # remove comment punctuation mark
     targets4[r"\n{3,}"] = "\n\n" # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
-    targets4[r"\n\s+\}\s*else"] = [r"\}\s*else", "} else"] # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
+    targets4[r"\}\n\s+else"] = [r"\}\s*else", "} else"] # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
     # WARNING not valid if in OR: NOR <=> AND = { NOT NOT } , # only 2 items (sub-trigger)
     targets4[r"\n\s+NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}"] = [r"([\t ]+)NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"]
     targets4[r"\brandom_country\s*=\s*\{\s*limit\s*=\s*\{\s*is_country_type\s*=\s*global_event\s*\}"] = "event_target:global_event_country = {"
