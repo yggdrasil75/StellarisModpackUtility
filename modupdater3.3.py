@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.3.1
-# @revision: 2022/02/24
+# @revision: 2022/03/01
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -113,6 +113,7 @@ else:
     # }
 
     targets3 = {
+        r"\bowner\.species\b": "owner_species",
         ### >= 3.0.* (only one-liner)
         r"\b(first_contact_)attack_not_allowed": r"\1cautious",
         r"\bsurveyed\s*=\s*\{": r"set_surveyed = {",
@@ -276,6 +277,9 @@ else:
 
 
     targets4 = {
+        # < 3.0
+        r"\s(?:any|every|random)_neighbor_system\s*=\s*\{[^{}]+?\s+ignore_hyperlanes\s*=\s*(?:yes|no)\n?": [r"(_neighbor_system)(\s*=\s*\{[^{}]+?)\s+ignore_hyperlanes\s*=\s*(yes|no)\n?",
+            lambda p: p.group(1) + p.group(2) if p.group(3) == "no" else p.group(1) + "_euclidean" + p.group(2)],
         # 3.0.* (multiline)
         # key (pre match without group): arr (search, replace) or str (if no group)
         # r"\s+random_system_planet\s*=\s*\{\s*limit\s*=\s*\{\s*is_star\s*=\s*yes\s*\}": [r"(\s+)random_system_planet\s*=\s*\{\s*limit\s*=\s*\{\s*is_star\s*=\s*yes\s*\}", r"\1star = {"], # TODO works only on single star systems
@@ -355,6 +359,7 @@ if also_old:
 if code_cosmetic and not only_warning:
     targets3[re.compile(r"([\s\.]+(PREV|FROM|ROOT|THIS)+)", re.I)] = lambda p: p.group(1).lower()
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
+    targets3[r"^(\s+)limit\s*=\s*\{\s*\}"] = r"\1# limit = { }"
     targets3[r"\s*days\s*=\s*-1"] = '' # default not needed anymore
     targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
     targets3[r"#([^\-\s#])"] = r"# \1" # r"#([^\s#])": r"# \1", # format comment
@@ -368,6 +373,8 @@ if code_cosmetic and not only_warning:
     # WARNING not valid if in OR: NOR <=> AND = { NOT NOT } , # only 2 items (sub-trigger)
     targets4[r"\n\s+NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}"] = [r"([\t ]+)NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"]
     targets4[r"\brandom_country\s*=\s*\{\s*limit\s*=\s*\{\s*is_country_type\s*=\s*global_event\s*\}"] = "event_target:global_event_country = {"
+     # unnecessary AND
+    targets4[r"(\b(?:limit|trigger|any_\w+|leader)\s*=\s*\{(\s+)AND\s*=\s*\{(?:\2\t[^\n]+)+\2\}\n)"] = [r"(limit|trigger|any_\w+|leader)\s*=\s*\{\n(\s+)AND\s*=\s*\{\n\t(\2[^\n]+\n)(?(3)\t)(\2[^\n]+\n)?(?(4)\t)(\2[^\n]+\n)?(?(5)\t)(\2[^\n]+\n)?(?(6)\t)(\2[^\n]+\n)?(?(7)\t)(\2[^\n]+\n)?(?(8)\t)(\2[^\n]+\n)?(?(9)\t)(\2[^\n]+\n)?(?(10)\t)(\2[^\n]+\n)?(?(11)\t)(\2[^\n]+\n)?(?(12)\t)(\2[^\n]+\n)?(?(13)\t)(\2[^\n]+\n)?(?(14)\t)(\2[^\n]+\n)?\2\}\n", r"\1 = {\n\3\4\5\6\7\8\9\10\11\12\13\14\15"]
     targets4[r"(?:\s+add_resource\s*=\s*\{\s*\w+\s*=\s*[^{}#]+\s*\})+"] = [r"(\s+add_resource\s*=\s*\{)(\s*\w+\s*=\s*[^\s{}#]+)\s*\}\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\}(?(3)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(4)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(5)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(6)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(7)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?", r"\1\2\3\4\5\6\7 }"] # 6 items
 
 
@@ -524,7 +531,12 @@ def modfix(file_list):
                             if rt:
                                 # print(type(repl), tar, type(tar))
                                 if isinstance(repl, list):
+                                    # Take only first group
+                                    if isinstance(tar, tuple):
+                                        tar = tar[0]
                                     replace = re.sub(repl[0], repl[1], tar, flags=re.I|re.M|re.A)
+
+                                    # print("ONLY 1:", type(replace), replace)
                                 if isinstance(repl, str) or (not isinstance(tar, tuple) and tar in out and tar != replace):
                                     print("Match:\n", tar)
                                     print("Multiline replace:\n", replace) # repr(
