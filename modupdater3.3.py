@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.3.1
-# @revision: 2022/03/01
+# @revision: 2022/03/02
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -63,6 +63,8 @@ else:
     8 triggers removed/renamed.
     426 modifiers removed/renamed.
     1 scope removed.
+    # >= 3.1.*
+    # prikki country removed
     """
     removedTargets = [
         # This are only warnings, commands which cannot be easily replaced.
@@ -275,7 +277,7 @@ else:
         # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
     }
 
-
+    # re flags=re.I|re.M|re.A
     targets4 = {
         # < 3.0
         r"\s(?:any|every|random)_neighbor_system\s*=\s*\{[^{}]+?\s+ignore_hyperlanes\s*=\s*(?:yes|no)\n?": [r"(_neighbor_system)(\s*=\s*\{[^{}]+?)\s+ignore_hyperlanes\s*=\s*(yes|no)\n?",
@@ -344,7 +346,7 @@ else:
         r"\bNO[RT]\s*=\s*\{\s*is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s*\}": [r"\bNO[RT]\s*=\s*\{\s*is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s*\}", r"is_artificial = no"],
         r"\bis_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\b": [r"\bis_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\b", r"is_artificial = yes"],
         r"\n\s+possible\s*=\s*\{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)(?:drone|worker|specialist|ruler)_job_check_trigger\s*=\s*yes\s*": [r"(\s+)(possible\s*=\s*\{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?))(drone|worker|specialist|ruler)_job_check_trigger\s*=\s*yes\s*", ("common\\pop_jobs", r"\1possible_precalc = can_fill_\4_job\1\2")], # only with 6 possible prior lines
-        r"[^b]\n\s+possible\s*=\s*\{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)complex_specialist_job_check_trigger\s*=\s*yes\s*": [r"(\s+)(possible\s*=\s*\{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)complex_specialist_job_check_trigger\s*=\s*yes\s*)", ("common\\pop_jobs", r"\1possible_precalc = can_fill_specialist_job\1\2")], # only with 6 possible prior lines
+        r"(?:[^b]\n\n|[^b][^b]\n)\s+possible\s*=\s*\{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)complex_specialist_job_check_trigger\s*=\s*yes\s*": [r"\n(\s+)(possible\s*=\s*\{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)complex_specialist_job_check_trigger\s*=\s*yes\s*)", ("common\\pop_jobs", r"\1possible_precalc = can_fill_specialist_job\1\2")], # only with 6 possible prior lines
         # > 3.2
         r"(?:random_weight|pop_attraction(_tag)?|country_attraction)\s+value\s*=": [r"\bvalue\b", ("common\\ethics", 'base')],
         #r"\n\s+NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}": [r"([\t ]+)NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"], not valid if in OR
@@ -357,7 +359,8 @@ if also_old:
 
 
 if code_cosmetic and not only_warning:
-    targets3[re.compile(r"([\s\.]+(PREV|FROM|ROOT|THIS)+)", re.I)] = lambda p: p.group(1).lower()
+    triggerScopes = r"limit|trigger|any_\w+|leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+"
+    targets3[r"([\s\.]+(PREV|FROM|ROOT|THIS|Prev|From|Root|This)+)"] = lambda p: p.group(1).lower()
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"^(\s+)limit\s*=\s*\{\s*\}"] = r"\1# limit = { }"
     targets3[r"\s*days\s*=\s*-1"] = '' # default not needed anymore
@@ -374,7 +377,7 @@ if code_cosmetic and not only_warning:
     targets4[r"\n\s+NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}"] = [r"([\t ]+)NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"]
     targets4[r"\brandom_country\s*=\s*\{\s*limit\s*=\s*\{\s*is_country_type\s*=\s*global_event\s*\}"] = "event_target:global_event_country = {"
      # unnecessary AND
-    targets4[r"(\b(?:limit|trigger|any_\w+|leader)\s*=\s*\{(\s+)AND\s*=\s*\{(?:\2\t[^\n]+)+\2\}\n)"] = [r"(limit|trigger|any_\w+|leader)\s*=\s*\{\n(\s+)AND\s*=\s*\{\n\t(\2[^\n]+\n)(?(3)\t)(\2[^\n]+\n)?(?(4)\t)(\2[^\n]+\n)?(?(5)\t)(\2[^\n]+\n)?(?(6)\t)(\2[^\n]+\n)?(?(7)\t)(\2[^\n]+\n)?(?(8)\t)(\2[^\n]+\n)?(?(9)\t)(\2[^\n]+\n)?(?(10)\t)(\2[^\n]+\n)?(?(11)\t)(\2[^\n]+\n)?(?(12)\t)(\2[^\n]+\n)?(?(13)\t)(\2[^\n]+\n)?(?(14)\t)(\2[^\n]+\n)?\2\}\n", r"\1 = {\n\3\4\5\6\7\8\9\10\11\12\13\14\15"]
+    targets4[r"\b((?:%s)\s*=\s*\{(\s+)(?:AND|this)\s*=\s*\{(?:\2\t[^\n]+)+\2\}\n)" % triggerScopes] = [r"(%s)\s*=\s*\{\n(\s+)(?:AND|this)\s*=\s*\{\n\t(\2[^\n]+\n)(?(3)\t)(\2[^\n]+\n)?(?(4)\t)(\2[^\n]+\n)?(?(5)\t)(\2[^\n]+\n)?(?(6)\t)(\2[^\n]+\n)?(?(7)\t)(\2[^\n]+\n)?(?(8)\t)(\2[^\n]+\n)?(?(9)\t)(\2[^\n]+\n)?(?(10)\t)(\2[^\n]+\n)?(?(11)\t)(\2[^\n]+\n)?(?(12)\t)(\2[^\n]+\n)?(?(13)\t)(\2[^\n]+\n)?(?(14)\t)(\2[^\n]+\n)?(?(15)\t)(\2[^\n]+\n)?(?(16)\t)(\2[^\n]+\n)?(?(17)\t)(\2[^\n]+\n)?(?(18)\t)(\2[^\n]+\n)?(?(19)\t)(\2[^\n]+\n)?(?(20)\t)(\2[^\n]+\n)?\2\}\n" % triggerScopes, r"\1 = {\n\3\4\5\6\7\8\9\10\11\12\13\14\15\16\17\18\19\20\21"]
     targets4[r"(?:\s+add_resource\s*=\s*\{\s*\w+\s*=\s*[^{}#]+\s*\})+"] = [r"(\s+add_resource\s*=\s*\{)(\s*\w+\s*=\s*[^\s{}#]+)\s*\}\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\}(?(3)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(4)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(5)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(6)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?(?(7)\s+add_resource\s*=\s*\{(\s*\w+\s*=\s*[^\s{}#]+)\s*\})?", r"\1\2\3\4\5\6\7 }"] # 6 items
 
 
