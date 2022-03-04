@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.3.1
-# @revision: 2022/03/02
+# @revision: 2022/03/04
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -360,7 +360,7 @@ if also_old:
 
 if code_cosmetic and not only_warning:
     triggerScopes = r"limit|trigger|any_\w+|leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+"
-    targets3[r"([\s\.]+(PREV|FROM|ROOT|THIS|Prev|From|Root|This)+)"] = lambda p: p.group(1).lower()
+    targets3[r"((?:[<=>]\s|[\.vmVM])+(PREV|FROM|ROOT|THIS|Prev|From|Root|This)+)"] = lambda p: p.group(1).lower()
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"^(\s+)limit\s*=\s*\{\s*\}"] = r"\1# limit = { }"
     targets3[r"\s*days\s*=\s*-1"] = '' # default not needed anymore
