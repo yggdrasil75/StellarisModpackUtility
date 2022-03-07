@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.3.1
-# @revision: 2022/03/04
+# @revision: 2022/03/07
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -50,6 +50,7 @@ if only_actual:
         r"\bwould_work_job": ("common\\game_rules", 'can_work_specific_job'),
         r"\bhas_civic\s*=\s*civic_reanimated_armies": 'is_reanimator = yes',
         # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
+        r"^\s+modification\s*=\s*(?:no|yes)\s*": ("common\\traits", ''),
     }
     targets4 = {
         r"(?:random_weight|pop_attraction(_tag)?|country_attraction)\s+value\s*=": [r"\bvalue\b", ("common\\ethics", 'base')],
@@ -275,6 +276,7 @@ else:
         r"\bwould_work_job": ("common\\game_rules", 'can_work_specific_job'),
         r"\bhas_civic\s*=\s*civic_reanimated_armies": 'is_reanimator = yes',
         # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
+        r"^\s+modification\s*=\s*(?:no|yes)\s*": ("common\\traits", ''),
     }
 
     # re flags=re.I|re.M|re.A
