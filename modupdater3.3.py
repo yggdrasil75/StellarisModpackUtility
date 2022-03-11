@@ -1,6 +1,6 @@
 # @author: FirePrince
-# @version: 3.3.1
-# @revision: 2022/03/07
+# @version: 3.3.2
+# @revision: 2022/03/11
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -23,7 +23,7 @@ only_actual = False # speedup search (from previous relevant) to actual version
 also_old = False # pre 2.3 stuff
 debug_mode = False # for dev print
 
-stellaris_version = '3.3.1'
+stellaris_version = '3.3.2'
 mod_outpath = ''
 
 # mod_path = os.path.dirname(os.getcwd())
@@ -342,7 +342,7 @@ else:
               }[p.group(2)])],
         r"\{\s*which\s*=\s*\"?\w+\"?\s+value\s*[<=>]+\s*(?:prev|from|root|event_target:[^\.\s])+\s*\}": [r"(\s*which\s*=\s*\"?(\w+)\"?\s+value\s*[<=>]+\s*(prev|from|root|event_target:[^\.\s])+)", r"\1.\2"],
         r"\bset_variable\s*=\s*\{\s*which\s*=\s*\"?\w+\"?\s+value\s*=\s*(?:event_target:[^\d:{}#\s=\.]+|(prev\.?|from\.?|root|this|megastructure|planet|country|owner|space_owner|ship|pop|fleet|galactic_object|leader|army|ambient_object|species|pop_faction|war|federation|starbase|deposit|sector|archaeological_site|first_contact|spy_network|espionage_operation|espionage_asset)+)\s*\}": [r"set_variable\s*=\s*\{\s*which\s*=\s*\"?(\w+)\"?\s+value\s*=\s*(event_target:\w+|\w+)\s*\}", r"set_variable = { which = \1 value = \2.\1 }"],
-        r"\s+spawn_megastructure\s*=\s*\{[^{}#]+?location\s*=\s*[\w\._:]+": [r"(spawn_megastructure\s*=\s*\{[^{}#]+?)location\s*=\s*([\w\._:]+)", r"spawn_megastructure = {\1coords_from = \2"],
+        r"\s+spawn_megastructure\s*=\s*\{[^{}#]+?location\s*=\s*[\w\._:]+": [r"(spawn_megastructure\s*=\s*\{[^{}#]+?)location\s*=\s*([\w\._:]+)", r"\1coords_from = \2"],
         r"\s+modifier\s*=\s*\{\s*mult\b": [r"\bmult\b", "factor"],
         # >= 3.2
         r"\bNO[RT]\s*=\s*\{\s*is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s*\}": [r"\bNO[RT]\s*=\s*\{\s*is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s*\}", r"is_artificial = no"],
@@ -372,6 +372,7 @@ if code_cosmetic and not only_warning:
     targets3[r"# ([a-z])(\w+ +[^;:\s#=<>]+ [^\n]+?[\.!?])$"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
     # NOT NUM triggers. TODO <> ?
     targets3[r"\bNOT\s*=\s*\{\s*(num_\w+|\w+?(?:_passed))\s*=\s*(\d+)\s*\}"] = r"\1 != \2"
+    targets3[r"\bfleet\s*=\s*\{\s*(?:destroy|delete)_fleet\s*=\s*this\s*\}"] = r"destroy_fleet = fleet" # TODO may extend
     ## targets3[r"# *([A-Z][\w ={}]+?)\.$"] = r"# \1" # remove comment punctuation mark
     targets4[r"\n{3,}"] = "\n\n" # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
     targets4[r"\}\n\s+else"] = [r"\}\s*else", "} else"] # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
