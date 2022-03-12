@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.3.2
-# @revision: 2022/03/11
+# @revision: 2022/03/12
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -17,11 +17,12 @@ from tkinter import filedialog
 from tkinter import messagebox
 
 # ============== Initialize global parameter/variables ===============
-only_warning = False # True/False optional (if True, implies code_cosmetic = False)
+# True/False optional 
+only_warning = False # (if True, implies code_cosmetic = False)
 code_cosmetic = False # True/False optional (only if only_warning = False)
-only_actual = False # speedup search (from previous relevant) to actual version
-also_old = False # pre 2.3 stuff
-debug_mode = False # for dev print
+only_actual = False   # speedup search (from previous relevant) to actual version
+also_old = False      # Beta: only some pre 2.3 stuff
+debug_mode = False   # for dev print
 
 stellaris_version = '3.3.2'
 mod_outpath = ''
@@ -50,7 +51,8 @@ if only_actual:
         r"\bwould_work_job": ("common\\game_rules", 'can_work_specific_job'),
         r"\bhas_civic\s*=\s*civic_reanimated_armies": 'is_reanimator = yes',
         # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
-        r"^\s+modification\s*=\s*(?:no|yes)\s*": ("common\\traits", ''),
+        r"\bmodification\s*=\s*(?:no|yes)": ("common\\traits", 'species_potential_add = { always = no }'), # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
+
     }
     targets4 = {
         r"(?:random_weight|pop_attraction(_tag)?|country_attraction)\s+value\s*=": [r"\bvalue\b", ("common\\ethics", 'base')],
@@ -108,6 +110,7 @@ else:
         ("common\\buildings", r"\sbuilding(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*="), # replaced buildings ai
         [r"\bnum_\w+\s*[<=>]+\s*[a-z]+[\s}]", 'no scope alone'], #  [^\d{$@] too rare (could also be auto fixed)
         [r"\n\s+NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}", 'can be merged to NOR if not in an OR'], #  [^\d{$@] too rare (could also be auto fixed)
+        ("common\\traits", [r"^\s+modification\s*=\s*(?:no|yes)\s*", '"modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.']),     
     ]
 
     # targets2 = {
@@ -276,7 +279,7 @@ else:
         r"\bwould_work_job": ("common\\game_rules", 'can_work_specific_job'),
         r"\bhas_civic\s*=\s*civic_reanimated_armies": 'is_reanimator = yes',
         # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
-        r"^\s+modification\s*=\s*(?:no|yes)\s*": ("common\\traits", ''),
+        r"\bmodification\s*=\s*(?:no|yes)": ("common\\traits", 'species_potential_add = { always = no }'), # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
     }
 
     # re flags=re.I|re.M|re.A
@@ -302,8 +305,8 @@ else:
         # NOR <=> NOT = { OR
         r"\s+NO[RT]\s*=\s*\{\s*?OR\s*=\s*\{\s*(?:\w+\s*=\s*(?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s+?){2,}\}\s*\}": [r"(\t*)NO[RT]\s*=\s*\{\s*?OR\s*=\s*\{(\s+)(\w+\s*=\s*(?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s+)(\s*\w+\s*=\s*(?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s)?(\s*\w+\s*=\s*(?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s)?(\s*\w+\s*=\s*(?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s)?(\s*\w+\s*=\s*(?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s)?\s*\}\s+", r"\1NOR = {\2\3\4\5\6\7"], # only right indent for 5 items (sub-trigger)
         ### End boolean operator merge
-        r"\sany_country\s*=\s*\{[^{}#]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default)": [r"(\s)any_country\s*=\s*(\{[^{}#]*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default))", r"\1any_playable_country = \2"],
-        r"\s(?:every|random|count)_country\s*=\s*\{[^{}#]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default|has_special_project)": [r"(\s(?:every|random|count))_country\s*=\s*(\{[^{}#]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_country_type\s*=\s*default|has_special_project))", r"\1_playable_country = \2"],
+        r"\sany_country\s*=\s*\{[^{}#]*(?:has_event_chain|is_ai\s*=\s*no|is_zofe_compatible\s*=\s*yes|is_country_type\s*=\s*default)": [r"(\s)any_country\s*=\s*(\{[^{}#]*(?:has_event_chain|is_ai\s*=\s*no|is_zofe_compatible\s*=\s*yes|is_country_type\s*=\s*default))", r"\1any_playable_country = \2"],
+        r"\s(?:every|random|count)_country\s*=\s*\{[^{}#]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_zofe_compatible\s*=\s*yes|is_country_type\s*=\s*default|has_special_project)": [r"(\s(?:every|random|count))_country\s*=\s*(\{[^{}#]*limit\s*=\s*\{\s*(?:has_event_chain|is_ai\s*=\s*no|is_zofe_compatible\s*=\s*yes|is_country_type\s*=\s*default|has_special_project))", r"\1_playable_country = \2"],
         r"\s(?:every|random|count|any)_playable_country\s*=\s*\{[^{}#]*(?:limit\s*=\s*\{\s*)?(?:is_country_type\s*=\s*default|CmtTriggerIsPlayableEmpire\s*=\s*yes|is_zofe_compatible\s*=\s*yes)\s*": [r"((?:every|random|count|any)_playable_country\s*=\s*\{[^{}#]*?(?:limit\s*=\s*\{\s*)?)(?:is_country_type\s*=\s*default|CmtTriggerIsPlayableEmpire\s*=\s*yes|is_zofe_compatible\s*=\s*yes)\s*", r"\1"],
 
         r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*[\w\._:]+\s*\}\s*\}": [r"\{\s+(?:space_)?owner\s*=\s*\{\s*is_(?:same_empire|country|same_value)\s*=\s*([\w\._:]+)\s*\}\s*\}", r"{ is_owned_by = \1 }"],
@@ -356,8 +359,24 @@ else:
     }
 
 if also_old:
-    targets3[r"(?<!add_resource\s=\s\{)(\s+)(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research)))\s*([<=>]+\s*-?\s*(?:@\w+|\d+))"] = (["common\\scripted_triggers", "common\\scripted_effects", "events"], r"\1has_resource = { type = \2 amount \3 }")
-
+    ## 2.2
+    targets3[r"\s+(?:outliner_planet_type|tile_set)\s*=\s*\w+\s*"] = ("common\\planet_classes", "")
+    targets3[r"\b(?:add|set)_blocker\s*=\s*\"?tb_(\w+)\"?"] = r"add_deposit = d_\1" # More concrete? r"add_blocker = { type = d_\1 blocked_deposit = none }" 
+    targets3[r"\btb_(\w+)"] = r"d_\1"
+    targets3[r"\b(building_capital)(?:_\d)\b"] = r"\1"
+    targets3[r"\b(betharian_power_plant)\b"] = r"building_\1"
+    targets3[r"\b(building_hydroponics_farm)_[12]\b"] = r"\1"
+    targets3[r"\bbuilding_hydroponics_farm_[34]\b"] = r"building_food_processing_facility"
+    targets3[r"\bbuilding_hydroponics_farm_[5]\b"] = r"building_food_processing_center"
+    targets3[r"\bbuilding_power_plant_[12]\b"] = r"building_energy_grid"
+    targets3[r"\bbuilding_power_plant_[345]\b"] = r"building_energy_nexus"
+    targets3[r"\bbuilding_mining_network_[12]\b"] = "building_mineral_purification_plant"
+    targets3[r"\bbuilding_mining_network_[345]\b"] = "building_mineral_purification_hub"
+    targets3[r"(?<!add_resource = \{)(\s+)(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research)))\s*([<=>]+\s*-?\s*(?:@\w+|\d+))\1(?!(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research))))"] = (["common\\scripted_triggers", "common\\scripted_effects", "events"], r"\1has_resource = { type = \2 amount \3 }")
+    # not sure because multiline
+    # targets3[r"(?<!add_resource = \{)(\s+)(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research)))\s*([<=>]+\s*-?\s*(?:@\w+|\d+))"] = (["common\\scripted_triggers", "common\\scripted_effects", "events"], r"\1has_resource = { type = \2 amount \3 }")
+    # tmp fix
+    # targets3[r"\bhas_resource = \{ type = (energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research))) amount( = (?:\d+|@\w+)) \}"] = (["common\\scripted_triggers", "common\\scripted_effects", "events"], r"\1\2 ")
 
 
 if code_cosmetic and not only_warning:
