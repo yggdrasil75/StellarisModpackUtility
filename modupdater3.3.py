@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.3.2
-# @revision: 2022/03/12
+# @revision: 2022/03/15
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -44,6 +44,7 @@ if only_actual:
         [r"\bnum_\w+\s*[<=>]+\s*[a-z]+[\s}]", 'no scope alone'], #  [^\d{$@] too rare (could also be auto fixed)
         [r"\n\s+NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}", 'can be merged to NOR if not in an OR'], #  [^\d{$@] too rare (could also be auto fixed)
     ]
+    # if type dict filenames are scanned
     targets3 = {
         r"\s+building(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*=\s*(?:yes|no)\n?": ("common\\buildings", ''),
         r"\bGFX_ship_part_auto_repair": (["common\\component_sets", "common\\component_templates"], 'GFX_ship_part_ship_part_nanite_repair_system'), # because icons.gfx
@@ -51,7 +52,8 @@ if only_actual:
         r"\bwould_work_job": ("common\\game_rules", 'can_work_specific_job'),
         r"\bhas_civic\s*=\s*civic_reanimated_armies": 'is_reanimator = yes',
         # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
-        r"\bmodification\s*=\s*(?:no|yes)": ("common\\traits", 'species_potential_add = { always = no }'), # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
+        # Replaces only in filename with species
+        r"\bmodification\s*=\s*(?:no|yes)\s*?\n": {"species": ("common\\traits", r'species_potential_add = { always = no }\n' , '')} # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
 
     }
     targets4 = {
@@ -279,7 +281,7 @@ else:
         r"\bwould_work_job": ("common\\game_rules", 'can_work_specific_job'),
         r"\bhas_civic\s*=\s*civic_reanimated_armies": 'is_reanimator = yes',
         # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
-        r"\bmodification\s*=\s*(?:no|yes)": ("common\\traits", 'species_potential_add = { always = no }'), # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
+        r"\bmodification\s*=\s*(?:no|yes)\s*?\n": {"species": ("common\\traits", r'species_potential_add = { always = no }\n' , '')}  # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
     }
 
     # re flags=re.I|re.M|re.A
@@ -348,8 +350,8 @@ else:
         r"\s+spawn_megastructure\s*=\s*\{[^{}#]+?location\s*=\s*[\w\._:]+": [r"(spawn_megastructure\s*=\s*\{[^{}#]+?)location\s*=\s*([\w\._:]+)", r"\1coords_from = \2"],
         r"\s+modifier\s*=\s*\{\s*mult\b": [r"\bmult\b", "factor"],
         # >= 3.2
-        r"\bNO[RT]\s*=\s*\{\s*is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s*\}": [r"\bNO[RT]\s*=\s*\{\s*is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s*\}", r"is_artificial = no"],
-        r"\bis_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\b": [r"\bis_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat)\b", r"is_artificial = yes"],
+        r"\bNO[RT]\s*=\s*\{\s*is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat|pc_cybrex)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat|pc_cybrex)(?:\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat|pc_cybrex))?\s*\}": [r"\bNO[RT]\s*=\s*\{\s*is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat|pc_cybrex)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat|pc_cybrex)(?:\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_cybrex))?\s*\}", r"is_artificial = no"],
+        r"\n\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat|pc_cybrex)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat|pc_cybrex)(?:\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat|pc_cybrex))?\b": [r"\bis_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat|pc_cybrex)\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_habitat|pc_cybrex)(?:\s+is_planet_class\s*=\s*(?:pc_ringworld_habitable|pc_cybrex))?\b", r"is_artificial = yes"],
         r"\n\s+possible\s*=\s*\{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)(?:drone|worker|specialist|ruler)_job_check_trigger\s*=\s*yes\s*": [r"(\s+)(possible\s*=\s*\{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?))(drone|worker|specialist|ruler)_job_check_trigger\s*=\s*yes\s*", ("common\\pop_jobs", r"\1possible_precalc = can_fill_\4_job\1\2")], # only with 6 possible prior lines
         r"(?:[^b]\n\n|[^b][^b]\n)\s+possible\s*=\s*\{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)complex_specialist_job_check_trigger\s*=\s*yes\s*": [r"\n(\s+)(possible\s*=\s*\{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)complex_specialist_job_check_trigger\s*=\s*yes\s*)", ("common\\pop_jobs", r"\1possible_precalc = can_fill_specialist_job\1\2")], # only with 6 possible prior lines
         # > 3.2
@@ -381,7 +383,7 @@ if also_old:
 
 if code_cosmetic and not only_warning:
     triggerScopes = r"limit|trigger|any_\w+|leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+"
-    targets3[r"((?:[<=>]\s|[\.vmVM])+(PREV|FROM|ROOT|THIS|Prev|From|Root|This)+)"] = lambda p: p.group(1).lower()
+    targets3[r"((?:[<=>]\s|\.|PREV|FROM|Prev|From)+(PREV|FROM|ROOT|THIS|Prev|From|Root|This)+)"] = lambda p: p.group(1).lower()
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"^(\s+)limit\s*=\s*\{\s*\}"] = r"\1# limit = { }"
     targets3[r"\s*days\s*=\s*-1"] = '' # default not needed anymore
@@ -512,7 +514,25 @@ def modfix(file_list):
                             # print(pattern, repl)
                             # check valid folder
                             rt = False
-                            if isinstance(repl, tuple):
+                            # File name check
+                            if isinstance(repl, dict):
+                                # is a 3 tuple
+                                file, repl = list(repl.items())[0]
+
+                                if file in basename:
+                                    print("FILE match:", file, basename)
+                                    folder, repl, rt = repl
+                                else:
+                                    folder, rt, repl = repl
+                                if isinstance(folder, list):
+                                    for fo in folder:
+                                        if subfolder in fo:
+                                            rt = True
+                                elif subfolder in folder:
+                                    rt = True
+                                else: rt = False
+                            # Folder check
+                            elif isinstance(repl, tuple):
                                 folder, repl = repl
                                 if isinstance(folder, list):
                                     for fo in folder:
@@ -521,6 +541,7 @@ def modfix(file_list):
                                 elif subfolder in folder:
                                     rt = True
                                 else: rt = False
+
                             else: rt = True
                             if rt: # , flags=re.I # , count=0, flags=0
                                 rt = re.search(pattern, line) # , flags=re.I
