@@ -49,13 +49,13 @@ if only_actual:
     targets3 = {
         r"\s+building(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*=\s*(?:yes|no)\n?": ("common\\buildings", ''),
         r"\bGFX_ship_part_auto_repair": (["common\\component_sets", "common\\component_templates"], 'GFX_ship_part_ship_part_nanite_repair_system'), # because icons.gfx
-        r"\bcountry_election_influence_cost_mult": ("common\\governments", 'country_election_cost_mult'),
+        r"\b(country_election_)influence_(cost_mult)": r'\1\2',
         r"\bwould_work_job": ("common\\game_rules", 'can_work_specific_job'),
         r"\bhas_civic\s*=\s*civic_reanimated_armies": 'is_reanimator = yes',
         # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
         r"\bjob_administrator": 'job_politician',
         # Replaces only in filename with species
-        r"\bmodification\s*=\s*(?:no|yes)\s*?\n": {"species": ("common\\traits", r'species_potential_add = { always = no }\n' , '')} # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
+        r"^(\s+)modification\s*=\s*(?:no|yes)\s*?\n": {"species": ("common\\traits", r'\1species_potential_add = { always = no }\n' , '')} # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
 
     }
     targets4 = {
@@ -279,13 +279,13 @@ else:
         ### 3.3 ###
         r"\s+building(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*=\s*(?:yes|no)\n?": ("common\\buildings", ''),
         r"\bGFX_ship_part_auto_repair": (["common\\component_sets", "common\\component_templates"], 'GFX_ship_part_ship_part_nanite_repair_system'), # because icons.gfx
-        r"\bcountry_election_influence_cost_mult": ("common\\governments", 'country_election_cost_mult'),
+        r"\b(country_election_)influence_(cost_mult)": r'\1\2',
         r"\bwould_work_job": ("common\\game_rules", 'can_work_specific_job'),
         r"\bhas_civic\s*=\s*civic_reanimated_armies": 'is_reanimator = yes',
         # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
         r"\bjob_administrator": 'job_politician',
         # Replaces only in filename with species
-        r"\bmodification\s*=\s*(?:no|yes)\s*?\n": {"species": ("common\\traits", r'species_potential_add = { always = no }\n' , '')}  # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
+        r"^(\s+)modification\s*=\s*(?:no|yes)\s*?\n": {"species": ("common\\traits", r'\1species_potential_add = { always = no }\n' , '')}  # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
     }
 
     # re flags=re.I|re.M|re.A
@@ -525,7 +525,8 @@ def modfix(file_list):
                                 file, repl = list(repl.items())[0]
 
                                 if file in basename:
-                                    print("FILE match:", file, basename)
+                                    if debug_mode:
+                                        print("\tFILE match:", file, basename)
                                     folder, repl, rt = repl
                                 else:
                                     folder, rt, repl = repl
@@ -599,7 +600,7 @@ def modfix(file_list):
                 if changed and not only_warning:
                     structure = os.path.normpath(os.path.join(mod_outpath, subfolder))
                     out_file = os.path.join(structure, basename)
-                    print('\tWrite file:', out_file)
+                    print('\tWRITE FILE:', out_file)
                     if not os.path.exists(structure):
                         os.makedirs(structure)
                         # print('Create folder:', subfolder)
