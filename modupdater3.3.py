@@ -1,9 +1,10 @@
 # @author: FirePrince
 # @version: 3.3.2
-# @revision: 2022/03/15
+# @revision: 2022/03/16
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
+#        replace in *.YML
 
 # ============== Import libs ===============
 import os  # io for high level usage
@@ -20,7 +21,7 @@ from tkinter import messagebox
 # True/False optional 
 only_warning = False # (if True, implies code_cosmetic = False)
 code_cosmetic = False # True/False optional (only if only_warning = False)
-only_actual = False   # speedup search (from previous relevant) to actual version
+only_actual = True   # speedup search (from previous relevant) to actual version
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False   # for dev print
 
@@ -52,6 +53,7 @@ if only_actual:
         r"\bwould_work_job": ("common\\game_rules", 'can_work_specific_job'),
         r"\bhas_civic\s*=\s*civic_reanimated_armies": 'is_reanimator = yes',
         # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
+        r"\bjob_administrator": 'job_politician',
         # Replaces only in filename with species
         r"\bmodification\s*=\s*(?:no|yes)\s*?\n": {"species": ("common\\traits", r'species_potential_add = { always = no }\n' , '')} # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
 
@@ -265,7 +267,7 @@ else:
         r"\bhas_swapped_tradition":     "has_active_tradition",
         r"\bis_for_colonizeable":       "is_for_colonizable",
         r"\bcolonizeable_planet":       "colonizable_planet",
-        ### 3.2
+        ### 3.2 ###
         # r"\bis_planet_class\s*=\s*pc_ringworld_habitable": "is_ringworld = yes",
         r"\s+free_guarantee_days\s*=\s*\d+":  "",
         r"\badd_tech_progress_effect":  "add_tech_progress",
@@ -274,13 +276,15 @@ else:
         r"\bhomeworld\s*=\s*": ("common\\governments\\civics", r"starting_colony = "),
         r"^((?:\t|    )parent\s*=\s*planet_jobs)\b": ("common\\economic_categories", r"\1_productive"),
         r"^(\t|    )energy\s*=\s*(\d+|@\w+)": ("common\\terraform", r"\1resources = {\n\1\1category = terraforming\n\1\1cost = { energy = \2 }\n\1}"),
-        ### 3.3
+        ### 3.3 ###
         r"\s+building(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*=\s*(?:yes|no)\n?": ("common\\buildings", ''),
         r"\bGFX_ship_part_auto_repair": (["common\\component_sets", "common\\component_templates"], 'GFX_ship_part_ship_part_nanite_repair_system'), # because icons.gfx
         r"\bcountry_election_influence_cost_mult": ("common\\governments", 'country_election_cost_mult'),
         r"\bwould_work_job": ("common\\game_rules", 'can_work_specific_job'),
         r"\bhas_civic\s*=\s*civic_reanimated_armies": 'is_reanimator = yes',
         # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
+        r"\bjob_administrator": 'job_politician',
+        # Replaces only in filename with species
         r"\bmodification\s*=\s*(?:no|yes)\s*?\n": {"species": ("common\\traits", r'species_potential_add = { always = no }\n' , '')}  # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
     }
 
@@ -292,6 +296,7 @@ else:
         # 3.0.* (multiline)
         # key (pre match without group): arr (search, replace) or str (if no group)
         # r"\s+random_system_planet\s*=\s*\{\s*limit\s*=\s*\{\s*is_star\s*=\s*yes\s*\}": [r"(\s+)random_system_planet\s*=\s*\{\s*limit\s*=\s*\{\s*is_star\s*=\s*yes\s*\}", r"\1star = {"], # TODO works only on single star systems
+        r"\s+random_system_planet\s*=\s*\{\s*limit\s*=\s*\{\s*is_primary_star\s*=\s*yes\s*\}": [r"(\s+)random_system_planet\s*=\s*\{\s*limit\s*=\s*\{\s*is_primary_star\s*=\s*yes\s*\}", r"\1star = {"], # TODO works only on single star systems
         r"\bcreate_leader\s*=\s*\{[^{}]+?\s+type\s*=\s*\w+": [r"(create_leader\s*=\s*\{[^{}]+?\s+)type\s*=\s*(\w+)", r"\1class = \2"],
         r"NO[RT]\s*=\s*\{\s*has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+\}": [r"NO[RT]\s*=\s*\{\s*has_ethic\s*=\s*\"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:\1|\2)|fanatic_(?:\1|\2))\"?\s+\}", r"is_\1\2 = no"],
         r"(?:\s+OR\s*=\s*\{)?\s*has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic\s*=\s*\"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*\}?": [r"(\s+OR\s*=\s*\{)?(\s*?\n?\s*?)?(?(1)\t?)has_ethic\s*=\s*\"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*?has_ethic\s*=\s*\"?ethic_(?:(?:\4|\3)|fanatic_(?:\4|\3))\"?\s*?(?(1)\})", r"\2is_\3\4 = yes"], # r"\4is_ethics_aligned = { ARG1 = \2\3 }",
@@ -383,7 +388,7 @@ if also_old:
 
 if code_cosmetic and not only_warning:
     triggerScopes = r"limit|trigger|any_\w+|leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+"
-    targets3[r"((?:[<=>]\s|\.|PREV|FROM|Prev|From)+(PREV|FROM|ROOT|THIS|Prev|From|Root|This)+)"] = lambda p: p.group(1).lower()
+    targets3[r"((?:[<=>]\s|\.|PREV|FROM|Prev|From)+(PREV|FROM|ROOT|THIS|Prev|From|Root|This)+\b)"] = lambda p: p.group(1).lower()
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"^(\s+)limit\s*=\s*\{\s*\}"] = r"\1# limit = { }"
     targets3[r"\s*days\s*=\s*-1"] = '' # default not needed anymore
@@ -396,7 +401,7 @@ if code_cosmetic and not only_warning:
     targets3[r"\bfleet\s*=\s*\{\s*(?:destroy|delete)_fleet\s*=\s*this\s*\}"] = r"destroy_fleet = fleet" # TODO may extend
     ## targets3[r"# *([A-Z][\w ={}]+?)\.$"] = r"# \1" # remove comment punctuation mark
     targets4[r"\n{3,}"] = "\n\n" # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
-    targets4[r"\}\n\s+else"] = [r"\}\s*else", "} else"] # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
+    targets4[r"\n\s+\}\n\s+else"] = [r"\}\s*else", r"} else"] # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
     # WARNING not valid if in OR: NOR <=> AND = { NOT NOT } , # only 2 items (sub-trigger)
     targets4[r"\n\s+NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*[^{}#\n]+\s*\}"] = [r"([\t ]+)NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR]\s*=\s*\{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"]
     targets4[r"\brandom_country\s*=\s*\{\s*limit\s*=\s*\{\s*is_country_type\s*=\s*global_event\s*\}"] = "event_target:global_event_country = {"
