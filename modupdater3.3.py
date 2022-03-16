@@ -21,7 +21,7 @@ from tkinter import messagebox
 # True/False optional 
 only_warning = False # (if True, implies code_cosmetic = False)
 code_cosmetic = False # True/False optional (only if only_warning = False)
-only_actual = True   # speedup search (from previous relevant) to actual version
+only_actual = False   # speedup search (from previous relevant) to actual version
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False   # for dev print
 
