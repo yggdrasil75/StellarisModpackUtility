@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ###    @author FirePrince
-###    @revision 2022/04/01
+###    @revision 2022/04/02
 ###    USAGE: You need install https://pyyaml.org/wiki/PyYAMLDocumentation for Python3.x
-###    ATTENTION: You must customize the vars localModPath and local_OVERHAUL
+###    ATTENTION: You still must customize the mod path at localModPath (and optionally the languages which should be overhauled)
 ###    TODO: Renaming (already translated) keys is not working
 ###    TODO: Cache loadVanillaLoc
 
@@ -27,9 +27,11 @@ import errno, winreg
 try: from winreg import *
 except: print("Not running Windows")
 
-#============== Initialise global variables ===============
+#============== Initialize global variables ===============
 
-optimizeLoc = False # BETA!!!
+optimizeLoc = False # True BETA! Best results if event keys have "event" in they name or they are in a file with event in the name.
+optimizeLocString = "event" # only used if optimizeLoc is True
+
 loadVanillaLoc = False # True BETA: replaces exact matching strings with vanilla ones
 loadVanillaLocUpdateDefault = True # only true if loadVanillaLoc
 # loadDependingMods = False # replaces exact matching strings with ones from the depending mod(s)
@@ -39,9 +41,32 @@ ymlfiles = '*.yml' # you can also use single names
 key_IGNORE = "" # stops copying over localisations keys with this starting pattern eg. "dmm_mod."
 
 # Write here your mod folder name and languages to replace/update
-localModPath = ["ADeadlyTempest", ["french", "polish"]]
+# localModPath = ["CrisisManager_EndGame", ["french", "polish"]]
+# localModPath = ["CrisisManager_Sleeper", ["french", "polish"]]
+# localModPath = ["more_midgame_crisis", ["russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
+# localModPath = ["distant_stars_overhaul", []] #["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
+# localModPath = ["TheGreatKhanExpanded", []]
+# localModPath = ["SEoOC", ["german", "russian", "spanish", "braz_por", "french", "polish"]]
+# localModPath = ["Starbase_Strong", ["russian", "simp_chinese", "french", "polish"]] # "braz_por",
+
+# localModPath = ["CrisisManager_MidGame", ["french", "polish"]]
+# localModPath = ["TheGreatKhanExpanded", []]
+# localModPath = ["Decentralized Empires", []] # ["spanish", "braz_por", "french", "polish", "simp_chinese"]
+# localModPath = ["The Outer Bulwark", ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
+# localModPath = ["prob", []]
+# localModPath = ["SEoOC", ["german", "russian", "spanish", "braz_por", "french", "polish"]]
+# localModPath = ["ADeadlyTempest", ["french", "polish"]]
+# localModPath = ["Nomads The wondering Void Farers", []] # "english"
+# localModPath = ["honored_leader", []] # "english"
+# localModPath = ["FATALF", []]
+# localModPath = ["Realistic_Pirates", ["polish"]]
+localModPath = ["UAP", ["english", "german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
+
+
 # localModPath = ["c:\\Games\\steamapps\\workshop\\content\\281990\\2268189539\\", ["braz_por"]]
 # local_OVERHAUL = ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
+
+
 
 localModPath, local_OVERHAUL = localModPath
 print(localModPath, local_OVERHAUL)
@@ -70,7 +95,7 @@ def replaceLoc(old, new, doc):
                     changed = True
             f.close()
 
-    if changed and "event" in old.lower() and old in doc:
+    if changed and optimizeLocString in old.lower() and old in doc:
         oldRe = "$" + old + "$"
         for k, v in doc.copy().items():
             if oldRe in v:
@@ -411,7 +436,7 @@ for filename in ymlfiles:
                         if k in docCopy: del docCopy[k]
                         replaceLoc(k, trimDupe.sub(r'"\1"', v), doc)
                         if k in doc:
-                            if "event" in filename.lower() or "event" in k.lower(): del doc[k]
+                            if optimizeLocString in filename.lower() or optimizeLocString in k.lower(): del doc[k]
                             else: doc[k] = vt
                 else:
                     replaceLoc(k, trimDupe.sub(r'"\1"', v), doc)
