@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.3.4
-# @revision: 2022/03/27
+# @revision: 2022/03/28
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -333,7 +333,8 @@ else:
         # r"change_species_characteristics = \{\s*?[^{}\n]*?
         r"[\s#]+new_pop_resource_requirement = \{[^{}]+\}\s*": [r"([\s#]+new_pop_resource_requirement = \{[^{}]+\}[ \t]*)", ""],
         # very rare, maybe put to cosmetic
-        r"\n\s+any_system_within_border = \{\s*any_system_planet = \{\s*(?:\w+ = \{[\w\W]+?\}|[\w\W]+?)\s*\}\s*\}": [r"(\n\s+)any_system_within_border = \{(\1\s*)any_system_planet = \{\1\s*([\w\W]+?)\s*\}\s*\1\}", r"\1any_planet_within_border = {\2\3\1}"],
+        r"\s+any_system_within_border = \{\s*any_system_planet = \{\s*(?:\w+ = \{[\w\W]+?\}|[\w\W]+?)\s*\}\s*\}": [r"(\n?\s+)any_system_within_border = \{(\1\s*)any_system_planet = \{\1\s*([\w\W]+?)\s*\}\s*\1\}", r"\1any_planet_within_border = {\2\3\1}"],
+        r"\s+any_system = \{\s*any_system_planet = \{\s*(?:\w+ = \{[\w\W]+?\}|[\w\W]+?)\s*\}\s*\}": [r"(\n?\s+)any_system = \{(\1\s*)any_system_planet = \{\1\s*([\w\W]+?)\s*\}\s*\1\}", r"\1any_galaxy_planet = {\2\3\1}"],
 
         # >=3.1
         #but not used for starbases
@@ -406,7 +407,7 @@ if code_cosmetic and not only_warning:
     ## targets3[r"# *([A-Z][\w ={}]+?)\.$"] = r"# \1" # remove comment punctuation mark
     targets4[r"\n{3,}"] = "\n\n" # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
     # WARNING TODO: works only accurate if list sum count is 100
-    targets4[r"\brandom_list = \{\s+\d\d = \{(?:\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+\d\d = \{\s*\}|\s*\}\s+\d\d = \{\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\} )\s*\}"] = [r"\brandom_list = \{\s+(?:(\d\d) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+\d\d = \{\s*\}|\d\d = \{\s*\}\s+(\d\d) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\})\s*\}", r"random = { chance = \1\3 \2\4 }"] # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
+    targets4[r"\brandom_list = \{\s+\d+ = \{(?:\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+\d+ = \{\s*\}|\s*\}\s+\d+ = \{\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\} )\s*\}"] = [r"\brandom_list = \{\s+(?:(\d\d) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+\d\d = \{\s*\}|\d\d = \{\s*\}\s+(\d\d) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\})\s*\}", r"random = { chance = \1\3 \2\4 }"] # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
     targets4[r"\n\s+\}\n\s+else"] = [r"\}\s*else", r"} else"] # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
     # WARNING not valid if in OR: NOR <=> AND = { NOT NOT } , # only 2 items (sub-trigger)
     targets4[r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}"] = [r"([\t ]+)NO[TR] = \{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR] = \{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"]

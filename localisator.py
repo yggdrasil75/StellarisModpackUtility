@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ###    @author FirePrince
-###    @revision 2022/02/17
+###    @revision 2022/04/01
 ###    USAGE: You need install https://pyyaml.org/wiki/PyYAMLDocumentation for Python3.x
 ###    ATTENTION: You must customize the vars localModPath and local_OVERHAUL
 ###    TODO: Renaming (already translated) keys is not working
@@ -28,24 +28,57 @@ try: from winreg import *
 except: print("Not running Windows")
 
 #============== Initialise global variables ===============
-# Write here your mod folder name and languages to replace/update
 
-localModPath = ["ADeadlyTempest", ["french", "polish"]]
-
-# localModPath = ["c:\\Games\\steamapps\\workshop\\content\\281990\\2268189539\\", ["braz_por"]]
-# local_OVERHAUL = ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
-
-loadVanillaLoc = False # BETA: replaces exact matching strings with vanilla ones
+optimizeLoc = False # BETA!!!
+loadVanillaLoc = False # True BETA: replaces exact matching strings with vanilla ones
 loadVanillaLocUpdateDefault = True # only true if loadVanillaLoc
 # loadDependingMods = False # replaces exact matching strings with ones from the depending mod(s)
 defaultLang = 'english'
 ymlfiles = '*.yml' # you can also use single names
 # ymlfiles = 'CrisisManagerMenu_l_english.yml'
-
 key_IGNORE = "" # stops copying over localisations keys with this starting pattern eg. "dmm_mod."
+
+# Write here your mod folder name and languages to replace/update
+localModPath = ["ADeadlyTempest", ["french", "polish"]]
+# localModPath = ["c:\\Games\\steamapps\\workshop\\content\\281990\\2268189539\\", ["braz_por"]]
+# local_OVERHAUL = ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
 
 localModPath, local_OVERHAUL = localModPath
 print(localModPath, local_OVERHAUL)
+
+
+def replaceLoc(old, new, doc):
+    # print(type(optimizeLoc))
+    if isinstance(optimizeLoc, list):
+        oldRe = re.compile(r'(title|name|ltip|desc)\s*=\s*"?' + old + r'"?([\s\n])', flags=re.I|re.A)
+        new = r"\1 = " + new + r"\2"
+        # print("Search for:", old, new)
+        changed = False
+        for fname in optimizeLoc:
+            # print(fname)
+            s = False
+            with open(fname, 'r', encoding='utf-8') as f:
+                s = f.read()
+                if oldRe.search(s):
+                    # print("FOUND old loc:", old)
+                    s = oldRe.sub(new, s)
+                else: s = False
+            if isinstance(s, str):
+                with open(fname, "w", encoding='utf-8') as f:
+                    f.write(s)
+                    print("REPLACED", old, "with", new)
+                    changed = True
+            f.close()
+
+    if changed and "event" in old.lower() and old in doc:
+        oldRe = "$" + old + "$"
+        for k, v in doc.copy().items():
+            if oldRe in v:
+                changed = False
+                break
+        if changed:      
+            del doc[old]
+
 
 
 def tr(s):
@@ -160,11 +193,9 @@ if loadVanillaLoc and len(local_OVERHAUL) > 0:
         print('ERROR: Unable to locate the Stellaris path. loadVanillaLoc = False')
         # raise Exception('ERROR: Unable to locate the Stellaris path.')
 
-# ymlfiles = '*.yml'
-
 # def abort(message):
-# 	mBox('abort', message, 0)
-# 	sys.exit(1)
+#   mBox('abort', message, 0)
+#   sys.exit(1)
 
 
 def mBox(mtype, text):
@@ -202,9 +233,9 @@ settingsPath = [s for s in settingsPath if os.path.isfile(
     os.path.join(s, mods_registry))]
 
 # for s in settingsPath:
-# 	if os.path.isfile(os.path.join(s, mods_registry)):
-# 		settingsPath[0] = s
-# 		break
+#   if os.path.isfile(os.path.join(s, mods_registry)):
+#       settingsPath[0] = s
+#       break
 print(settingsPath)
 
 if len(settingsPath) > 0:
@@ -215,10 +246,18 @@ else:
     settingsPath = iBox("Please select the Stellaris settings folder:", settingsPath[0])
 
 # mods_registry = os.path.join(settingsPath, mods_registry)
+if optimizeLoc:
+    optimizeLoc = glob.glob(os.path.join(settingsPath, "mod", localModPath, "events") + '/**', recursive=True)
+    optimizeLoc = [f for f in optimizeLoc if os.path.isfile(f) and f.endswith('.txt')]
+    # obj = os.scandir(os.getcwd())
+    # for entry in obj :
+    #     if entry.is_dir() or entry.is_file():
+    #         print(entry.name)
+    # optimizeLoc = [f for f in os.scandir('.') if f.name.endswith('.txt')]
 
 localModPath = os.path.join(settingsPath, "mod", localModPath, "localisation")
-
 os.chdir(localModPath)
+
 
 regRev1 = re.compile(r'^ +\"([^:"\s]+)\": ', re.MULTILINE) # remove quote marks from keys
 regRev2 = re.compile(r'(?:\'|([^:"]{2}))\'?$', re.MULTILINE)
@@ -230,6 +269,7 @@ if os.path.exists(defaultLang):
 else:
     ymlfiles = glob.iglob('*l_'+defaultLang+'.yml', recursive=False)
     no_subfolder = True
+
 
 def trReverse(s):
     "Paradox workaround"
@@ -303,10 +343,10 @@ for filename in ymlfiles:
     # print(streamEn)
     dictionary = {}
     # try:
-    # 	print(type(dictionary),dictionary)
-    # 	# print(dictionary["ï»¿l_english"])
+    #   print(type(dictionary),dictionary)
+    #   # print(dictionary["ï»¿l_english"])
     # except yaml.YAMLError as exc:
-    # 	print(exc)
+    #   print(exc)
     # doc = yaml.load_all(stream, Loader=yaml.FullLoader)
     # doc = yaml.dump(dictionary) # ["\u00ef\u00bb\u00bfl_english"]
     # doc = json.dumps(dictionary) # ["\u00ef\u00bb\u00bfl_english"]
@@ -319,6 +359,8 @@ for filename in ymlfiles:
     doc = dictionary["l_"+defaultLang]
     # print(type(doc), isinstance(doc, dict)) True
     # print(type(loadVanillaLoc), isinstance(loadVanillaLoc, dict)) # type(loadVanillaLoc) == dict class 'dict_items'
+    trimDupe = re.compile(r"^\$([^$]+)\$$")
+    trimEnd = re.compile(r"[.!?]\s+$")
 
     # Replace with Vanilla
     if loadVanillaLoc and isinstance(doc, dict):
@@ -327,20 +369,66 @@ for filename in ymlfiles:
         for vkey, vvalue in loadVanillaLoc:
             if len(vvalue) > 2 and not vvalue.startswith("$") and len(vvalue) < 60:
                 for k, v in doc.copy().items():
-                    if isinstance(vkey, str) and isinstance(k, str) and k.lower() == vkey.lower() and v == vvalue:
+                    if isinstance(vkey, str) and k.lower() == vkey.lower() and v == vvalue:
                         del doc[k]
                         changed = True
-                        print(k, "DELETED: same as vanilla", vkey)
-                    elif len(v) > 2 and not(v.startswith("$") and v.endswith("$")) and len(v) < 60 and v == vvalue:
-                        doc[k] = '$'+ vkey +'$'
-                        changed = True
-                        print(k, "REPLACED with vanilla", vkey)
-                        # break
+                        print(k, "DELETED dupe, same as vanilla:", vkey)
+                    elif len(v) > 2 and not(v.startswith("$") and v.endswith("$")) and len(v) < 60:
+                        if v == vvalue:
+                            doc[k] = '$'+ vkey +'$'
+                            changed = True
+                            print(k, "REPLACED dupe with:", vkey)
+                        elif optimizeLoc and trimEnd.sub("", v) == trimEnd.sub("", vvalue):
+                            doc[k] = '$'+ vkey +'$'
+                            changed = True
+                            print(k, "REPLACED near dupe with:", vkey)
+                        # elif optimizeLoc: # also own duplicates
+                        #     loadVanillaLoc[k] = v 
+                        
+                    # elif optimizeLoc: # also own duplicates
+                    #     loadVanillaLoc[k] = v
+
+                    if optimizeLoc and k in doc and v.startswith("$") and v.endswith("$"):
+                        replaceLoc(k, trimDupe.sub(r'"\1"', v), doc)
+
         if changed and loadVanillaLocUpdateDefault:
             loadVanillaLocUpdateDefault = True
             localizations.append(defaultLang)
         else: loadVanillaLocUpdateDefault = False
         print("loadVanillaLocUpdateDefault:", loadVanillaLocUpdateDefault)
+
+    elif optimizeLoc != False and isinstance(doc, dict):
+        print("optimize Loc")
+        docCopy = doc.copy()
+        for k, v in doc.copy().items():
+            if v.startswith("$") and v.endswith("$") and len(v) < 60:
+                kt = trimDupe.sub(r'\1', v)
+                if kt in docCopy:
+                    vt = docCopy[kt]
+                    if vt.startswith("$") and vt.endswith("$") and len(vt) < 60:
+                        replaceLoc(kt, trimDupe.sub(r'"\1"', vt), doc)
+                        del docCopy[kt]
+                        if k in docCopy: del docCopy[k]
+                        replaceLoc(k, trimDupe.sub(r'"\1"', v), doc)
+                        if k in doc:
+                            if "event" in filename.lower() or "event" in k.lower(): del doc[k]
+                            else: doc[k] = vt
+                else:
+                    replaceLoc(k, trimDupe.sub(r'"\1"', v), doc)
+                    if k in docCopy: del docCopy[k]
+            elif len(v) > 2 and not (v.startswith("$") or v.endswith("$")):
+                for vkey, vvalue in docCopy.items():
+                    if k.lower() != vkey.lower() and v == vvalue:
+                        srt = [vkey, k] # sort
+                        if len(vkey) < len(k):
+                            srt.reverse()
+                        elif len(vkey) == len(k):
+                            srt.sort()
+                        doc[srt[0]] = '$'+ srt[1] +'$'
+                        replaceLoc(srt[0], '"'+ srt[1] +'"', doc)
+                        docCopy[srt[0]] = ''
+
+
 
     # for doc in dictionary:
     for lang in range(1, len(localizations)):
@@ -384,9 +472,10 @@ for filename in ymlfiles:
 
         # for _, doc in dictionary.items():
         if isinstance(langDict, dict):
+            reDupe = re.compile(r"^\$[^$]+?\$$") # don't use re in a loop
             for key, value in doc.items():
                 # print(key, value)
-                if key not in langDict or value == "" or langDict[key] in ("", "REPLACE_ME") or (lang in local_OVERHAUL and langDict[key] != value) and not (key_IGNORE != "" and key.startswith(key_IGNORE)) or re.search(r"^\$[^$]+?\$$", value):
+                if key not in langDict or value == "" or langDict[key] in ("", "REPLACE_ME") or (lang in local_OVERHAUL and langDict[key] != value) and not (key_IGNORE != "" and key.startswith(key_IGNORE)) or reDupe.search(value):
                     langDict[key] = value
                     changed = True
                     print("Fixed document " + filename.replace(defaultLang, lang), key, value.encode())
