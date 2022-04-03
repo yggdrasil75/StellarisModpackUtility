@@ -1,5 +1,5 @@
 ###     Made by ShadowTrolll
-# @revision 2022/04/03 + Options + calculate max weights (by FirePrince)
+# @revision 2022/04/03 + tech weights (still without calc the modifiers) (by FirePrince)
 # @revision 2022/01/15 + Options + scripts merged + fix KeyError (by FirePrince)
 # @revision 2021/10/17 + tier nr + tech multiline (by FirePrince)
 
@@ -454,12 +454,7 @@ def export_relations_into_trees(jsonContent):
                                     if wNr == int(wNr): wNr = int(wNr)
                                     if wNr != 1:
                                         tech_name += " w%s" % str(wNr) # " (" + str(tier) + ")"
-                                    break
-
-                            # wNr = [w for w in techArr if isinstance(w, float)]
-                            # if len(wNr) > 0:
-                            #     wNr = wNr[0]
-                                
+                                    break                                
                             wNr = None
 
                         if techKeysOnly:
