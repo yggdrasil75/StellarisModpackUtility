@@ -1,4 +1,5 @@
 ###     Made by ShadowTrolll
+# @revision 2022/04/03 + Options + calculate max weights (by FirePrince)
 # @revision 2022/01/15 + Options + scripts merged + fix KeyError (by FirePrince)
 # @revision 2021/10/17 + tier nr + tech multiline (by FirePrince)
 
@@ -16,6 +17,7 @@ techKeysOnly = False # True
 # if not techKeysOnly=True display both
 techKeysToo = True # False
 techTiers = True
+techWeights = True
 loadVanillaTech = False
 
 modsPath = ''
@@ -24,6 +26,7 @@ selectedEncoding = 'UTF-8'
 forbiddenFileChars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
 workshopDir = r'\\steamapps\\workshop\content\\281990'
 steamStellarisDir = r'\\steamapps\\common\\Stellaris'
+weightVars = {}
 
 #============== Load config ===============
 scriptConfig = {
@@ -32,7 +35,8 @@ scriptConfig = {
     "loadVanillaTech": str(loadVanillaTech),
     "techKeysOnly": str(techKeysOnly),
     "techKeysToo": str(techKeysToo),
-    "techTiers": str(techTiers)
+    "techTiers": str(techTiers),
+    "techWeights": str(techWeights)
 }
 
 if os.path.isfile('config.json'):
@@ -43,7 +47,7 @@ if os.path.isfile('config.json'):
         print("ERROR_NOT_FOUND config.json, load defaults")
 else: print("config.json not found, load defaults")
 
-print("Welcome to Stellaris modded tech tree exporter by ShadowTrolll.")
+print("Welcome to Stellaris modded tech tree exporter by ShadowTrolll & FirePrince.")
 
 #============== Set paths ===============
 if os.name == 'nt' and len(modsPath) < 1 or not os.path.isdir(modsPath):
@@ -104,6 +108,11 @@ while not os.path.isdir(os.path.join(stellarisPath, 'localisation', 'english')):
     print("\nStellaris folder does not contain necessary files: " + stellarisPath)
     stellarisPath = input("Stellaris install directory could not be found, please enter the FULL path to it (the folder with stellaris.exe)").strip()
 
+if techTiers:
+    techTiersTest = re.compile(r"^\s+tier")
+    tiersRE = re.compile(r'\btier\s*=\s*"?(\d+)\"?')
+
+
 #============== 'Fix' mod specific string quirks ===============
 modFixes = [
     "\u00a3",
@@ -151,25 +160,53 @@ def loadTechNames(filePath):
                 nameDict[linePart0] = linePartsRest
         return nameDict
 
+
 # techNames = type dict
 def handleTechFile(filePath, techNames):
     techArray = {"---": []}
+    global weightVars
+
     with open(filePath, 'r', encoding=selectedEncoding, errors='replace') as file:
         lastTech = "---"
+        weight = False
         tier = False
+        match = None
+        wNr = None # 0
         splitLine = []
         for line in file:
             #line = line.lstrip() # can't as we scan with indention
-            ### add tier nr
+            ### add weight vars number
+            if techWeights and line.startswith('@') and len(line) > 3:
+                match = weightVar.search(line)
+                if match: # number
+                    weightVars[match.group(1)] = float(match.group(2))
+            ### add tier number
             # if line.startswith('tier'):
-            if techTiers and re.search(r"^\s*tier", line):
-                tier = re.search(r'\btier\s*=\s*"?(\d+)\"?', line)
+            elif techTiers and techTiersTest.search(line):
+                tier = tiersRE.search(line)
                 if tier and lastTech in techArray:
                     tier = tier.group(1)
                     try:
                         techArray[lastTech].insert(1, int(tier)) # len([[tech_name]) > 0
                     except ValueError:
                         print(lastTech + " has no translation")
+             # if line.startswith('weight'):
+            elif techWeights and techWeightsTest.search(line): 
+                wNr = weightsRE.search(line)
+                if wNr: # get number
+                    wNr = wNr.group(1)
+                    try:
+                        if wNr.startswith('@') and wNr in weightVars:
+                            wNr = float(weightVars[wNr])
+                        else:
+                            wNr = float(wNr)
+                        techArray[lastTech].append(wNr)
+
+                    except ValueError:
+                        wNr = None
+                        print('Exception: ValueError on weight')
+            # TODO: this needs really a lot more work as any var in /scripted_variables needs to be parsed and calculated ...
+            # elif techWeights and wNr and techWeightsModTest.search(line):
 
             if re.search(r"^\s*prerequisites", line) or len(splitLine) > 0:
             # if line.startswith('prerequisites') or len(splitLine) > 0:
@@ -229,9 +266,46 @@ for item in os.listdir(modsPath):
 print("\nIndentified mods with technologies:")
 print(techMods)
 
+
+#============== Get scripted weight vars ===============
+def loadScriptedVars(filePath):
+    global weightVars
+    with open(filePath, 'r', encoding=selectedEncoding, errors='replace') as file:
+        nameDict = {}
+        for line in file:
+            line = line.lstrip()
+            match = None
+            if line.startswith('@') and len(line) > 3:
+                match = weightVar.search(line)
+                if match and "weight" in match.group(1): # number
+                    weightVars[match.group(1)] = float(match.group(2))
+
+        return nameDict
+
+if techWeights:
+    weightVar = re.compile(r"^(@\w+)\s*=\s*(\d+)")
+    techWeightsTest = re.compile(r"^\s+weight\b")
+    # techWeightsModTest = re.compile(r"^\s+weight_modifier\b"):
+    weightsRE = re.compile(r'\bweight\s*=\s*([-+.\d]+|@\w+)')
+    # techWeightsMod = re.compile(r"^\s+weight_modifier\s*=\s*\{"):
+
+    stellarisVarPath = os.path.join(stellarisPath, 'common', 'scripted_variables')
+    for root, dirs, files in os.walk(stellarisVarPath):
+        for name in files:
+            print("\tLoading scripted vars from file: " + os.path.join(root, name))
+            weightVars.update(loadScriptedVars(os.path.join(root, name)))
+
+    for mod in techMods:
+        for root, dirs, files in os.walk(os.path.join(modsPath, mod, 'common', 'scripted_variables')):
+            for name in files:
+                print("\tLoading scripted vars from file: " + os.path.join(root, name))
+                weightVars.update(loadScriptedVars(os.path.join(root, name)))
+
+
 #============== Load localization files ===============
 englishTechNames = {}
-for root, dirs, files in os.walk(os.path.join(stellarisPath, 'localisation', 'english')):
+stellarisLocPath = os.path.join(stellarisPath, 'localisation', 'english')
+for root, dirs, files in os.walk(stellarisLocPath):
     for name in files:
         if "english" in name:
             print("\tLoading localization from file: " + os.path.join(root, name))
@@ -364,6 +438,7 @@ def export_relations_into_trees(jsonContent):
             for tech_key in jsonContent[mod][file]:
                 techArr = jsonContent[mod][file][tech_key]
                 print("\t\tProcessing technology: " + tech_key)
+                wNr = None
                 if len(techArr) > 0:
                     tech_name = techArr.pop(0)
                     if isinstance(tech_name, str) and len(tech_name) > 3:
@@ -371,6 +446,22 @@ def export_relations_into_trees(jsonContent):
                             tier = techArr.pop(0)
                             if isinstance(tier, int):
                                 tech_name += " (%i)" % tier # " (" + str(tier) + ")"
+
+                        if techWeights and len(techArr) > 0:
+                            for i, w in enumerate(techArr):
+                                if isinstance(w, float):
+                                    wNr = techArr.pop(i)
+                                    if wNr == int(wNr): wNr = int(wNr)
+                                    if wNr != 1:
+                                        tech_name += " w%s" % str(wNr) # " (" + str(tier) + ")"
+                                    break
+
+                            # wNr = [w for w in techArr if isinstance(w, float)]
+                            # if len(wNr) > 0:
+                            #     wNr = wNr[0]
+                                
+                            wNr = None
+
                         if techKeysOnly:
                             tech_name = tech_key
                         elif techKeysToo and isinstance(tech_name, str):
@@ -380,6 +471,8 @@ def export_relations_into_trees(jsonContent):
                             print("\t\t\tTechnology %s has prerequirements:" % (tech_name))
                             modTechsWithPrereq[tech_name] = techArr
                         modTechs.append(stellarisTech(tech_name, techArr))
+
+                        
 
         exportStringGL = ''
         for tech in modTechs:
