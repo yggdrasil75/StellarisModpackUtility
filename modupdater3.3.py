@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.3.4
-# @revision: 2022/03/28
+# @revision: 2022/04/05
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -416,6 +416,16 @@ if code_cosmetic and not only_warning:
     targets4[r"\b((?:%s) = \{(\s+)(?:AND|this) = \{(?:\2\t[^\n]+)+\2\}\n)" % triggerScopes] = [r"(%s) = \{\n(\s+)(?:AND|this) = \{\n\t(\2[^\n]+\n)(?(3)\t)(\2[^\n]+\n)?(?(4)\t)(\2[^\n]+\n)?(?(5)\t)(\2[^\n]+\n)?(?(6)\t)(\2[^\n]+\n)?(?(7)\t)(\2[^\n]+\n)?(?(8)\t)(\2[^\n]+\n)?(?(9)\t)(\2[^\n]+\n)?(?(10)\t)(\2[^\n]+\n)?(?(11)\t)(\2[^\n]+\n)?(?(12)\t)(\2[^\n]+\n)?(?(13)\t)(\2[^\n]+\n)?(?(14)\t)(\2[^\n]+\n)?(?(15)\t)(\2[^\n]+\n)?(?(16)\t)(\2[^\n]+\n)?(?(17)\t)(\2[^\n]+\n)?(?(18)\t)(\2[^\n]+\n)?(?(19)\t)(\2[^\n]+\n)?(?(20)\t)(\2[^\n]+\n)?\2\}\n" % triggerScopes, r"\1 = {\n\3\4\5\6\7\8\9\10\11\12\13\14\15\16\17\18\19\20\21"]
     targets4[r"(?:\s+add_resource = \{\s*\w+ = [^{}#]+\s*\})+"] = [r"(\s+add_resource = \{)(\s*\w+ = [^\s{}#]+)\s*\}\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\}(?(3)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?(?(4)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?(?(5)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?(?(6)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?(?(7)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?", r"\1\2\3\4\5\6\7 }"] # 6 items
 
+### Pre-Compile regexps
+if debug_mode:
+    import datetime
+    # start_time = datetime.datetime.now()
+    start_time = 0
+targets3 = [(re.compile(k, flags=0), targets3[k]) for k in targets3]
+targets4 = [(re.compile(k, flags=re.I), targets4[k]) for k in targets4]
+# print(datetime.datetime.now() - start_time)
+# exit()
+
 
 def mBox(mtype, text):
     tk.Tk().withdraw()
@@ -434,6 +444,7 @@ def iBox(title, prefil):  # , master
 #============== Set paths ===============
 def parse_dir():
     global mod_path, mod_outpath
+    if debug_mode: global start_time
     files = []
     mod_path = os.path.normpath(mod_path)
     print("Welcome to Stellaris Mod-Updater-%s by F1r3Pr1nc3!" % stellaris_version)
@@ -461,6 +472,7 @@ def parse_dir():
         mod_outpath = os.path.normpath(mod_outpath)
 
     print("\tLoading folder", mod_path)
+    if debug_mode: start_time = datetime.datetime.now()
 
     files = glob.glob(mod_path + '/**', recursive=True)  # '\\*.txt'
     # files = glob.glob(mod_path, recursive=True)  # os.path.join( ,'\\*.txt'
@@ -474,7 +486,7 @@ def modfix(file_list):
     # print(mod_path)
     subfolder = ''
     for _file in file_list:
-        if os.path.isfile(_file) and re.search(r"\.txt$", _file):
+        if os.path.isfile(_file) and _file.endswith('.txt'):
             subfolder = os.path.relpath(_file, mod_path)
             file_contents = ""
             print("\tCheck file:", _file)
@@ -521,7 +533,11 @@ def modfix(file_list):
                                 rt = re.search(rt, line) # , flags=re.I
                             if rt:
                                 print(" WARNING outdated removed syntax%s: %s in line %i file %s\n" % (msg, rt.group(0), i, basename))
-                        for pattern, repl in targets3.items():
+                        
+                        # for pattern, repl in targets3.items(): old dict way
+                        for pattern in targets3: # new list way
+                            repl = pattern[1]
+                            pattern = pattern[0]
                             # print(line)
                             # print(pattern, repl)
                             # check valid folder
@@ -557,16 +573,19 @@ def modfix(file_list):
 
                             else: rt = True
                             if rt: # , flags=re.I # , count=0, flags=0
-                                rt = re.search(pattern, line) # , flags=re.I
+                                rt = pattern.search(line) # , flags=re.I
                                 if rt:
-                                    line = re.sub(pattern, repl, line, flags=0) # , flags=re.I
+                                    line = pattern.sub(repl, line) # , flags=re.I
                                     # line = line.replace(t, r)
                                     changed = True
                                     print("\tUpdated file: %s at line %i with %s\n" % (basename, i, line.strip().encode()))
                     out += line
 
-                for pattern, repl in targets4.items():
-                    targets = re.findall(pattern, out, flags=re.I)
+                # for pattern, repl in targets4.items(): old dict way
+                for pattern in targets4: # new list way
+                    repl = pattern[1]
+                    pattern = pattern[0]
+                    targets = pattern.findall(out)
                     # if targets:
                     if len(targets) > 0:
                         # print(targets, type(targets))
@@ -628,6 +647,7 @@ def modfix(file_list):
         #         os.mkdir(structure)
         # else: print("NO TXT?", _file)
     print("\nDone!")
+    if debug_mode: print(datetime.datetime.now() - start_time)
 
-parse_dir()  # mod_path, mod_outpath
+parse_dir() # mod_path, mod_outpath
 # input("\nPRESS ANY KEY TO EXIT!")
