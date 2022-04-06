@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ###    @author FirePrince
-###    @revision 2022/04/02
+###    @revision 2022/04/06
+###
 ###    USAGE: You need install https://pyyaml.org/wiki/PyYAMLDocumentation for Python3.x
 ###    ATTENTION: You still must customize the mod path at localModPath (and optionally the languages which should be overhauled)
 ###    TODO: Renaming (already translated) keys is not working
@@ -14,7 +15,6 @@ import tkinter as tk
 from tkinter import messagebox
 # import traceback
 # import sys
-# import json
 # from ruamel.yaml import YAML
 # from ruamel.yaml.compat import StringIO
 import re
@@ -34,6 +34,8 @@ optimizeLocString = "event" # only used if optimizeLoc is True
 
 loadVanillaLoc = False # True BETA: replaces exact matching strings with vanilla ones
 loadVanillaLocUpdateDefault = True # only true if loadVanillaLoc
+
+
 # loadDependingMods = False # replaces exact matching strings with ones from the depending mod(s)
 defaultLang = 'english'
 ymlfiles = '*.yml' # you can also use single names
@@ -52,20 +54,16 @@ key_IGNORE = "" # stops copying over localisations keys with this starting patte
 # localModPath = ["CrisisManager_MidGame", ["french", "polish"]]
 # localModPath = ["TheGreatKhanExpanded", []]
 # localModPath = ["Decentralized Empires", []] # ["spanish", "braz_por", "french", "polish", "simp_chinese"]
-# localModPath = ["The Outer Bulwark", ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
 # localModPath = ["prob", []]
 # localModPath = ["SEoOC", ["german", "russian", "spanish", "braz_por", "french", "polish"]]
 # localModPath = ["ADeadlyTempest", ["french", "polish"]]
 # localModPath = ["Nomads The wondering Void Farers", []] # "english"
 # localModPath = ["honored_leader", []] # "english"
-# localModPath = ["FATALF", []]
 # localModPath = ["Realistic_Pirates", ["polish"]]
 localModPath = ["UAP", ["english", "german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
 
-
 # localModPath = ["c:\\Games\\steamapps\\workshop\\content\\281990\\2268189539\\", ["braz_por"]]
 # local_OVERHAUL = ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
-
 
 
 localModPath, local_OVERHAUL = localModPath
@@ -82,14 +80,16 @@ def replaceLoc(old, new, doc):
         for fname in optimizeLoc:
             # print(fname)
             s = False
-            with open(fname, 'r', encoding='utf-8') as f:
+            with io.open(fname, 'r' , encoding='utf-8', errors='replace') as f: #
                 s = f.read()
-                if oldRe.search(s):
+                if isinstance(s, bytes):
+                    s = unicode(s, errors='replace')  
+                if s and oldRe.search(s):
                     # print("FOUND old loc:", old)
                     s = oldRe.sub(new, s)
                 else: s = False
             if isinstance(s, str):
-                with open(fname, "w", encoding='utf-8') as f:
+                with io.open(fname, 'w', encoding='utf-8') as f: # , encoding='utf-8-sig'
                     f.write(s)
                     print("REPLACED", old, "with", new)
                     changed = True
@@ -141,82 +141,103 @@ def getYAMLstream(lang, filename):
 
 
 if loadVanillaLoc and len(local_OVERHAUL) > 0:
-    ### Read Stellaris path from registry
-    loadVanillaLoc = os.getcwd()
+    import tempfile
+    import json # for temp file
+    tmpFile = "vanillaLoc.json"
+    ### fst chck th xsts a temp file
+    loadVanillaLoc = os.path.join(tempfile.gettempdir(), tmpFile) 
 
-    if os.path.exists(os.path.normpath(os.path.join(loadVanillaLoc, "localisation"))):
-        loadVanillaLoc = os.path.normpath(os.path.join(loadVanillaLoc, "localisation"))
-    elif os.name == 'nt':
-        loadVanillaLoc = ""
-        aReg = winreg.HKEY_CURRENT_USER
-        proc_arch = os.environ['PROCESSOR_ARCHITECTURE'].lower()
-        proc_arch64 = os.environ['PROCESSOR_ARCHITEW6432'].lower()
-        aKey = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
-        aReg = winreg.HKEY_LOCAL_MACHINE
-        print(r"*** Reading Stellaris path from %s ***" % (aKey))
-        if proc_arch == 'x86' and not proc_arch64:
-            arch_keys = {0}
-        elif proc_arch == 'x86' or proc_arch == 'amd64':
-            arch_keys = {winreg.KEY_WOW64_32KEY, winreg.KEY_WOW64_64KEY}
-        else: raise Exception("Unhandled arch: %s" % proc_arch)
-        for arch_key in arch_keys:
-            key = winreg.OpenKey(aReg, aKey, 0, winreg.KEY_READ | arch_key)
-            for i in range(0, winreg.QueryInfoKey(key)[0]):
-                skey_name = winreg.EnumKey(key, i)
-                skey = winreg.OpenKey(key, skey_name)
-                if len(loadVanillaLoc) > 0 and os.path.isdir(loadVanillaLoc):
-                    break
+    if os.path.isfile(loadVanillaLoc):
+        try:
+            with io.open(loadVanillaLoc, 'r', encoding='utf-8', errors='replace') as file:
+                loadVanillaLoc = file.read()
+                loadVanillaLoc = json.loads(loadVanillaLoc.replace('\\', '/'))
+        except IOError:
+            print("ERROR_NOT_FOUND temp file %s, load defaults new" % tmpFile)
+            loadVanillaLoc = os.getcwd()
+
+    else:
+         ### Read Stellaris path from registry
+        loadVanillaLoc = os.getcwd()
+
+        if os.path.exists(os.path.normpath(os.path.join(loadVanillaLoc, "localisation"))):
+            loadVanillaLoc = os.path.normpath(os.path.join(loadVanillaLoc, "localisation"))
+        elif os.name == 'nt':
+            loadVanillaLoc = ""
+            aReg = winreg.HKEY_CURRENT_USER
+            proc_arch = os.environ['PROCESSOR_ARCHITECTURE'].lower()
+            proc_arch64 = os.environ['PROCESSOR_ARCHITEW6432'].lower()
+            aKey = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"
+            aReg = winreg.HKEY_LOCAL_MACHINE
+            print(r"*** Reading Stellaris path from %s ***" % (aKey))
+            if proc_arch == 'x86' and not proc_arch64:
+                arch_keys = {0}
+            elif proc_arch == 'x86' or proc_arch == 'amd64':
+                arch_keys = {winreg.KEY_WOW64_32KEY, winreg.KEY_WOW64_64KEY}
+            else: raise Exception("Unhandled arch: %s" % proc_arch)
+            for arch_key in arch_keys:
+                key = winreg.OpenKey(aReg, aKey, 0, winreg.KEY_READ | arch_key)
+                for i in range(0, winreg.QueryInfoKey(key)[0]):
+                    skey_name = winreg.EnumKey(key, i)
+                    skey = winreg.OpenKey(key, skey_name)
+                    if len(loadVanillaLoc) > 0 and os.path.isdir(loadVanillaLoc):
+                        break
+                    else:
+                        try:
+                            if winreg.QueryValueEx(skey, 'DisplayName')[0] == "Stellaris" and len(winreg.QueryValueEx(skey, 'InstallLocation')[0]) > 0:
+                                loadVanillaLoc = winreg.QueryValueEx(skey, 'InstallLocation')[0]
+                                if len(loadVanillaLoc) > 0:
+                                    loadVanillaLoc = os.path.normpath(loadVanillaLoc)
+                                    if os.path.isdir(loadVanillaLoc):
+                                        print("REG", loadVanillaLoc, winreg.QueryValueEx(skey, 'DisplayName')[0])
+                                        break
+                                    else: loadVanillaLoc = ""
+                        except OSError as e:
+                            if e.errno == errno.ENOENT: # DisplayName doesn't exist in this skey
+                                pass
+                        finally:
+                            skey.Close()
+        else:
+            loadVanillaLoc = os.path.expanduser("~/.steam/steam/steamapps/common/Stellaris")
+
+        print(loadVanillaLoc, os.path.exists(os.path.join(loadVanillaLoc, "localisation")))
+
+        if len(loadVanillaLoc) > 0 and os.path.isdir(loadVanillaLoc) and os.path.exists(os.path.join(loadVanillaLoc, "localisation")):
+            loadVanillaLoc = os.path.join(loadVanillaLoc, "localisation")
+
+
+            os.chdir(loadVanillaLoc)
+            print(loadVanillaLoc)
+            vanillafiles = glob.iglob(os.path.join(defaultLang, ymlfiles), recursive=False)
+            # vanillafiles = ["english\\l_english.yml"] # TEST
+            loadVanillaLoc = {}
+
+            for filename in vanillafiles:
+                print(filename)
+                streamEn = getYAMLstream(defaultLang, filename)
+                streamEn = streamEn.read()
+                # FIX VANILLA
+                if filename == os.path.join(defaultLang, 'l_'+defaultLang+'.yml'):
+                    if isinstance(streamEn, bytes):
+                        streamEn = streamEn.decode('utf-8-sig')
+                    streamEn = streamEn.replace('android_occupation_army_desc:0 ""', 'android_occupation_army_desc: "')
+
+                streamEn = yaml.safe_load(tr(streamEn))
+                streamEn = streamEn["l_"+defaultLang]
+                if isinstance(streamEn, dict):
+                    loadVanillaLoc.update(streamEn)
                 else:
-                    try:
-                        if winreg.QueryValueEx(skey, 'DisplayName')[0] == "Stellaris" and len(winreg.QueryValueEx(skey, 'InstallLocation')[0]) > 0:
-                            loadVanillaLoc = winreg.QueryValueEx(skey, 'InstallLocation')[0]
-                            if len(loadVanillaLoc) > 0:
-                                loadVanillaLoc = os.path.normpath(loadVanillaLoc)
-                                if os.path.isdir(loadVanillaLoc):
-                                    print("REG", loadVanillaLoc, winreg.QueryValueEx(skey, 'DisplayName')[0])
-                                    break
-                                else: loadVanillaLoc = ""
-                    except OSError as e:
-                        if e.errno == errno.ENOENT: # DisplayName doesn't exist in this skey
-                            pass
-                    finally:
-                        skey.Close()
-    else:
-        loadVanillaLoc = os.path.expanduser("~/.steam/steam/steamapps/common/Stellaris")
+                    print("XAML TYPE ERROR", type(streamEn), streamEn)
+                    # loadVanillaLoc.extend(streamEn)
 
-    print(loadVanillaLoc, os.path.exists(os.path.join(loadVanillaLoc, "localisation")))
-
-    if len(loadVanillaLoc) > 0 and os.path.isdir(loadVanillaLoc) and os.path.exists(os.path.join(loadVanillaLoc, "localisation")):
-        loadVanillaLoc = os.path.join(loadVanillaLoc, "localisation")
-
-
-        os.chdir(loadVanillaLoc)
-        print(loadVanillaLoc)
-        vanillafiles = glob.iglob(os.path.join(defaultLang, ymlfiles), recursive=False)
-        # vanillafiles = ["english\\l_english.yml"] # TEST
-        loadVanillaLoc = {}
-
-        for filename in vanillafiles:
-            print(filename)
-            streamEn = getYAMLstream(defaultLang, filename)
-            streamEn = streamEn.read()
-            # FIX VANILLA
-            if filename == os.path.join(defaultLang, 'l_'+defaultLang+'.yml'):
-                if isinstance(streamEn, bytes):
-                    streamEn = streamEn.decode('utf-8-sig')
-                streamEn = streamEn.replace('android_occupation_army_desc:0 ""', 'android_occupation_army_desc: "')
-
-            streamEn = yaml.safe_load(tr(streamEn))
-            streamEn = streamEn["l_"+defaultLang]
-            if isinstance(streamEn, dict):
-                loadVanillaLoc.update(streamEn)
-            else:
-                print("XAML TYPE ERROR", type(streamEn), streamEn)
-                # loadVanillaLoc.extend(streamEn)
-    else:
-        loadVanillaLoc = False
-        print('ERROR: Unable to locate the Stellaris path. loadVanillaLoc = False')
-        # raise Exception('ERROR: Unable to locate the Stellaris path.')
+            with io.open(os.path.join(tempfile.gettempdir(), tmpFile), "w", encoding='utf-8', errors='replace') as f:
+                tmpFile = json.dumps(loadVanillaLoc, indent=2)
+                f.write(tmpFile)
+                
+        else:
+            loadVanillaLoc = False
+            print('ERROR: Unable to locate the Stellaris path. loadVanillaLoc = False')
+            # raise Exception('ERROR: Unable to locate the Stellaris path.')
 
 # def abort(message):
 #   mBox('abort', message, 0)
@@ -413,8 +434,8 @@ for filename in ymlfiles:
                     # elif optimizeLoc: # also own duplicates
                     #     loadVanillaLoc[k] = v
 
-                    if optimizeLoc and k in doc and v.startswith("$") and v.endswith("$"):
-                        replaceLoc(k, trimDupe.sub(r'"\1"', v), doc)
+                # if optimizeLoc and k in doc and v.startswith("$") and v.endswith("$") and len(v) < 60:
+                #     replaceLoc(k, trimDupe.sub(r'"\1"', v), doc)
 
         if changed and loadVanillaLocUpdateDefault:
             loadVanillaLocUpdateDefault = True
