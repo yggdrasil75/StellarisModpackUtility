@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.3.4
-# @revision: 2022/04/05
+# @revision: 2022/04/12
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -277,7 +277,7 @@ else:
         r"\bgive_scaled_tech_bonus_effect": "add_monthly_resource_mult",
         r"\bclear_uncharted_space = \{\s*from = ([^\n{}# ])\s*\}": r"clear_uncharted_space = \1",
         r"\bhomeworld = ": ("common\\governments\\civics", r"starting_colony = "),
-        r"^((?:\t|    )parent = planet_jobs)\b": ("common\\economic_categories", r"\1_productive"),
+        # r"^((?:\t|    )parent = planet_jobs)\b": ("common\\economic_categories", r"\1_productive"), TODO
         r"^(\t|    )energy = (\d+|@\w+)": ("common\\terraform", r"\1resources = {\n\1\1category = terraforming\n\1\1cost = { energy = \2 }\n\1}"),
         ### 3.3 ###
         r"\s+building(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow) = (?:yes|no)\n?": ("common\\buildings", ''),
@@ -325,8 +325,8 @@ else:
         r"\s+(?:OR = \{)?\s{4,}is_country_type = (?:fallen_empire|awakened_fallen_empire)\s+is_country_type = (?:fallen_empire|awakened_fallen_empire)\s+\}?": [r"(\s+)(OR = \{)?(\s{4,})is_country_type = (?:fallen_empire|awakened_fallen_empire)\s+is_country_type = (?:fallen_empire|awakened_fallen_empire)(?(2)\1\})", r"\1\3is_fallen_empire = yes"],
         r"NO[RT] = \{\s*is_country_type = (?:default|awakened_fallen_empire)\s+is_country_type = (?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = no",
         r"OR = \{\s*is_country_type = (?:default|awakened_fallen_empire)\s+is_country_type = (?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = yes",
+        r"\s+(?:OR = \{)?\s{4,}(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+\}?": [r"(\s+)(OR = \{)?(\s{4,})(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)(?(2)\1\})", r"\1\3is_synthetic_empire = yes"],
         r"NO[RT] = \{\s*(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+\}": "is_synthetic_empire = no",
-        r"OR = \{\s*(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire)\s+\}": "is_synthetic_empire = yes",
         r"NO[RT] = \{\s*has_(?:valid_)?civic = \"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*has_(?:valid_)?civic = \"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*has_(?:valid_)?civic = \"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*\}": "is_homicidal = no",
         r"(?:OR = \{)\s{4,}?has_(?:valid_)?civic = \"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*\}?": [r"(OR = \{\s*)?has_(?:valid_)?civic = \"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?(?(1)\s*\})", "is_homicidal = yes"],
         r"NOT = \{\s*check_variable = \{\s*which = \"?\w+\"?\s+value = [^{}#\s=]\s*\}\s*\}": [r"NOT = \{\s*(check_variable = \{\s*which = \"?\w+\"?\s+value) = ([^{}#\s=])\s*\}\s*\}", r"\1 != \2 }"],
