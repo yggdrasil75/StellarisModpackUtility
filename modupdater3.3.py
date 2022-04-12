@@ -38,9 +38,11 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 
 # For performance reason option
 # 3.3 TODO soldier_job_check_trigger
+# ethics    value -> base
 if only_actual:
     removedTargets = [
         "tech_repeatable_improved_edict_length",
+        r"country_admin_cap_(add|mult)",
         ("common\\buildings", r"\sbuilding(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*="), # replaced buildings ai
         [r"\bnum_\w+\s*[<=>]+\s*[a-z]+[\s}]", 'no scope alone'], #  [^\d{$@] too rare (could also be auto fixed)
         [r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}", 'can be merged to NOR if not in an OR'], #  [^\d{$@] too rare (could also be auto fixed)
@@ -55,6 +57,9 @@ if only_actual:
         # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
         r"\bjob_administrator": 'job_politician',
         r"\b(has_any_(?:farming|generator)_district)\b": r'\1_or_building', # 3.3.4 scripted trigger
+        # r"\bcountry_admin_cap_mult\b": ("common\\**", 'empire_size_colonies_mult'),
+        # r"\bcountry_admin_cap_add\b": ("common\\**", 'country_edict_fund_add'), 
+        r"^\t\tvalue\b": ("common\\ethics", 'base'),
         # Replaces only in filename with species
         r"^(\s+)modification = (?:no|yes)\s*?\n": {"species": ("common\\traits", r'\1species_potential_add = { always = no }\n' , '')} # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
 
@@ -113,6 +118,7 @@ else:
         r"\scan_support_spaceport = (yes|no)",
         # 3.3
         "tech_repeatable_improved_edict_length",
+        r"country_admin_cap_(add|mult)",
         ("common\\buildings", r"\sbuilding(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*="), # replaced buildings ai
         [r"\bnum_\w+\s*[<=>]+\s*[a-z]+[\s}]", 'no scope alone'], #  [^\d{$@] too rare (could also be auto fixed)
         [r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}", 'can be merged to NOR if not in an OR'], #  [^\d{$@] too rare (could also be auto fixed)
@@ -288,6 +294,7 @@ else:
         # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
         r"\bjob_administrator": 'job_politician',
         r"\b(has_any_(?:farming|generator)_district)\b": r'\1_or_building', # 3.3.4 scripted trigger
+        r"^\t\tvalue\b": ("common\\ethics", 'base'),
         # Replaces only in filename with species
         r"^(\s+)modification = (?:no|yes)\s*?\n": {"species": ("common\\traits", r'\1species_potential_add = { always = no }\n' , '')}  # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
     }
