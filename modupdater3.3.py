@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.3.4
-# @revision: 2022/04/12
+# @revision: 2022/05/01
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -39,6 +39,11 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 # For performance reason option
 # 3.3 TODO soldier_job_check_trigger
 # ethics    value -> base
+# -empire_size_penalty_mult = 1.0
+# +empire_size_pops_mult = -0.15
+# +empire_size_colonies_mult = 0.5
+# -country_admin_cap_add = 15
+# +country_unity_produces_mult = 0.05
 if only_actual:
     removedTargets = [
         "tech_repeatable_improved_edict_length",
@@ -59,6 +64,7 @@ if only_actual:
         r"\b(has_any_(?:farming|generator)_district)\b": r'\1_or_building', # 3.3.4 scripted trigger
         # r"\bcountry_admin_cap_mult\b": ("common\\**", 'empire_size_colonies_mult'),
         # r"\bcountry_admin_cap_add\b": ("common\\**", 'country_edict_fund_add'), 
+        # r"\bcountry_edict_cap_add\b": ("common\\**", 'country_power_projection_influence_produces_add'), 
         r"^\t\tvalue\b": ("common\\ethics", 'base'),
         # Replaces only in filename with species
         r"^(\s+)modification = (?:no|yes)\s*?\n": {"species": ("common\\traits", r'\1species_potential_add = { always = no }\n' , '')} # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
@@ -68,7 +74,14 @@ if only_actual:
         r"(?:random_weight|pop_attraction(_tag)?|country_attraction)\s+value\s*=": [r"\bvalue\b", ("common\\ethics", 'base')],
         #r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}": [r"([\t ]+)NO[TR] = \{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR] = \{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"], not valid if in OR
         r"\bany_\w+ = \{[^{}]+?\bcount\s*[<=>]+\s*[^{}\s]+\s+[^{}]*\}": [r"\bany_(\w+) = \{\s*(?:([^{}]+?)\s+(\bcount\s*[<=>]+\s*[^{}\s]+)|(\bcount\s*[<=>]+\s*[^{}\s]+)\s+([^{}]*))\s+\}", r"count_\1 = { limit = { \2\5 } \3\4 }"], # too rare!? only simple supported TODO
+        # Near cosmetic
+        r'\badd_modifier = \{\s*modifier = "?\w+"?\s+days\s*=\s*\d{2,}\s*\}': [r'\s+days\s*=\s*(\d{2,})\s*', lambda p: " years = " + str(int(p.group(1))//360) + ' ' if int(p.group(1))%360 < 41 else (" months = " + str(int(p.group(1))//30) + ' ' if int(p.group(1))%30 < 3 else " days = " + p.group(1)) + ' '],
+        r"\brandom_list = \{\s+\d+ = \{(?:\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+\d+ = \{\s*\}|\s*\}\s+\d+ = \{\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\} )\s*\}": [
+            r"\brandom_list = \{\s+(?:(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+(\d+) = \{\s*\}|(\d+) = \{\s*\}\s+(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\})\s*", # r"random = { chance = \1\5 \2\6 }"
+            lambda p: "random = { chance = " + str(round((int(p.group(1))/(int(p.group(1))+int(p.group(3))) if len(p.group(1)) else int(p.group(5))/(int(p.group(5))+int(p.group(4))))*100)) + ' ' + p.group(2) or p.group(6)
+        ],
     }
+
 else:
     # >= 3.0.*
     """== 3.1 Quick stats ==
@@ -342,7 +355,12 @@ else:
         # very rare, maybe put to cosmetic
         r"\s+any_system_within_border = \{\s*any_system_planet = \{\s*(?:\w+ = \{[\w\W]+?\}|[\w\W]+?)\s*\}\s*\}": [r"(\n?\s+)any_system_within_border = \{(\1\s*)any_system_planet = \{\1\s*([\w\W]+?)\s*\}\s*\1\}", r"\1any_planet_within_border = {\2\3\1}"],
         r"\s+any_system = \{\s*any_system_planet = \{\s*(?:\w+ = \{[\w\W]+?\}|[\w\W]+?)\s*\}\s*\}": [r"(\n?\s+)any_system = \{(\1\s*)any_system_planet = \{\1\s*([\w\W]+?)\s*\}\s*\1\}", r"\1any_galaxy_planet = {\2\3\1}"],
-
+        # Near cosmetic
+        r'\badd_modifier = \{\s*modifier = "?\w+"?\s+days\s*=\s*\d{2,}\s*\}': [r'\s+days\s*=\s*(\d{2,})\s*', lambda p: " years = " + str(int(p.group(1))//360) + ' ' if int(p.group(1))%360 < 41 else (" months = " + str(int(p.group(1))//30) + ' ' if int(p.group(1))%30 < 3 else " days = " + p.group(1)) + ' '],
+        r"\brandom_list = \{\s+\d+ = \{(?:\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+\d+ = \{\s*\}|\s*\}\s+\d+ = \{\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\} )\s*\}": [
+            r"\brandom_list = \{\s+(?:(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+(\d+) = \{\s*\}|(\d+) = \{\s*\}\s+(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\})\s*", # r"random = { chance = \1\5 \2\6 }"
+            lambda p: "random = { chance = " + str(round((int(p.group(1))/(int(p.group(1))+int(p.group(3))) if len(p.group(1)) else int(p.group(5))/(int(p.group(5))+int(p.group(4))))*100)) + ' ' + p.group(2) or p.group(6)
+        ],
         # >=3.1
         #but not used for starbases
         r"\bis_space_station = no\s*icon_frame = \d+":
@@ -403,7 +421,7 @@ if code_cosmetic and not only_warning:
     targets3[r"((?:[<=>]\s|\.|PREV|FROM|Prev|From)+(PREV|FROM|ROOT|THIS|Prev|From|Root|This)+\b)"] = lambda p: p.group(1).lower()
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"^(\s+)limit = \{\s*\}"] = r"\1# limit = { }"
-    targets3[r"\s*days = -1"] = '' # default not needed anymore
+    targets3[r"\s*days\s*=\s*-1\s*"] = ' ' # default not needed anymore
     targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
     targets3[r"#([^\-\s#])"] = r"# \1" # r"#([^\s#])": r"# \1", # format comment
     targets3[r"# +([A-Z][^\n=<>{}\[\]# ]+? [\w,\.;\'\/\\+\- ()&]+? \w+ \w+ \w+)$"] = r"# \1." # set comment punctuation mark
@@ -413,8 +431,6 @@ if code_cosmetic and not only_warning:
     targets3[r"\bfleet = \{\s*(?:destroy|delete)_fleet = this\s*\}"] = r"destroy_fleet = fleet" # TODO may extend
     ## targets3[r"# *([A-Z][\w ={}]+?)\.$"] = r"# \1" # remove comment punctuation mark
     targets4[r"\n{3,}"] = "\n\n" # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
-    # WARNING TODO: works only accurate if list sum count is 100
-    targets4[r"\brandom_list = \{\s+\d+ = \{(?:\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+\d+ = \{\s*\}|\s*\}\s+\d+ = \{\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\} )\s*\}"] = [r"\brandom_list = \{\s+(?:(\d\d) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+\d\d = \{\s*\}|\d\d = \{\s*\}\s+(\d\d) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\})\s*\}", r"random = { chance = \1\3 \2\4 }"] # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
     targets4[r"\n\s+\}\n\s+else"] = [r"\}\s*else", r"} else"] # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
     # WARNING not valid if in OR: NOR <=> AND = { NOT NOT } , # only 2 items (sub-trigger)
     targets4[r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}"] = [r"([\t ]+)NO[TR] = \{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR] = \{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"]
