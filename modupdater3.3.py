@@ -75,10 +75,13 @@ if only_actual:
         #r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}": [r"([\t ]+)NO[TR] = \{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR] = \{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"], not valid if in OR
         r"\bany_\w+ = \{[^{}]+?\bcount\s*[<=>]+\s*[^{}\s]+\s+[^{}]*\}": [r"\bany_(\w+) = \{\s*(?:([^{}]+?)\s+(\bcount\s*[<=>]+\s*[^{}\s]+)|(\bcount\s*[<=>]+\s*[^{}\s]+)\s+([^{}]*))\s+\}", r"count_\1 = { limit = { \2\5 } \3\4 }"], # too rare!? only simple supported TODO
         # Near cosmetic
-        r'\badd_modifier = \{\s*modifier = "?\w+"?\s+days\s*=\s*\d{2,}\s*\}': [r'\s+days\s*=\s*(\d{2,})\s*', lambda p: " years = " + str(int(p.group(1))//360) + ' ' if int(p.group(1))%360 < 41 else (" months = " + str(int(p.group(1))//30) + ' ' if int(p.group(1))%30 < 3 else " days = " + p.group(1)) + ' '],
+        r'\badd_modifier = \{\s*modifier = "?\w+"?\s+days\s*=\s*\d{2,}\s*\}': [
+            r'\s+days\s*=\s*(\d{2,})\s*',
+            lambda p: " years = " + str(int(p.group(1))//360) + ' ' if int(p.group(1)) > 320 and int(p.group(1))%360 < 41 else (" months = " + str(int(p.group(1))//30) if int(p.group(1)) > 28 and int(p.group(1))%30 < 3 else " days = " + p.group(1)) + ' '
+        ],
         r"\brandom_list = \{\s+\d+ = \{(?:\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+\d+ = \{\s*\}|\s*\}\s+\d+ = \{\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\} )\s*\}": [
-            r"\brandom_list = \{\s+(?:(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+(\d+) = \{\s*\}|(\d+) = \{\s*\}\s+(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\})\s*", # r"random = { chance = \1\5 \2\6 }"
-            lambda p: "random = { chance = " + str(round((int(p.group(1))/(int(p.group(1))+int(p.group(3))) if len(p.group(1)) else int(p.group(5))/(int(p.group(5))+int(p.group(4))))*100)) + ' ' + p.group(2) or p.group(6)
+            r"\brandom_list = \{\s+(?:(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+(\d+) = \{\s*\}|(\d+) = \{\s*\}\s+(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\})\s*", # r"random = { chance = \1\5 \2\6 "
+            lambda p: "random = { chance = " + str(round((int(p.group(1))/(int(p.group(1))+int(p.group(3))) if len(p.group(1)) else int(p.group(5))/(int(p.group(5))+int(p.group(4))))*100)) + ' ' + (p.group(2) or p.group(6)) + ' '
         ],
     }
 
@@ -356,10 +359,13 @@ else:
         r"\s+any_system_within_border = \{\s*any_system_planet = \{\s*(?:\w+ = \{[\w\W]+?\}|[\w\W]+?)\s*\}\s*\}": [r"(\n?\s+)any_system_within_border = \{(\1\s*)any_system_planet = \{\1\s*([\w\W]+?)\s*\}\s*\1\}", r"\1any_planet_within_border = {\2\3\1}"],
         r"\s+any_system = \{\s*any_system_planet = \{\s*(?:\w+ = \{[\w\W]+?\}|[\w\W]+?)\s*\}\s*\}": [r"(\n?\s+)any_system = \{(\1\s*)any_system_planet = \{\1\s*([\w\W]+?)\s*\}\s*\1\}", r"\1any_galaxy_planet = {\2\3\1}"],
         # Near cosmetic
-        r'\badd_modifier = \{\s*modifier = "?\w+"?\s+days\s*=\s*\d{2,}\s*\}': [r'\s+days\s*=\s*(\d{2,})\s*', lambda p: " years = " + str(int(p.group(1))//360) + ' ' if int(p.group(1))%360 < 41 else (" months = " + str(int(p.group(1))//30) + ' ' if int(p.group(1))%30 < 3 else " days = " + p.group(1)) + ' '],
+        r'\badd_modifier = \{\s*modifier = "?\w+"?\s+days\s*=\s*\d{2,}\s*\}': [
+            r'\s+days\s*=\s*(\d{2,})\s*',
+            lambda p: " years = " + str(int(p.group(1))//360) + ' ' if int(p.group(1)) > 320 and int(p.group(1))%360 < 41 else (" months = " + str(int(p.group(1))//30) if int(p.group(1)) > 28 and int(p.group(1))%30 < 3 else " days = " + p.group(1)) + ' '
+        ],
         r"\brandom_list = \{\s+\d+ = \{(?:\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+\d+ = \{\s*\}|\s*\}\s+\d+ = \{\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\} )\s*\}": [
-            r"\brandom_list = \{\s+(?:(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+(\d+) = \{\s*\}|(\d+) = \{\s*\}\s+(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\})\s*", # r"random = { chance = \1\5 \2\6 }"
-            lambda p: "random = { chance = " + str(round((int(p.group(1))/(int(p.group(1))+int(p.group(3))) if len(p.group(1)) else int(p.group(5))/(int(p.group(5))+int(p.group(4))))*100)) + ' ' + p.group(2) or p.group(6)
+            r"\brandom_list = \{\s+(?:(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+(\d+) = \{\s*\}|(\d+) = \{\s*\}\s+(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\})\s*", # r"random = { chance = \1\5 \2\6 "
+            lambda p: "random = { chance = " + str(round((int(p.group(1))/(int(p.group(1))+int(p.group(3))) if len(p.group(1)) else int(p.group(5))/(int(p.group(5))+int(p.group(4))))*100)) + ' ' + (p.group(2) or p.group(6)) + ' '
         ],
         # >=3.1
         #but not used for starbases
