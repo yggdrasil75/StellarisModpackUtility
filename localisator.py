@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ###    @author FirePrince
-###    @revision 2022/04/06
+###    @revision 2022/05/11
 ###
 ###    USAGE: You need install https://pyyaml.org/wiki/PyYAMLDocumentation for Python3.x
 ###    ATTENTION: You still must customize the mod path at localModPath (and optionally the languages which should be overhauled)
@@ -54,13 +54,15 @@ key_IGNORE = "" # stops copying over localisations keys with this starting patte
 # localModPath = ["CrisisManager_MidGame", ["french", "polish"]]
 # localModPath = ["TheGreatKhanExpanded", []]
 # localModPath = ["Decentralized Empires", []] # ["spanish", "braz_por", "french", "polish", "simp_chinese"]
-# localModPath = ["prob", []]
 # localModPath = ["SEoOC", ["german", "russian", "spanish", "braz_por", "french", "polish"]]
 # localModPath = ["ADeadlyTempest", ["french", "polish"]]
 # localModPath = ["Nomads The wondering Void Farers", []] # "english"
-# localModPath = ["honored_leader", []] # "english"
-# localModPath = ["Realistic_Pirates", ["polish"]]
+localModPath = ["Realistic_Pirates", ["english", "polish"]]
+localModPath = ["honored_leader", ["english"]] # "english"
+localModPath = ["prob", []]
 localModPath = ["UAP", ["english", "german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
+
+
 
 # localModPath = ["c:\\Games\\steamapps\\workshop\\content\\281990\\2268189539\\", ["braz_por"]]
 # local_OVERHAUL = ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
@@ -97,7 +99,7 @@ def replaceLoc(old, new, doc):
 
     if changed and optimizeLocString in old.lower() and old in doc:
         oldRe = "$" + old + "$"
-        for k, v in doc.copy().items():
+        for k, v in doc.items():
             if oldRe in v:
                 changed = False
                 break
@@ -261,7 +263,7 @@ def iBox(title, prefil): # , master
 
 # mods_registry = "mods_registry.json" # old launcher (changed in 2.7.2)
 mods_registry = "settings.txt"
-localizations = ["english", "german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
+localizations = ["english", "german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"]
 
 # default needs first
 if defaultLang != localizations[0]:
@@ -406,7 +408,7 @@ for filename in ymlfiles:
     # print(type(doc), isinstance(doc, dict)) True
     # print(type(loadVanillaLoc), isinstance(loadVanillaLoc, dict)) # type(loadVanillaLoc) == dict class 'dict_items'
     trimDupe = re.compile(r"^\$([^$]+)\$$")
-    trimEnd = re.compile(r"[.!?]\s+$")
+    trimEnd = re.compile(r"[.!?]\s*$")
 
     # Replace with Vanilla
     if loadVanillaLoc and isinstance(doc, dict):
