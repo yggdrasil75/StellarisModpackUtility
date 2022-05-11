@@ -25,7 +25,7 @@ only_actual = False   # speedup search (from previous relevant) to actual versio
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False   # for dev print
 
-stellaris_version = '3.3.4'
+stellaris_version = '3.4.2.Beta'
 mod_outpath = ''
 
 # mod_path = os.path.dirname(os.getcwd())
@@ -47,45 +47,21 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 # 3.0 removed ai_weight for buildings except branch_office_building = yes
 if only_actual:
     removedTargets = [
-        "tech_repeatable_improved_edict_length",
-        r"country_admin_cap_(add|mult)",
-        ("common\\buildings", r"\sbuilding(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*="), # replaced buildings ai
-        ("common\\buildings", [r"^\s+ai_weight\s*=", 'ai_weight for buildings removed except for branch office']), # replaced buildings ai
-        [r"\bnum_\w+\s*[<=>]+\s*[a-z]+[\s}]", 'no scope alone'], #  [^\d{$@] too rare (could also be auto fixed)
-        [r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}", 'can be merged to NOR if not in an OR'], #  [^\d{$@] too rare (could also be auto fixed)
     ]
-    # if type dict filenames are scanned
     targets3 = {
-        r"\s+building(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow) = (?:yes|no)\n?": ("common\\buildings", ''),
-        r"\bGFX_ship_part_auto_repair": (["common\\component_sets", "common\\component_templates"], 'GFX_ship_part_ship_part_nanite_repair_system'), # because icons.gfx
-        r"\b(country_election_)influence_(cost_mult)": r'\1\2',
-        r"\bwould_work_job": ("common\\game_rules", 'can_work_specific_job'),
-        r"\bhas_civic = civic_reanimated_armies": 'is_reanimator = yes',
-        # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
-        r"\bjob_administrator": 'job_politician',
-        r"\b(has_any_(?:farming|generator)_district)\b": r'\1_or_building', # 3.3.4 scripted trigger
-        # r"\bcountry_admin_cap_mult\b": ("common\\**", 'empire_size_colonies_mult'),
-        # r"\bcountry_admin_cap_add\b": ("common\\**", 'country_edict_fund_add'), 
-        # r"\bcountry_edict_cap_add\b": ("common\\**", 'country_power_projection_influence_produces_add'), 
-        r"^\t\tvalue\b": ("common\\ethics", 'base'),
-        # Replaces only in filename with species
-        r"^(\s+)modification = (?:no|yes)\s*?\n": {"species": ("common\\traits", r'\1species_potential_add = { always = no }\n' , '')} # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
-
+        # >= 3.4
+        r"\bis_subject_type = vassal": "is_subject = yes",
+        r"\bis_subject_type = (\w+)": r"any_agreement = { agreement_preset = preset_\1 }",
+        r"\bsubject_type = (\w+)": r"preset = preset_\1",
     }
     targets4 = {
-        r"(?:random_weight|pop_attraction(_tag)?|country_attraction)\s+value\s*=": [r"\bvalue\b", ("common\\ethics", 'base')],
-        #r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}": [r"([\t ]+)NO[TR] = \{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR] = \{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"], not valid if in OR
-        r"\bany_\w+ = \{[^{}]+?\bcount\s*[<=>]+\s*[^{}\s]+\s+[^{}]*\}": [r"\bany_(\w+) = \{\s*(?:([^{}]+?)\s+(\bcount\s*[<=>]+\s*[^{}\s]+)|(\bcount\s*[<=>]+\s*[^{}\s]+)\s+([^{}]*))\s+\}", r"count_\1 = { limit = { \2\5 } \3\4 }"], # too rare!? only simple supported TODO
-        # Near cosmetic
-        r"\bcount_starbase_modules = \{\s+type = \w+\s+count\s*>\s*0\s+\}": [r"count_starbase_modules = \{\s+type = (\w+)\s+count\s*>\s*0\s+\}", r'has_starbase_module = \1'],
-        r'\b(?:add_modifier = \{\s*modifier|set_timed_\w+ = \{\s*flag) = "?\w+"?\s+days\s*=\s*\d{2,}\s*\}': [
-            r'\s+days\s*=\s*(\d{2,})\s*',
-            lambda p: " years = " + str(int(p.group(1))//360) + ' ' if int(p.group(1)) > 320 and int(p.group(1))%360 < 41 else (" months = " + str(int(p.group(1))//30) if int(p.group(1)) > 28 and int(p.group(1))%30 < 3 else " days = " + p.group(1)) + ' '
-        ],
-        r"\brandom_list = \{\s+\d+ = \{(?:\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+\d+ = \{\s*\}|\s*\}\s+\d+ = \{\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\} )\s*\}": [
-            r"\brandom_list = \{\s+(?:(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+(\d+) = \{\s*\}|(\d+) = \{\s*\}\s+(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\})\s*", # r"random = { chance = \1\5 \2\6 "
-            lambda p: "random = { chance = " + str(round((int(p.group(1))/(int(p.group(1))+int(p.group(3))) if len(p.group(1)) else int(p.group(5))/(int(p.group(5))+int(p.group(4))))*100)) + ' ' + (p.group(2) or p.group(6)) + ' '
-        ],
+        # >= 3.4
+        r"\s+construction_block(?:s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no": [r"construction_block(s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type')],
+        r"construction_blocks_others = no": [r"construction_blocks_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = none')],
+        # r"construction_blocked_by_others = no": ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type'),
+        r"(?:contact|any_playable)_country\s*=\s*{\s+(?:NOT = \{\s+)?(?:any|count)_owned_(?:fleet|ship) = \{": [r"(any|count)_owned_(fleet|ship) =", r"\1_controlled_\2 ="], # only playable empire!?
+        r"\s+every_owned_fleet = \{\s+limit\b": [r"owned_fleet", r"controlled_fleet"], # only playable empire and not with is_ship_size!?
+        # r"\s+(?:any|every|random)_owned_ship = \{": [r"(any|every|random)_owned_ship =", r"\1_controlled_fleet ="], # only playable empire!?
     }
 
 else:
@@ -312,6 +288,9 @@ else:
         r"\bwould_work_job": ("common\\game_rules", 'can_work_specific_job'),
         r"\bhas_civic = civic_reanimated_armies": 'is_reanimator = yes',
         # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
+         # r"\bcountry_admin_cap_mult\b": ("common\\**", 'empire_size_colonies_mult'),
+        # r"\bcountry_admin_cap_add\b": ("common\\**", 'country_edict_fund_add'), 
+        # r"\bcountry_edict_cap_add\b": ("common\\**", 'country_power_projection_influence_produces_add'), 
         r"\bjob_administrator": 'job_politician',
         r"\b(has_any_(?:farming|generator)_district)\b": r'\1_or_building', # 3.3.4 scripted trigger
         r"^\t\tvalue\b": ("common\\ethics", 'base'),
@@ -343,7 +322,7 @@ else:
         # NOR <=> NOT = { OR
         r"\s+NO[RT] = \{\s*?OR = \{\s*(?:\w+ = (?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s+?){2,}\}\s*\}": [r"(\t*)NO[RT] = \{\s*?OR = \{(\s+)(\w+ = (?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s+)(\s*\w+ = (?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s)?(\s*\w+ = (?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s)?(\s*\w+ = (?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s)?(\s*\w+ = (?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s)?\s*\}\s+", r"\1NOR = {\2\3\4\5\6\7"], # only right indent for 5 items (sub-trigger)
         ### End boolean operator merge
-        r"\sany_country = \{[^{}#]*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default)": [r"(\s)any_country = (\{[^{}#]*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default))", r"\1any_playable_country = \2"],
+        r"\sany_country = \{[^{}#]*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_policy_flag)": [r"(\s)any_country = (\{[^{}#]*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_policy_flag))", r"\1any_playable_country = \2"],
         r"\s(?:every|random|count)_country = \{[^{}#]*limit = \{\s*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_special_project)": [r"(\s(?:every|random|count))_country = (\{[^{}#]*limit = \{\s*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_special_project))", r"\1_playable_country = \2"],
         r"\s(?:every|random|count|any)_playable_country = \{[^{}#]*(?:limit = \{\s*)?(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes)\s*": [r"((?:every|random|count|any)_playable_country = \{[^{}#]*?(?:limit = \{\s*)?)(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes)\s*", r"\1"],
 
@@ -442,6 +421,8 @@ if code_cosmetic and not only_warning:
     targets3[r"\bfleet = \{\s*(?:destroy|delete)_fleet = this\s*\}"] = r"destroy_fleet = fleet" # TODO may extend
     ## targets3[r"# *([A-Z][\w ={}]+?)\.$"] = r"# \1" # remove comment punctuation mark
     targets4[r"\n{3,}"] = "\n\n" # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
+    targets4[r'_event = \{\s+id = \"[\w.]+\"'] = [r'\bid = \"([\w.]+)\"', ("events", r"id = \1")] # trim id quote marks
+
     targets4[r"\n\s+\}\n\s+else"] = [r"\}\s*else", r"} else"] # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
     # WARNING not valid if in OR: NOR <=> AND = { NOT NOT } , # only 2 items (sub-trigger)
     targets4[r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}"] = [r"([\t ]+)NO[TR] = \{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR] = \{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"]
