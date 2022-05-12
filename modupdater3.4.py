@@ -1,6 +1,6 @@
 # @author: FirePrince
-# @version: 3.3.4
-# @revision: 2022/05/09
+# @version: 3.4.2.Beta
+# @revision: 2022/05/12
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -21,7 +21,7 @@ from tkinter import messagebox
 # True/False optional 
 only_warning = False # (if True, implies code_cosmetic = False)
 code_cosmetic = False # True/False optional (only if only_warning = False)
-only_actual = False   # speedup search (from previous relevant) to actual version
+only_actual = True   # speedup search (from previous relevant) to actual version
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False   # for dev print
 
@@ -60,7 +60,7 @@ if only_actual:
         r"construction_blocks_others = no": [r"construction_blocks_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = none')],
         # r"construction_blocked_by_others = no": ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type'),
         r"(?:contact|any_playable)_country\s*=\s*{\s+(?:NOT = \{\s+)?(?:any|count)_owned_(?:fleet|ship) = \{": [r"(any|count)_owned_(fleet|ship) =", r"\1_controlled_\2 ="], # only playable empire!?
-        r"\s+every_owned_fleet = \{\s+limit\b": [r"owned_fleet", r"controlled_fleet"], # only playable empire and not with is_ship_size!?
+        # r"\s+every_owned_fleet = \{\s+limit\b": [r"owned_fleet", r"controlled_fleet"], # only playable empire and not with is_ship_size!?
         # r"\s+(?:any|every|random)_owned_ship = \{": [r"(any|every|random)_owned_ship =", r"\1_controlled_fleet ="], # only playable empire!?
     }
 
@@ -137,7 +137,7 @@ else:
         r"species = last_created(\s)": r"species = last_created_species\1",
         r"owner = last_created(\s)": r"owner = last_created_country\1",
         r"(\s(?:any|every|random))_pop\s*=": r"\1_owned_pop =",
-        r"(\s(?:any|every|random))_planet\s*=": r"\1_system_planet =", # _galaxy_planet
+        r"(\s(?:any|every|random))_planet\s*=": r"\1_galaxy_planet =", #_system_planet
         r"(\s(?:any|every|random))_ship\s*=": r"\1_fleet_in_system =", # _galaxy_fleet
         r"(\s(?:any|every|random|count))_sector\s*=": r"\1_owned_sector =", # _galaxy_sector
         r"(\s(?:any|every|random))_war_(attacker|defender)\s*=": r"\1_\2 =",
@@ -295,15 +295,19 @@ else:
         r"\b(has_any_(?:farming|generator)_district)\b": r'\1_or_building', # 3.3.4 scripted trigger
         r"^\t\tvalue\b": ("common\\ethics", 'base'),
         # Replaces only in filename with species
-        r"^(\s+)modification = (?:no|yes)\s*?\n": {"species": ("common\\traits", r'\1species_potential_add = { always = no }\n' , '')}  # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
+        r"^(\s+)modification = (?:no|yes)\s*?\n": {"species": ("common\\traits", r'\1species_potential_add = { always = no }\n' , '')},  # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
+        ### >= 3.4 ###
+        r"\bis_subject_type = vassal": "is_subject = yes",
+        r"\bis_subject_type = (\w+)": r"any_agreement = { agreement_preset = preset_\1 }",
+        r"\bsubject_type = (\w+)": r"preset = preset_\1",
     }
 
     # re flags=re.I|re.M|re.A
     targets4 = {
-        # < 3.0
+        ### < 3.0
         r"\s(?:any|every|random)_neighbor_system = \{[^{}]+?\s+ignore_hyperlanes = (?:yes|no)\n?": [r"(_neighbor_system)( = \{[^{}]+?)\s+ignore_hyperlanes = (yes|no)\n?",
             lambda p: p.group(1) + p.group(2) if p.group(3) == "no" else p.group(1) + "_euclidean" + p.group(2)],
-        # 3.0.* (multiline)
+        ### 3.0.* (multiline)
         # key (pre match without group): arr (search, replace) or str (if no group)
         # r"\s+random_system_planet = \{\s*limit = \{\s*is_star = yes\s*\}": [r"(\s+)random_system_planet = \{\s*limit = \{\s*is_star = yes\s*\}", r"\1star = {"], # TODO works only on single star systems
         r"\s+random_system_planet = \{\s*limit = \{\s*is_primary_star = yes\s*\}": [r"(\s+)random_system_planet = \{\s*limit = \{\s*is_primary_star = yes\s*\}", r"\1star = {"], # TODO works only on single star systems
@@ -351,7 +355,7 @@ else:
             r"\brandom_list = \{\s+(?:(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+(\d+) = \{\s*\}|(\d+) = \{\s*\}\s+(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\})\s*", # r"random = { chance = \1\5 \2\6 "
             lambda p: "random = { chance = " + str(round((int(p.group(1))/(int(p.group(1))+int(p.group(3))) if len(p.group(1)) else int(p.group(5))/(int(p.group(5))+int(p.group(4))))*100)) + ' ' + (p.group(2) or p.group(6)) + ' '
         ],
-        # >=3.1
+        ### >=3.1
         #but not used for starbases
         r"\bis_space_station = no\s*icon_frame = \d+":
             [r"(is_space_station = no\s*)icon_frame = ([1-9][0-2]?)",
@@ -374,15 +378,20 @@ else:
         r"\bset_variable = \{\s*which = \"?\w+\"?\s+value = (?:event_target:[^\d:{}#\s=\.]+|(prev\.?|from\.?|root|this|megastructure|planet|country|owner|space_owner|ship|pop|fleet|galactic_object|leader|army|ambient_object|species|pop_faction|war|federation|starbase|deposit|sector|archaeological_site|first_contact|spy_network|espionage_operation|espionage_asset)+)\s*\}": [r"set_variable = \{\s*which = \"?(\w+)\"?\s+value = (event_target:\w+|\w+)\s*\}", r"set_variable = { which = \1 value = \2.\1 }"],
         r"\s+spawn_megastructure = \{[^{}#]+?location = [\w\._:]+": [r"(spawn_megastructure = \{[^{}#]+?)location = ([\w\._:]+)", r"\1coords_from = \2"],
         r"\s+modifier = \{\s*mult\b": [r"\bmult\b", "factor"],
-        # >= 3.2
+        ### >= 3.2
         r"\bNO[RT] = \{\s*is_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex)\s+is_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex)(?:\s+is_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex))?\s*\}": [r"\bNO[RT] = \{\s*is_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex)\s+is_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex)(?:\s+is_planet_class = (?:pc_ringworld_habitable|pc_cybrex))?\s*\}", r"is_artificial = no"],
         r"\n\s+is_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex)\s+is_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex)(?:\s+is_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex))?\b": [r"\bis_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex)\s+is_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex)(?:\s+is_planet_class = (?:pc_ringworld_habitable|pc_cybrex))?\b", r"is_artificial = yes"],
         r"\n\s+possible = \{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)(?:drone|worker|specialist|ruler)_job_check_trigger = yes\s*": [r"(\s+)(possible = \{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?))(drone|worker|specialist|ruler)_job_check_trigger = yes\s*", ("common\\pop_jobs", r"\1possible_precalc = can_fill_\4_job\1\2")], # only with 6 possible prior lines
         r"(?:[^b]\n\n|[^b][^b]\n)\s+possible = \{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)complex_specialist_job_check_trigger = yes\s*": [r"\n(\s+)(possible = \{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)complex_specialist_job_check_trigger = yes\s*)", ("common\\pop_jobs", r"\1possible_precalc = can_fill_specialist_job\1\2")], # only with 6 possible prior lines
-        # > 3.2
+        ### >= 3.3
         r"(?:random_weight|pop_attraction(_tag)?|country_attraction)\s+value\s*=": [r"\bvalue\b", ("common\\ethics", 'base')],
         #r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}": [r"([\t ]+)NO[TR] = \{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR] = \{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"], not valid if in OR
         r"\bany_\w+ = \{[^{}]+?\bcount\s*[<=>]+\s*[^{}\s]+\s+[^{}]*\}": [r"\bany_(\w+) = \{\s*(?:([^{}]+?)\s+(\bcount\s*[<=>]+\s*[^{}\s]+)|(\bcount\s*[<=>]+\s*[^{}\s]+)\s+([^{}]*))\s+\}", r"count_\1 = { limit = { \2\5 } \3\4 }"], # too rare!? only simple supported TODO
+        ### >= 3.4
+        r"\s+construction_block(?:s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no": [r"construction_block(s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type')],
+        r"construction_blocks_others = no": [r"construction_blocks_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = none')],
+        # r"construction_blocked_by_others = no": ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type'),
+        r"(?:contact|any_playable)_country\s*=\s*{\s+(?:NOT = \{\s+)?(?:any|count)_owned_(?:fleet|ship) = \{": [r"(any|count)_owned_(fleet|ship) =", r"\1_controlled_\2 ="], # only playable empire!?
     }
 
 if also_old:
