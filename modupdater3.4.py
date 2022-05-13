@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.4.2.Beta
-# @revision: 2022/05/12
+# @revision: 2022/05/13
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -21,7 +21,7 @@ from tkinter import messagebox
 # True/False optional 
 only_warning = False # (if True, implies code_cosmetic = False)
 code_cosmetic = False # True/False optional (only if only_warning = False)
-only_actual = True   # speedup search (from previous relevant) to actual version
+only_actual = False   # speedup search (from previous relevant) to actual version
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False   # for dev print
 
@@ -316,7 +316,7 @@ else:
         r"(?:\s+OR = \{)?\s*has_ethic = \"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic = \"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*\}?": [r"(\s+OR = \{)?(\s*?\n?\s*?)?(?(1)\t?)has_ethic = \"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*?has_ethic = \"?ethic_(?:(?:\4|\3)|fanatic_(?:\4|\3))\"?\s*?(?(1)\})", r"\2is_\3\4 = yes"], # r"\4is_ethics_aligned = { ARG1 = \2\3 }",
         ### Boolean operator merge
         # NAND <=> OR = { NOT
-        r"\s+OR = \{(?:\s*NO[RT] = \{[^{}#]*?\})+\s*\}[ \t]*\n": [r"^(\s+)OR = \{\s*?\n(?:(\s+)NO[RT] = \{\s*)?([^{}#]*?)\s*\}(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?", r"\1NAND = {\n\2\3\4\5\6\7\8\9\10\11\12\13\14\15"], # up to 7 items (sub-trigger)
+        r"\s+OR = \{(?:\s*NOT = \{[^{}#]*?\})+\s*\}[ \t]*\n": [r"^(\s+)OR = \{\s*?\n(?:(\s+)NOT = \{\s*)?([^{}#]*?)\s*\}(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?", r"\1NAND = {\n\2\3\4\5\6\7\8\9\10\11\12\13\14\15"], # up to 7 items (sub-trigger)
         # NOR <=> AND = { NOT
         r"\s+AND = \{\s+(?:\s+NOT = \{\s*(?:[^{}#]+|\w+ = {[^{}#]+\s*\})\s*\}){2,}\s*\}": [r"^(\s+)AND = \{\s*?\n(?:(\s+)NOT = \{\s*([^{}#]+|\w+ = \{[^{}#]+\s*\})\s*\})(?:(\s+)?NOT = \{\s*([^{}#]+|\w+ = \{[^{}#]+\s*\})\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]+|\w+ = \{[^{}#]+\s*\})\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]+|\w+ = \{[^{}#]+\s*\})\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]+|\w+ = \{[^{}#]+\s*\})\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]+|\w+ = \{[^{}#]+\s*\})\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]+|\w+ = \{[^{}#]+\s*\})\s*\})?", r"\1NOR = {\n\2\3\4\5\6\7\8\9\10\11\12\13\14\15"], # up to 7 items (sub-trigger)
         # NOR <=> (AND) = { NOT
@@ -641,6 +641,7 @@ def modfix(file_list):
                                     # print("ONLY 1:", type(replace), replace)
                                 if isinstance(repl, str) or (not isinstance(tar, tuple) and tar in out and tar != replace):
                                     print("Match:\n", tar)
+                                    if debug_mode: print("\tFROM:\n", pattern)
                                     print("Multiline replace:\n", replace) # repr(
                                     out = out.replace(tar, replace)
                                     changed = True
