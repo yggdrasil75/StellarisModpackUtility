@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.4.2.Beta
-# @revision: 2022/05/13
+# @revision: 2022/05/16
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -21,7 +21,7 @@ from tkinter import messagebox
 # True/False optional 
 only_warning = False # (if True, implies code_cosmetic = False)
 code_cosmetic = False # True/False optional (only if only_warning = False)
-only_actual = False   # speedup search (from previous relevant) to actual version
+only_actual =  False   # speedup search (from previous relevant) to actual version
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False   # for dev print
 
@@ -56,8 +56,10 @@ if only_actual:
     }
     targets4 = {
         # >= 3.4
+        r"\bpotential = \{\s+always = no\s+\}": ["potential", ('common\\armies', 'potential_country')],
+        r"\bpotential = \{\s+owner = \{\s+": [r"potential = \{(\s+)owner = \{([\w\W]+)(?(1)\})", ("common\\armies", r'potential_country = {\1\2')],
         r"\s+construction_block(?:s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no": [r"construction_block(s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type')],
-        r"construction_blocks_others = no": [r"construction_blocks_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = none')],
+        r"construction_blocks_others = no": ["construction_blocks_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = none')],
         # r"construction_blocked_by_others = no": ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type'),
         r"(?:contact|any_playable)_country\s*=\s*{\s+(?:NOT = \{\s+)?(?:any|count)_owned_(?:fleet|ship) = \{": [r"(any|count)_owned_(fleet|ship) =", r"\1_controlled_\2 ="], # only playable empire!?
         # r"\s+every_owned_fleet = \{\s+limit\b": [r"owned_fleet", r"controlled_fleet"], # only playable empire and not with is_ship_size!?
@@ -616,22 +618,23 @@ def modfix(file_list):
                         for tar in targets:
                             # check valid folder
                             rt = False
-                            replace = repl
+                            replace = repl.copy()
                             if isinstance(repl, list) and isinstance(repl[1], tuple):
-                                folder, repl = repl[1]
-                                replace[1] = repl
-                                repl = replace
-                                # print(type(repl), repl)
+                                folder, replace[1] = repl
+                                if debug_mode: print(type(repl), repl)
                                 if isinstance(folder, list):
                                     for fo in folder:
                                         if subfolder in fo:
                                             rt = True
+                                            if debug_mode: print(folder)
+                                            break
                                 elif subfolder in folder:
                                     rt = True
+                                    if debug_mode: print(folder)
                                 else: rt = False
                             else: rt = True
                             if rt:
-                                # print(type(repl), tar, type(tar))
+                                # print(type(repl), tar, type(tar), subfolder)
                                 if isinstance(repl, list):
                                     # Take only first group
                                     if isinstance(tar, tuple):
