@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.4.2.Beta
-# @revision: 2022/05/16
+# @revision: 2022/05/18
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -47,6 +47,7 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 # 3.0 removed ai_weight for buildings except branch_office_building = yes
 if only_actual:
     removedTargets = [
+        ("common\\ship_sizes", [r"^\s+empire_limit = \{\s+", '"empire_limit" has been replaces by "ai_ship_data" and "country_limit"']),
     ]
     targets3 = {
         # >= 3.4
@@ -56,8 +57,9 @@ if only_actual:
     }
     targets4 = {
         # >= 3.4
+        r"\n\s+empire_limit = \{\s+base = [\w\W]+\s+\}": [r"(\s+)empire_limit = \{(\s+)base = (\d+\s+max = \d+|\d+)[\w\W]*?\s+\}", ('common\\ship_sizes', r'ai_ship_data = {\2min = \3\1}')],
         r"\bpotential = \{\s+always = no\s+\}": ["potential", ('common\\armies', 'potential_country')],
-        r"\bpotential = \{\s+owner = \{\s+": [r"potential = \{(\s+)owner = \{([\w\W]+)(?(1)\})", ("common\\armies", r'potential_country = {\1\2')],
+        r"\s+potential = \{\s+owner = \{\s+\{[\w\W]+\n(?:\t| {4})\}": [r"potential = \{(\s+)owner = \{([\w\W]+)(?(1)\})", ("common\\armies", r'potential_country = {\1\2')],
         r"\s+construction_block(?:s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no": [r"construction_block(s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type')],
         r"construction_blocks_others = no": ["construction_blocks_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = none')],
         # r"construction_blocked_by_others = no": ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type'),
@@ -120,7 +122,9 @@ else:
         ("common\\buildings", r"\sbuilding(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*="), # replaced buildings ai
         [r"\bnum_\w+\s*[<=>]+\s*[a-z]+[\s}]", 'no scope alone'], #  [^\d{$@] too rare (could also be auto fixed)
         [r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}", 'can be merged to NOR if not in an OR'], #  [^\d{$@] too rare (could also be auto fixed)
-        ("common\\traits", [r"^\s+modification = (?:no|yes)\s*", '"modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.']),     
+        ("common\\traits", [r"^\s+modification = (?:no|yes)\s*", '"modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.']),
+        # 3.4
+        ("common\\ship_sizes", [r"^\s+empire_limit = \{\s+", '"empire_limit" has been replaces by "ai_ship_data" and "country_limit"']),
     ]
 
     # targets2 = {
@@ -390,6 +394,7 @@ else:
         #r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}": [r"([\t ]+)NO[TR] = \{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR] = \{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"], not valid if in OR
         r"\bany_\w+ = \{[^{}]+?\bcount\s*[<=>]+\s*[^{}\s]+\s+[^{}]*\}": [r"\bany_(\w+) = \{\s*(?:([^{}]+?)\s+(\bcount\s*[<=>]+\s*[^{}\s]+)|(\bcount\s*[<=>]+\s*[^{}\s]+)\s+([^{}]*))\s+\}", r"count_\1 = { limit = { \2\5 } \3\4 }"], # too rare!? only simple supported TODO
         ### >= 3.4
+        r"\n\s+empire_limit = \{\s+base = [\w\W]+\s+\}": [r"(\s+)empire_limit = \{(\s+)base = (\d+\s+max = \d+|\d+)[\w\W]*?\s+\}", ('common\\ship_sizes', r'ai_ship_data = {\2min = \3\1}')],
         r"\s+construction_block(?:s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no": [r"construction_block(s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type')],
         r"construction_blocks_others = no": [r"construction_blocks_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = none')],
         # r"construction_blocked_by_others = no": ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type'),
