@@ -439,9 +439,10 @@ if code_cosmetic and not only_warning:
     targets3[r"\bfleet = \{\s*(?:destroy|delete)_fleet = this\s*\}"] = r"destroy_fleet = fleet" # TODO may extend
     ## targets3[r"# *([A-Z][\w ={}]+?)\.$"] = r"# \1" # remove comment punctuation mark
     targets4[r"\n{3,}"] = "\n\n" # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
+    targets4[r"\bexists = (?:space_)?owner\s+is_owned_by\b"] = [r"exists = (?:space_)?owner(\s+)is_owned_by", r"has_owner = yes\1is_owned_by"] # "has_owner = yes is_owned_by"
     targets4[r'_event = \{\s+id = \"[\w.]+\"'] = [r'\bid = \"([\w.]+)\"', ("events", r"id = \1")] # trim id quote marks
 
-    targets4[r"\n\s+\}\n\s+else"] = [r"\}\s*else", r"} else"] # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
+    targets4[r"\n\s+\}\n\s+else"] = [r"\}\s*else", "} else"] # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
     # WARNING not valid if in OR: NOR <=> AND = { NOT NOT } , # only 2 items (sub-trigger)
     targets4[r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}"] = [r"([\t ]+)NO[TR] = \{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR] = \{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"]
     targets4[r"\brandom_country = \{\s*limit = \{\s*is_country_type = global_event\s*\}"] = "event_target:global_event_country = {"
@@ -625,8 +626,9 @@ def modfix(file_list):
                         for tar in targets:
                             # check valid folder
                             rt = False
-                            replace = repl.copy()
+                            replace = repl
                             if isinstance(repl, list) and isinstance(repl[1], tuple):
+                                replace = repl.copy()
                                 # folder = repl[1][0]
                                 # replace[1] = repl[1][1]
                                 folder, replace[1] = repl[1] 
