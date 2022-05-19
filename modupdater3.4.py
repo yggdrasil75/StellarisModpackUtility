@@ -1,6 +1,6 @@
 # @author: FirePrince
-# @version: 3.4.2.Beta
-# @revision: 2022/05/18
+# @version: 3.4.3
+# @revision: 2022/05/19
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -25,7 +25,7 @@ only_actual =  False   # speedup search (from previous relevant) to actual versi
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False   # for dev print
 
-stellaris_version = '3.4.2.Beta'
+stellaris_version = '3.4.3'
 mod_outpath = ''
 
 # mod_path = os.path.dirname(os.getcwd())
@@ -59,7 +59,7 @@ if only_actual:
         # >= 3.4
         r"\n\s+empire_limit = \{\s+base = [\w\W]+\s+\}": [r"(\s+)empire_limit = \{(\s+)base = (\d+\s+max = \d+|\d+)[\w\W]*?\s+\}", ('common\\ship_sizes', r'ai_ship_data = {\2min = \3\1}')],
         r"\bpotential = \{\s+always = no\s+\}": ["potential", ('common\\armies', 'potential_country')],
-        r"\s+potential = \{\s+owner = \{\s+\{[\w\W]+\n(?:\t| {4})\}": [r"potential = \{(\s+)owner = \{([\w\W]+)(?(1)\})", ("common\\armies", r'potential_country = {\1\2')],
+        r"(?:\t| {4})potential = \{\s+(?:exists = )?owner[\w\W]+\n(?:\t| {4})\}": [r"potential = \{\s+(?:exists = owner)?(\s+)owner = \{\s+([\w\W]+?)(?(1)\s+\})\s+\}", ("common\\armies", r'potential_country = { \2 }')],
         r"\s+construction_block(?:s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no": [r"construction_block(s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type')],
         r"construction_blocks_others = no": ["construction_blocks_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = none')],
         # r"construction_blocked_by_others = no": ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type'),
@@ -395,6 +395,8 @@ else:
         r"\bany_\w+ = \{[^{}]+?\bcount\s*[<=>]+\s*[^{}\s]+\s+[^{}]*\}": [r"\bany_(\w+) = \{\s*(?:([^{}]+?)\s+(\bcount\s*[<=>]+\s*[^{}\s]+)|(\bcount\s*[<=>]+\s*[^{}\s]+)\s+([^{}]*))\s+\}", r"count_\1 = { limit = { \2\5 } \3\4 }"], # too rare!? only simple supported TODO
         ### >= 3.4
         r"\n\s+empire_limit = \{\s+base = [\w\W]+\s+\}": [r"(\s+)empire_limit = \{(\s+)base = (\d+\s+max = \d+|\d+)[\w\W]*?\s+\}", ('common\\ship_sizes', r'ai_ship_data = {\2min = \3\1}')],
+        r"\bpotential = \{\s+always = no\s+\}": ["potential", ('common\\armies', 'potential_country')],
+        r"(?:\t| {4})potential = \{\s+(?:exists = )?owner[\w\W]+\n(?:\t| {4})\}": [r"potential = \{\s+(?:exists = owner)?(\s+)owner = \{\s+([\w\W]+?)(?(1)\s+\})\s+\}", ("common\\armies", r'potential_country = { \2 }')],
         r"\s+construction_block(?:s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no": [r"construction_block(s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type')],
         r"construction_blocks_others = no": [r"construction_blocks_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = none')],
         # r"construction_blocked_by_others = no": ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type'),
@@ -625,8 +627,10 @@ def modfix(file_list):
                             rt = False
                             replace = repl.copy()
                             if isinstance(repl, list) and isinstance(repl[1], tuple):
-                                folder, replace[1] = repl
-                                if debug_mode: print(type(repl), repl)
+                                # folder = repl[1][0]
+                                # replace[1] = repl[1][1]
+                                folder, replace[1] = repl[1] 
+                                if debug_mode: print(type(replace), replace, replace[1])
                                 if isinstance(folder, list):
                                     for fo in folder:
                                         if subfolder in fo:
@@ -644,7 +648,7 @@ def modfix(file_list):
                                     # Take only first group
                                     if isinstance(tar, tuple):
                                         tar = tar[0]
-                                    replace = re.sub(repl[0], repl[1], tar, flags=re.I|re.M|re.A)
+                                    replace = re.sub(replace[0], replace[1], tar, flags=re.I|re.M|re.A)
 
                                     # print("ONLY 1:", type(replace), replace)
                                 if isinstance(repl, str) or (not isinstance(tar, tuple) and tar in out and tar != replace):
