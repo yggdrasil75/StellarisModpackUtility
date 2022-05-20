@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.4.3
-# @revision: 2022/05/19
+# @revision: 2022/05/20
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -19,9 +19,9 @@ from tkinter import messagebox
 
 # ============== Initialize global parameter/variables ===============
 # True/False optional 
-only_warning = False # (if True, implies code_cosmetic = False)
+only_warning = False # True implies code_cosmetic = False
 code_cosmetic = False # True/False optional (only if only_warning = False)
-only_actual =  False   # speedup search (from previous relevant) to actual version
+only_actual = False   # True speedup search (from previous relevant) to actual version
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False   # for dev print
 
@@ -48,24 +48,29 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 if only_actual:
     removedTargets = [
         ("common\\ship_sizes", [r"^\s+empire_limit = \{\s+", '"empire_limit" has been replaces by "ai_ship_data" and "country_limit"']),
+        r"\b(fire_warning_sign|add_unity_times_empire_size) = yes",
     ]
     targets3 = {
         # >= 3.4
         r"\bis_subject_type = vassal": "is_subject = yes",
         r"\bis_subject_type = (\w+)": r"any_agreement = { agreement_preset = preset_\1 }",
         r"\bsubject_type = (\w+)": r"preset = preset_\1",
+        r"\badd_100_unity_per_year_passed = yes": "add_500_unity_per_year_passed = yes",
     }
     targets4 = {
         # >= 3.4
-        r"\n\s+empire_limit = \{\s+base = [\w\W]+\s+\}": [r"(\s+)empire_limit = \{(\s+)base = (\d+\s+max = \d+|\d+)[\w\W]*?\s+\}", ('common\\ship_sizes', r'ai_ship_data = {\2min = \3\1}')],
+        r"\n\s+empire_limit = \{\s+base = [\w\W]+\s+\}": [r"(\s+)empire_limit = \{(\s+)base = (\d+\s+max = \d+|\d+)[\w\W]*?\s+\}", ('common\\ship_sizes', r'\1ai_ship_data = {\2min = \3\1}')],
         r"\bpotential = \{\s+always = no\s+\}": ["potential", ('common\\armies', 'potential_country')],
-        r"(?:\t| {4})potential = \{\s+(?:exists = )?owner[\w\W]+\n(?:\t| {4})\}": [r"potential = \{\s+(?:exists = owner)?(\s+)owner = \{\s+([\w\W]+?)(?(1)\s+\})\s+\}", ("common\\armies", r'potential_country = { \2 }')],
+        #r"(?:\t| {4})potential = \{\s+(?:exists = )?owner[\w\W]+\n(?:\t| {4})\}": [r"potential = \{\s+(?:exists = owner)?(\s+)owner = \{\s+([\w\W]+?)(?(1)\s+\})\s+\}", ("common\\armies", r'potential_country = { \2 }')],
         r"\s+construction_block(?:s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no": [r"construction_block(s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type')],
         r"construction_blocks_others = no": ["construction_blocks_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = none')],
         # r"construction_blocked_by_others = no": ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type'),
         r"(?:contact|any_playable)_country\s*=\s*{\s+(?:NOT = \{\s+)?(?:any|count)_owned_(?:fleet|ship) = \{": [r"(any|count)_owned_(fleet|ship) =", r"\1_controlled_\2 ="], # only playable empire!?
         # r"\s+every_owned_fleet = \{\s+limit\b": [r"owned_fleet", r"controlled_fleet"], # only playable empire and not with is_ship_size!?
         # r"\s+(?:any|every|random)_owned_ship = \{": [r"(any|every|random)_owned_ship =", r"\1_controlled_fleet ="], # only playable empire!?
+        r"\s+(?:any|every|random)_(?:system|planet) = \{(?:\s+limit = \{)?\s+has_owner = yes\s+is_owned_by": [r"(any|every|random)_(system|planet) =", r"\1_\2_within_border ="],
+
+
     }
 
 else:
@@ -83,7 +88,7 @@ else:
         # Format: tuple is with folder (folder, regexp/list); list is with a specific message [regexp, msg]
         # 3.2
         r"\sslot = 0", # \sset_starbase_module = \{ now starts with 1
-        [r"[^# \t]\s+is_planet_class = pc_ringworld_habitable", 'could possibly be replaced with "is_ringworld = yes"'], # ,
+        [r"[^# \t]\s+is_planet_class = pc_ringworld_habitable", 'could possibly be replaced with "is_ringworld = yes"'],
         # r"\sadd_tech_progress_effect = ", # replaced with add_tech_progress
         # r"\sgive_scaled_tech_bonus_effect = ", # replaced with add_monthly_resource_mult
         ("common\\districts", r"\sdistricts_build_district\b"), # scripted trigger
@@ -125,6 +130,7 @@ else:
         ("common\\traits", [r"^\s+modification = (?:no|yes)\s*", '"modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.']),
         # 3.4
         ("common\\ship_sizes", [r"^\s+empire_limit = \{\s+", '"empire_limit" has been replaces by "ai_ship_data" and "country_limit"']),
+        r"\b(fire_warning_sign|add_unity_times_empire_size) = yes",
     ]
 
     # targets2 = {
@@ -306,6 +312,7 @@ else:
         r"\bis_subject_type = vassal": "is_subject = yes",
         r"\bis_subject_type = (\w+)": r"any_agreement = { agreement_preset = preset_\1 }",
         r"\bsubject_type = (\w+)": r"preset = preset_\1",
+        r"\badd_100_unity_per_year_passed = yes": "add_500_unity_per_year_passed = yes",
     }
 
     # re flags=re.I|re.M|re.A
@@ -394,7 +401,7 @@ else:
         #r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}": [r"([\t ]+)NO[TR] = \{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR] = \{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"], not valid if in OR
         r"\bany_\w+ = \{[^{}]+?\bcount\s*[<=>]+\s*[^{}\s]+\s+[^{}]*\}": [r"\bany_(\w+) = \{\s*(?:([^{}]+?)\s+(\bcount\s*[<=>]+\s*[^{}\s]+)|(\bcount\s*[<=>]+\s*[^{}\s]+)\s+([^{}]*))\s+\}", r"count_\1 = { limit = { \2\5 } \3\4 }"], # too rare!? only simple supported TODO
         ### >= 3.4
-        r"\n\s+empire_limit = \{\s+base = [\w\W]+\s+\}": [r"(\s+)empire_limit = \{(\s+)base = (\d+\s+max = \d+|\d+)[\w\W]*?\s+\}", ('common\\ship_sizes', r'ai_ship_data = {\2min = \3\1}')],
+        r"\n\s+empire_limit = \{\s+base = [\w\W]+\s+\}": [r"(\s+)empire_limit = \{(\s+)base = (\d+\s+max = \d+|\d+)[\w\W]*?\s+\}", ('common\\ship_sizes', r'\1ai_ship_data = {\2min = \3\1}')],
         r"\bpotential = \{\s+always = no\s+\}": ["potential", ('common\\armies', 'potential_country')],
         r"(?:\t| {4})potential = \{\s+(?:exists = )?owner[\w\W]+\n(?:\t| {4})\}": [r"potential = \{\s+(?:exists = owner)?(\s+)owner = \{\s+([\w\W]+?)(?(1)\s+\})\s+\}", ("common\\armies", r'potential_country = { \2 }')],
         r"\s+construction_block(?:s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no": [r"construction_block(s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type')],
@@ -439,7 +446,7 @@ if code_cosmetic and not only_warning:
     targets3[r"\bfleet = \{\s*(?:destroy|delete)_fleet = this\s*\}"] = r"destroy_fleet = fleet" # TODO may extend
     ## targets3[r"# *([A-Z][\w ={}]+?)\.$"] = r"# \1" # remove comment punctuation mark
     targets4[r"\n{3,}"] = "\n\n" # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
-    targets4[r"\bexists = (?:space_)?owner\s+is_owned_by\b"] = [r"exists = (?:space_)?owner(\s+)is_owned_by", r"has_owner = yes\1is_owned_by"] # "has_owner = yes is_owned_by"
+    # targets4[r"(?:_system|_planet)? = \{\s+(?:limit = \{})?\bexists = (?:space_)?owner\s+is_owned_by\b"] = [r"exists = (?:space_)?owner(\s+)is_owned_by", r"has_owner = yes\1is_owned_by"] # only for planet galactic_object
     targets4[r'_event = \{\s+id = \"[\w.]+\"'] = [r'\bid = \"([\w.]+)\"', ("events", r"id = \1")] # trim id quote marks
 
     targets4[r"\n\s+\}\n\s+else"] = [r"\}\s*else", "} else"] # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
