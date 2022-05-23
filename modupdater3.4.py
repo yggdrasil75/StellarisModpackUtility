@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.4.3
-# @revision: 2022/05/20
+# @revision: 2022/05/23
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -36,6 +36,9 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 #     print("You are using Python {}.{}.".format(sys.version_info.major, sys.version_info.minor))
 #     sys.exit(1)
 
+# 3.4
+# - new country_limits - replaced empire_limit
+# - new agreement_presets - replaced subjects
 # For performance reason option
 # 3.3 TODO soldier_job_check_trigger
 # ethics    value -> base
@@ -47,7 +50,8 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 # 3.0 removed ai_weight for buildings except branch_office_building = yes
 if only_actual:
     removedTargets = [
-        ("common\\ship_sizes", [r"^\s+empire_limit = \{\s+", '"empire_limit" has been replaces by "ai_ship_data" and "country_limit"']),
+        ("common\\ship_sizes", [r"^\s+empire_limit = \{", '"empire_limit" has been replaces by "ai_ship_data" and "country_limits"']),
+        ("common\\country_types", [r"^\s+(?:ship_data|army_data) = { = \{", '"ship_data & army_data" has been replaces by "ai_ship_data" and "country_limits"']),
         r"\b(fire_warning_sign|add_unity_times_empire_size) = yes",
     ]
     targets3 = {
@@ -69,8 +73,8 @@ if only_actual:
         # r"\s+every_owned_fleet = \{\s+limit\b": [r"owned_fleet", r"controlled_fleet"], # only playable empire and not with is_ship_size!?
         # r"\s+(?:any|every|random)_owned_ship = \{": [r"(any|every|random)_owned_ship =", r"\1_controlled_fleet ="], # only playable empire!?
         r"\s+(?:any|every|random)_(?:system|planet) = \{(?:\s+limit = \{)?\s+has_owner = yes\s+is_owned_by": [r"(any|every|random)_(system|planet) =", r"\1_\2_within_border ="],
-
-
+        r"NO[RT] = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+(?:has_trait = trait_(?:zombie|nerve_stapled)\s+|NOT = \{\s*has_trait = trait_(?:zombie|nerve_stapled))\}": "can_think = no",
+        r"OR = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+has_trait = trait_(?:zombie|nerve_stapled)\s+\}": "can_think = yes",
     }
 
 else:
@@ -123,7 +127,7 @@ else:
         r"\scan_support_spaceport = (yes|no)",
         # 3.3
         "tech_repeatable_improved_edict_length",
-        r"country_admin_cap_(add|mult)",
+        r"(^\s+|[^#] )country_admin_cap_(add|mult)",
         ("common\\buildings", r"\sbuilding(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*="), # replaced buildings ai
         [r"\bnum_\w+\s*[<=>]+\s*[a-z]+[\s}]", 'no scope alone'], #  [^\d{$@] too rare (could also be auto fixed)
         [r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}", 'can be merged to NOR if not in an OR'], #  [^\d{$@] too rare (could also be auto fixed)
@@ -300,7 +304,7 @@ else:
         r"\bwould_work_job": ("common\\game_rules", 'can_work_specific_job'),
         r"\bhas_civic = civic_reanimated_armies": 'is_reanimator = yes',
         # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
-         # r"\bcountry_admin_cap_mult\b": ("common\\**", 'empire_size_colonies_mult'),
+        # r"\bcountry_admin_cap_mult\b": ("common\\**", 'empire_size_colonies_mult'),
         # r"\bcountry_admin_cap_add\b": ("common\\**", 'country_edict_fund_add'), 
         # r"\bcountry_edict_cap_add\b": ("common\\**", 'country_power_projection_influence_produces_add'), 
         r"\bjob_administrator": 'job_politician',
@@ -408,6 +412,9 @@ else:
         r"construction_blocks_others = no": [r"construction_blocks_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = none')],
         # r"construction_blocked_by_others = no": ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type'),
         r"(?:contact|any_playable)_country\s*=\s*{\s+(?:NOT = \{\s+)?(?:any|count)_owned_(?:fleet|ship) = \{": [r"(any|count)_owned_(fleet|ship) =", r"\1_controlled_\2 ="], # only playable empire!?
+        r"\s+(?:any|every|random)_(?:system|planet) = \{(?:\s+limit = \{)?\s+has_owner = yes\s+is_owned_by": [r"(any|every|random)_(system|planet) =", r"\1_\2_within_border ="],
+        r"NO[RT] = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+(?:has_trait = trait_(?:zombie|nerve_stapled)\s+|NOT = \{\s*has_trait = trait_(?:zombie|nerve_stapled))\}": "can_think = no",
+        r"OR = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+has_trait = trait_(?:zombie|nerve_stapled)\s+\}": "can_think = yes",
     }
 
 if also_old:
@@ -436,6 +443,17 @@ if code_cosmetic and not only_warning:
     targets3[r"((?:[<=>]\s|\.|PREV|FROM|Prev|From)+(PREV|FROM|ROOT|THIS|Prev|From|Root|This)+\b)"] = lambda p: p.group(1).lower()
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"^(\s+)limit = \{\s*\}"] = r"\1# limit = { }"
+    targets3[r'\bhost_has_dlc = "([\s\w]+) Pack"'] = lambda p:
+        "has_" + {
+            "Ancient Relics Story": "ancrel",
+            "Distant Stars Story": "distar",
+            "Aquatics Species": "aquatics",
+            "Lithoids Species": "lithoids",
+            "Humanoids Species": "humanoids",
+            "Synthetic Dawn Story": "synthethic_dawn",
+            "Leviathans Story": "leviathans",
+            "Necroids Species": "necroids"
+         }[p.group(1)] + " = yes"
     targets3[r"\s*days\s*=\s*-1\s*"] = ' ' # default not needed anymore
     targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
     targets3[r"#([^\-\s#])"] = r"# \1" # r"#([^\s#])": r"# \1", # format comment
