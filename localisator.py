@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ###    @author FirePrince
-###    @revision 2022/05/11
+###    @revision 2022/05/27
 ###
 ###    USAGE: You need install https://pyyaml.org/wiki/PyYAMLDocumentation for Python3.x
 ###    ATTENTION: You still must customize the mod path at localModPath (and optionally the languages which should be overhauled)
@@ -43,26 +43,25 @@ ymlfiles = '*.yml' # you can also use single names
 key_IGNORE = "" # stops copying over localisations keys with this starting pattern eg. "dmm_mod."
 
 # Write here your mod folder name and languages to replace/update
-# localModPath = ["CrisisManager_EndGame", ["french", "polish"]]
 # localModPath = ["CrisisManager_Sleeper", ["french", "polish"]]
 # localModPath = ["more_midgame_crisis", ["russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
-# localModPath = ["distant_stars_overhaul", []] #["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
 # localModPath = ["TheGreatKhanExpanded", []]
 # localModPath = ["SEoOC", ["german", "russian", "spanish", "braz_por", "french", "polish"]]
 # localModPath = ["Starbase_Strong", ["russian", "simp_chinese", "french", "polish"]] # "braz_por",
-
+# localModPath = ["SEoOC", ["german", "russian", "spanish", "braz_por", "french", "polish"]]
+# localModPath = ["Nomads The wondering Void Farers", []] # "english"
+# localModPath = ["honored_leader", ["english"]] # "english"
+# localModPath = ["prob", []]
+# localModPath = ["UAP", ["english", "german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
+# localModPath = ["distant_stars_overhaul", []] #["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
+# localModPath = ["FATALF", []]
+# localModPath = ["CrisisManager_EndGame", ["french", "polish"]]
+# localModPath = ["ADeadlyTempest", ["english", "french", "polish"]]
+# localModPath = ["Realistic_Pirates", ["english", "polish"]]
+# localModPath = ["Decentralized Empires", []] # ["spanish", "braz_por", "french", "polish", "simp_chinese"]
 # localModPath = ["CrisisManager_MidGame", ["french", "polish"]]
 # localModPath = ["TheGreatKhanExpanded", []]
-# localModPath = ["Decentralized Empires", []] # ["spanish", "braz_por", "french", "polish", "simp_chinese"]
-# localModPath = ["SEoOC", ["german", "russian", "spanish", "braz_por", "french", "polish"]]
-# localModPath = ["ADeadlyTempest", ["french", "polish"]]
-# localModPath = ["Nomads The wondering Void Farers", []] # "english"
-localModPath = ["Realistic_Pirates", ["english", "polish"]]
-localModPath = ["honored_leader", ["english"]] # "english"
-localModPath = ["prob", []]
-localModPath = ["UAP", ["english", "german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
-
-
+localModPath = ["UAP_3.4", ["german", "russian", "spanish", "braz_por", "french", "polish", "korean"]]
 
 # localModPath = ["c:\\Games\\steamapps\\workshop\\content\\281990\\2268189539\\", ["braz_por"]]
 # local_OVERHAUL = ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
@@ -71,14 +70,30 @@ localModPath = ["UAP", ["english", "german", "russian", "spanish", "braz_por", "
 localModPath, local_OVERHAUL = localModPath
 print(localModPath, local_OVERHAUL)
 
+# mods_registry = "mods_registry.json" # old launcher (changed in 2.7.2)
+mods_registry = "settings.txt"
+localizations = ["english", "german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"]
+# localizations = ["english", "german", "japanese"]
 
+# old, new = string
 def replaceLoc(old, new, doc):
-    # print(type(optimizeLoc))
+    # print(type(optimizeLoc), "OLD", old, "NEW", new)
+    changed = False
+    oldRe = "$" + old + "$"
+    if not new.startswith("$"):
+        new = str(trimDupe.sub(r'$\1$', new))
+        print("Replace in YML converted:", new)
+    # if old in doc:
+    # Replace inclusion in yml
+    for k, v in doc.items():
+        if oldRe in v:
+            doc[k] = v.replace(oldRe, new)
+            print("REPLACE in YML:", old, "with", new)
+
     if isinstance(optimizeLoc, list):
         oldRe = re.compile(r'(title|name|ltip|desc)\s*=\s*"?' + old + r'"?([\s\n])', flags=re.I|re.A)
-        new = r"\1 = " + new + r"\2"
+        new = r"\1 = " + trimDupe.sub(r'"\1"', new) + r"\2"
         # print("Search for:", old, new)
-        changed = False
         for fname in optimizeLoc:
             # print(fname)
             s = False
@@ -98,14 +113,12 @@ def replaceLoc(old, new, doc):
             f.close()
 
     if changed and optimizeLocString in old.lower() and old in doc:
-        oldRe = "$" + old + "$"
         for k, v in doc.items():
             if oldRe in v:
                 changed = False
                 break
         if changed:      
             del doc[old]
-
 
 
 def tr(s):
@@ -261,10 +274,6 @@ def iBox(title, prefil): # , master
     return answer
 
 
-# mods_registry = "mods_registry.json" # old launcher (changed in 2.7.2)
-mods_registry = "settings.txt"
-localizations = ["english", "german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"]
-
 # default needs first
 if defaultLang != localizations[0]:
     localizations.remove(defaultLang)
@@ -384,6 +393,9 @@ if loadVanillaLoc and isinstance(loadVanillaLoc, dict):
 else: loadVanillaLoc = False
 
 #CrisisManagerEvent_l_english ,'**'
+
+trimDupe = re.compile(r"^\$?([^$]+)\$?$")
+trimEnd = re.compile(r"[.!?]\s*$")
 for filename in ymlfiles:
     print(filename)
     streamEn = getYAMLstream(localizations[0], filename)
@@ -407,21 +419,19 @@ for filename in ymlfiles:
     doc = dictionary["l_"+defaultLang]
     # print(type(doc), isinstance(doc, dict)) True
     # print(type(loadVanillaLoc), isinstance(loadVanillaLoc, dict)) # type(loadVanillaLoc) == dict class 'dict_items'
-    trimDupe = re.compile(r"^\$([^$]+)\$$")
-    trimEnd = re.compile(r"[.!?]\s*$")
 
     # Replace with Vanilla
     if loadVanillaLoc and isinstance(doc, dict):
         changed = False
         # print("LOAD loadVanillaLoc", type(loadVanillaLoc)) # = dict_items
         for vkey, vvalue in loadVanillaLoc:
-            if len(vvalue) > 2 and not vvalue.startswith("$") and len(vvalue) < 60:
+            if len(vvalue) > 2 and not vvalue.startswith("$") and len(vvalue) < 64 and vvalue.count("$", 1, -3) == 0:
                 for k, v in doc.copy().items():
                     if isinstance(vkey, str) and k.lower() == vkey.lower() and v == vvalue:
                         del doc[k]
                         changed = True
                         print(k, "DELETED dupe, same as vanilla:", vkey)
-                    elif len(v) > 2 and not(v.startswith("$") and v.endswith("$")) and len(v) < 60:
+                    elif len(v) > 2 and not(v.startswith("$") and v.endswith("$")) and len(v) < 64 and v.count("$", 1, -3) == 0:
                         if v == vvalue:
                             doc[k] = '$'+ vkey +'$'
                             changed = True
@@ -445,26 +455,38 @@ for filename in ymlfiles:
         else: loadVanillaLocUpdateDefault = False
         print("loadVanillaLocUpdateDefault:", loadVanillaLocUpdateDefault)
 
-    elif optimizeLoc != False and isinstance(doc, dict):
+    if optimizeLoc != False and isinstance(doc, dict):
         print("optimize Loc")
         docCopy = doc.copy()
         for k, v in doc.copy().items():
-            if v.startswith("$") and v.endswith("$") and len(v) < 60:
+            if len(v) < 4: continue
+            if v.startswith("$") and v.endswith("$") and len(v) < 64 and v.count("$", 1, -3) == 0:
                 kt = trimDupe.sub(r'\1', v)
                 if kt in docCopy:
                     vt = docCopy[kt]
-                    if vt.startswith("$") and vt.endswith("$") and len(vt) < 60:
-                        replaceLoc(kt, trimDupe.sub(r'"\1"', vt), doc)
-                        del docCopy[kt]
-                        if k in docCopy: del docCopy[k]
-                        replaceLoc(k, trimDupe.sub(r'"\1"', v), doc)
+                    # double inclusion
+                    if vt.startswith("$") and vt.endswith("$") and len(vt) < 64 and vt.count("$", 1, -3) == 0:
+                        replaceLoc(kt, vt, docCopy)
+                        if optimizeLocString in kt.lower(): del docCopy[kt]
+                        if kt in doc: del doc[kt]
+                        replaceLoc(k, v, docCopy)
                         if k in doc:
-                            if optimizeLocString in filename.lower() or optimizeLocString in k.lower(): del doc[k]
-                            else: doc[k] = vt
-                else:
-                    replaceLoc(k, trimDupe.sub(r'"\1"', v), doc)
-                    if k in docCopy: del docCopy[k]
-            elif len(v) > 2 and not (v.startswith("$") or v.endswith("$")):
+                            del doc[k]
+                            if k in docCopy and optimizeLocString in filename.lower() or optimizeLocString in k.lower():
+                                del docCopy[k]
+                            else:
+                                docCopy[k] = vt
+                    else: kt = False
+                else: kt = False
+                # REPLACE inclusion 
+                if not kt:
+                    print("REPLACE inclusion:", k, "with", v)
+                    replaceLoc(k, v, docCopy)
+                    if optimizeLocString in k.lower() and k in docCopy:
+                        del docCopy[k]
+                    if k in doc: del doc[k]
+            # normal dupe
+            elif not (v.startswith("$") or v.endswith("$")):
                 for vkey, vvalue in docCopy.items():
                     if k.lower() != vkey.lower() and v == vvalue:
                         srt = [vkey, k] # sort
@@ -472,9 +494,17 @@ for filename in ymlfiles:
                             srt.reverse()
                         elif len(vkey) == len(k):
                             srt.sort()
+                        docCopy[srt[0]] = '$'+ srt[1] +'$'
                         doc[srt[0]] = '$'+ srt[1] +'$'
-                        replaceLoc(srt[0], '"'+ srt[1] +'"', doc)
-                        docCopy[srt[0]] = ''
+                        replaceLoc(srt[0], srt[1], docCopy)
+                        # docCopy[srt[0]] = '' TODO
+        # write default YML back
+        if loadVanillaLocUpdateDefault:
+            langStream = {}
+            langStream["l_"+localizations[0]] = docCopy
+            langStream = yaml.dump(langStream, width=10000, allow_unicode=True, indent=1, default_style='"')  # , encoding='utf-8'
+            langStream = trReverse(langStream)
+            writeStream(localizations[0], langStream, filename)
 
 
 
@@ -542,8 +572,7 @@ for filename in ymlfiles:
             # langStream["l_"+lang] = dictionary
             langStream["l_"+lang] = langDict
             # print(type(langStream), langStream)
-            langStream = yaml.dump(langStream, width=10000, allow_unicode=True,
-                                   indent=1, default_style='"')  # , encoding='utf-8'
+            langStream = yaml.dump(langStream, width=10000, allow_unicode=True, indent=1, default_style='"')  # , encoding='utf-8'
             langStream = trReverse(langStream)
             # print(type(langStream), langStream.encode("utf-8"))
             writeStream(lang, langStream, filename)
