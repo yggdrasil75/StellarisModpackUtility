@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.4.3
-# @revision: 2022/05/23
+# @revision: 2022/05/27
 # @thanks: OldEnt for detailed rundowns.
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @ToDo: full path mod folder
@@ -73,8 +73,10 @@ if only_actual:
         # r"\s+every_owned_fleet = \{\s+limit\b": [r"owned_fleet", r"controlled_fleet"], # only playable empire and not with is_ship_size!?
         # r"\s+(?:any|every|random)_owned_ship = \{": [r"(any|every|random)_owned_ship =", r"\1_controlled_fleet ="], # only playable empire!?
         r"\s+(?:any|every|random)_(?:system|planet) = \{(?:\s+limit = \{)?\s+has_owner = yes\s+is_owned_by": [r"(any|every|random)_(system|planet) =", r"\1_\2_within_border ="],
-        r"NO[RT] = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+(?:has_trait = trait_(?:zombie|nerve_stapled)\s+|NOT = \{\s*has_trait = trait_(?:zombie|nerve_stapled))\}": "can_think = no",
-        r"OR = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+has_trait = trait_(?:zombie|nerve_stapled)\s+\}": "can_think = yes",
+        r"\bNO[RT] = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+(?:has_trait = trait_(?:zombie|nerve_stapled)\s+|NOT = \{\s*has_trait = trait_(?:zombie|nerve_stapled))\}": "can_think = no",
+        r"\bOR = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+has_trait = trait_(?:zombie|nerve_stapled)\s+\}": "can_think = yes",
+        r"\bNO[RT] = \{\s*has_modifier = doomsday_\d[\w\s=]+\}": [r"NO[RT] = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = no"],
+        r"\bOR = \{\s*has_modifier = doomsday_\d[\w\s=]+\}": [r"OR = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = yes"],
     }
 
 else:
@@ -443,16 +445,16 @@ if code_cosmetic and not only_warning:
     targets3[r"((?:[<=>]\s|\.|PREV|FROM|Prev|From)+(PREV|FROM|ROOT|THIS|Prev|From|Root|This)+\b)"] = lambda p: p.group(1).lower()
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"^(\s+)limit = \{\s*\}"] = r"\1# limit = { }"
-    targets3[r'\bhost_has_dlc = "([\s\w]+) Pack"'] = lambda p:
-        "has_" + {
+    targets3[r'\bhost_has_dlc = "([\s\w]+) Pack"'] = lambda p: "has_" + {
             "Ancient Relics Story": "ancrel",
-            "Distant Stars Story": "distar",
             "Aquatics Species": "aquatics",
-            "Lithoids Species": "lithoids",
+            "Distant Stars Story": "distar",
             "Humanoids Species": "humanoids",
-            "Synthetic Dawn Story": "synthethic_dawn",
             "Leviathans Story": "leviathans",
-            "Necroids Species": "necroids"
+            "Lithoids Species": "lithoids",
+            "Necroids Species": "necroids",
+            "Plantoids Species": "plantoids",
+            "Synthetic Dawn Story": "synthethic_dawn",
          }[p.group(1)] + " = yes"
     targets3[r"\s*days\s*=\s*-1\s*"] = ' ' # default not needed anymore
     targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
@@ -474,12 +476,16 @@ if code_cosmetic and not only_warning:
      # unnecessary AND
     targets4[r"\b((?:%s) = \{(\s+)(?:AND|this) = \{(?:\2\t[^\n]+)+\2\}\n)" % triggerScopes] = [r"(%s) = \{\n(\s+)(?:AND|this) = \{\n\t(\2[^\n]+\n)(?(3)\t)(\2[^\n]+\n)?(?(4)\t)(\2[^\n]+\n)?(?(5)\t)(\2[^\n]+\n)?(?(6)\t)(\2[^\n]+\n)?(?(7)\t)(\2[^\n]+\n)?(?(8)\t)(\2[^\n]+\n)?(?(9)\t)(\2[^\n]+\n)?(?(10)\t)(\2[^\n]+\n)?(?(11)\t)(\2[^\n]+\n)?(?(12)\t)(\2[^\n]+\n)?(?(13)\t)(\2[^\n]+\n)?(?(14)\t)(\2[^\n]+\n)?(?(15)\t)(\2[^\n]+\n)?(?(16)\t)(\2[^\n]+\n)?(?(17)\t)(\2[^\n]+\n)?(?(18)\t)(\2[^\n]+\n)?(?(19)\t)(\2[^\n]+\n)?(?(20)\t)(\2[^\n]+\n)?\2\}\n" % triggerScopes, r"\1 = {\n\3\4\5\6\7\8\9\10\11\12\13\14\15\16\17\18\19\20\21"]
     targets4[r"(?:\s+add_resource = \{\s*\w+ = [^{}#]+\s*\})+"] = [r"(\s+add_resource = \{)(\s*\w+ = [^\s{}#]+)\s*\}\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\}(?(3)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?(?(4)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?(?(5)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?(?(6)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?(?(7)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?", r"\1\2\3\4\5\6\7 }"] # 6 items
+    ### 3.4
+    targets4[r"\bNO[RT] = \{\s*has_modifier = doomsday_\d[\w\s=]+\}"] = [r"NO[RT] = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = no"]
+    targets4[r"\bOR = \{\s*has_modifier = doomsday_\d[\w\s=]+\}"] = [r"OR = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = yes"]
 
-### Pre-Compile regexps
 if debug_mode:
     import datetime
     # start_time = datetime.datetime.now()
     start_time = 0
+    
+### Pre-Compile regexps
 targets3 = [(re.compile(k, flags=0), targets3[k]) for k in targets3]
 targets4 = [(re.compile(k, flags=re.I), targets4[k]) for k in targets4]
 # print(datetime.datetime.now() - start_time)
