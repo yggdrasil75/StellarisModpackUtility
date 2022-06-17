@@ -1,12 +1,11 @@
 # @author: FirePrince
 # @version: 3.4.3
-# @revision: 2022/06/04
+# @revision: 2022/06/17
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
 #        replace in *.YML
-# @TODO mergerofrules = False   # Support global compatibility for The Merger of Rules
-
+# @TODO: extended support The Merger of Rules
 
 # ============== Import libs ===============
 import os  # io for high level usage
@@ -26,6 +25,7 @@ code_cosmetic = False # True/False optional (only if only_warning = False)
 only_actual = False   # True speedup search (from previous relevant) to actual version
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False   # for dev print
+mergerofrules = False   # Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
 
 stellaris_version = '3.4.3'
 mod_outpath = ''
@@ -348,8 +348,8 @@ else:
         # NOR <=> NOT = { OR
         r"\n\s+NO[RT] = \{\s*?OR = \{\s*(?:\w+ = (?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s+?){2,}\}\s*\}": [r"(\t*)NO[RT] = \{\s*?OR = \{(\s+)(\w+ = (?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s+)(\s*\w+ = (?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s)?(\s*\w+ = (?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s)?(\s*\w+ = (?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s)?(\s*\w+ = (?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s)?\s*\}\s+", r"\1NOR = {\2\3\4\5\6\7"], # only right indent for 5 items (sub-trigger)
         ### End boolean operator merge
-        r"\bany_country = \{[^{}#]*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_policy_flag)": [r"(\s)any_country = (\{[^{}#]*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_policy_flag))", r"\1any_playable_country = \2"],
-        r"\s(?:every|random|count)_country = \{[^{}#]*limit = \{\s*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_special_project)": [r"(\s(?:every|random|count))_country = (\{[^{}#]*limit = \{\s*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_special_project))", r"\1_playable_country = \2"],
+        r"\bany_country = \{[^{}#]*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_policy_flag|merg_is_default_empire = yes)": [r"any_country = (\{[^{}#]*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_policy_flag|merg_is_default_empire = yes))", r"any_playable_country = \1"],
+        r"\s(?:every|random|count)_country = \{[^{}#]*limit = \{\s*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_special_project|merg_is_default_empire = yes)": [r"(\s(?:every|random|count))_country = (\{[^{}#]*limit = \{\s*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_special_project|merg_is_default_empire = yes))", r"\1_playable_country = \2"],
         r"\s(?:every|random|count|any)_playable_country = \{[^{}#]*(?:limit = \{\s*)?(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes)\s*": [r"((?:every|random|count|any)_playable_country = \{[^{}#]*?(?:limit = \{\s*)?)(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes)\s*", r"\1"],
 
         r"\{\s+owner = \{\s*is_same_(?:empire|value) = [\w\._:]+\s*\}\s*\}": [r"\{\s+owner = \{\s*is_same_(?:empire|value) = ([\w\._:]+)\s*\}\s*\}", r"{ is_owned_by = \1 }"],
@@ -485,6 +485,17 @@ if code_cosmetic and not only_warning:
     targets4[r"\bNO[RT] = \{\s*has_modifier = doomsday_\d[\w\s=]+\}"] = [r"NO[RT] = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = no"]
     targets4[r"\bOR = \{\s*has_modifier = doomsday_\d[\w\s=]+\}"] = [r"OR = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = yes"]
 
+# BETA WIP still only event folder
+# like targets3 but later
+if mergerofrules:
+    targets4[r"\b(?:(?:is_country_type = default|merg_is_default_empire = yes|is_country_type = fallen_empire|merg_is_fallen_empire = yes|is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes|is_fallen_empire = yes|is_country_type_with_subjects = yes)\s+){2,}"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_country_type = fallen_empire|merg_is_fallen_empire = yes|is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes|is_fallen_empire = yes|is_country_type_with_subjects = yes)(\s+)){2,}", ("events", r"merg_is_standard_empire = yes\2")]
+    targets3[r"\bis_country_type = default\b"] = ("events", "merg_is_default_empire = yes")
+    targets3[r"\bis_country_type = fallen_empire\b"] = ("events", "merg_is_fallen_empire = yes")
+    targets3[r"\bis_country_type = awakened_fallen_empire\b"] = ("events", "merg_is_awakened_fe = yes")
+    targets3[r"\bis_planet_class = pc_habitat\b"] = ("events", "merg_is_habitat = yes")
+    # targets31 = [(re.compile(k, flags=0), targets31[k]) for k in targets31]
+
+
 if debug_mode:
     import datetime
     # start_time = datetime.datetime.now()
@@ -559,7 +570,7 @@ def modfix(file_list):
         if os.path.isfile(_file) and _file.endswith('.txt'):
             subfolder = os.path.relpath(_file, mod_path)
             file_contents = ""
-            print("\tCheck file:", _file)
+            print("\tCheck file:", _file.encode(errors='replace'))
             with open(_file, 'r', encoding='utf-8', errors='ignore') as txtfile:
                 # out = txtfile.read() # full_fille
                 # try:
@@ -649,7 +660,7 @@ def modfix(file_list):
                                     line = pattern.sub(repl, line) # , flags=re.I
                                     # line = line.replace(t, r)
                                     changed = True
-                                    print("\tUpdated file: %s at line %i with %s\n" % (basename, i, line.strip().encode()))
+                                    print("\tUpdated file: %s at line %i with %s\n" % (basename, i, line.strip().encode(errors='replace')))
                     out += line
 
                 # for pattern, repl in targets4.items(): old dict way
@@ -699,10 +710,11 @@ def modfix(file_list):
                                 elif debug_mode:
                                     print("DEBUG Blind Match:", tar, repl, type(repl), replace)
 
+
                 if changed and not only_warning:
                     structure = os.path.normpath(os.path.join(mod_outpath, subfolder))
                     out_file = os.path.join(structure, basename)
-                    print('\tWRITE FILE:', out_file)
+                    print('\tWRITE FILE:', out_file.encode(errors='replace'))
                     if not os.path.exists(structure):
                         os.makedirs(structure)
                         # print('Create folder:', subfolder)
