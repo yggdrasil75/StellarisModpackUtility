@@ -449,6 +449,11 @@ if code_cosmetic and not only_warning:
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"^(\s+)limit = \{\s*\}"] = r"\1# limit = { }"
     targets3[r'\bhost_has_dlc = "([\s\w]+) Pack"'] = lambda p: "has_" + {
+            "Utopia": "utopia",
+            "Federations": "federations_dlc",
+            "Necroids Species": "necroids",
+            "Nemesis": "nemesis",
+            "Overlord": "overlord_dlc",
             "Ancient Relics Story": "ancrel",
             "Aquatics Species": "aquatics",
             "Distant Stars Story": "distar",
