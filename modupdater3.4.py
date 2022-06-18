@@ -467,7 +467,7 @@ if code_cosmetic and not only_warning:
          }[p.group(1)] + " = yes"
     # targets3[r"\s*days\s*=\s*-1\s*"] = ' ' # still needed to execute immediately
     targets3[r"has_creature = yes"] = lambda p: 'host_has_dlc = "Creatures of the Void Portrait Pack"' # return arachnoid and creature pack
-    targets3[r"has_arachnoid = yes"] = lambda p: 'host_has_dlc = "Arachnoid Portrait Pack""' # return arachnoid and creature pack
+    targets3[r"has_arachnoid = yes"] = lambda p: 'host_has_dlc = "Arachnoid Portrait Pack"' # return arachnoid and creature pack
     targets3[r"# ([a-z])(\w+ +[^;:\s#=<>]+ [^\n]+?[\.!?])$"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
     # NOT NUM triggers. TODO <> ?
     targets3[r"\bNOT = \{\s*(num_\w+|\w+?(?:_passed)) = (\d+)\s*\}"] = r"\1 != \2"
