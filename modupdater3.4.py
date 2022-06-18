@@ -449,7 +449,8 @@ if code_cosmetic and not only_warning:
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"^(\s+)limit = \{\s*\}"] = r"\1# limit = { }"
     targets3[r'\bhost_has_dlc = "([\s\w]+) Pack"'] = lambda p: "has_" + {
-            "Utopia": "utopia",
+            "Creatures of the Void Portrait": "creature",
+            "Arachnoid Portrait": "arachnoid",
             "Federations": "federations_dlc",
             "Necroids Species": "necroids",
             "Nemesis": "nemesis",
@@ -465,9 +466,8 @@ if code_cosmetic and not only_warning:
             "Synthetic Dawn Story": "synthethic_dawn",
          }[p.group(1)] + " = yes"
     # targets3[r"\s*days\s*=\s*-1\s*"] = ' ' # still needed to execute immediately
-    targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
-    targets3[r"#([^\-\s#])"] = r"# \1" # r"#([^\s#])": r"# \1", # format comment
-    targets3[r"# +([A-Z][^\n=<>{}\[\]# ]+? [\w,\.;\'\/\\+\- ()&]+? \w+ \w+ \w+)$"] = r"# \1." # set comment punctuation mark
+    targets3[r"has_creature = yes"] = lambda p: 'host_has_dlc = "Creatures of the Void Portrait Pack"' # return arachnoid and creature pack
+    targets3[r"has_arachnoid = yes"] = lambda p: 'host_has_dlc = "arachnoid portrait Pack""' # return arachnoid and creature pack
     targets3[r"# ([a-z])(\w+ +[^;:\s#=<>]+ [^\n]+?[\.!?])$"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
     # NOT NUM triggers. TODO <> ?
     targets3[r"\bNOT = \{\s*(num_\w+|\w+?(?:_passed)) = (\d+)\s*\}"] = r"\1 != \2"
