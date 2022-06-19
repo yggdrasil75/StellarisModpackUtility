@@ -1,8 +1,10 @@
-# Requirements
+# StellarisModpackUtility
+
+## Requirements
 
 -Python 3.6
 
--Add the 7z folder to your windows enviroment path (File explorer crashes when extracting the descriptor.mod, so i used 7z instead)
+-Add the 7z folder to your windows environment path (File explorer crashes when extracting the descriptor.mod, so i used 7z instead)
 
 > In Search, search for and then select: System (Control Panel)
 
@@ -14,16 +16,15 @@
 
 > Reopen any command prompt windows.
 
-# Usage
+## Usage
 
 -Place all scripts in C:\Users\<your username>\Documents\Paradox Interactive\Stellaris\
 
 -Run generateModList.py
 
->This will create list.txt which contains a list of all installed mods and an empty whitelist.txt 
+>This will create list.txt which contains a list of all installed mods and an empty whitelist.txt
 
 >Mods which are not updated for 2.4+ will be listed according to their zip file name, which may be abbreviated
-  
 
 -Copy the mods that you want to merge from list.txt to whitelist.txt
 
@@ -41,9 +42,9 @@
 
 -Merge the conflicting files
 
-> Notepad++ w/ the compare plugin is probably the quickest and simplest, although it does occasionaly get confused with the more complex files
+> Notepad++ w/ the compare plugin is probably the quickest and simplest, although it does occasionally get confused with the more complex files
 
-# Other scripts
+## Other scripts
 
 OrbitalDepositsBoost.py:
 
@@ -72,3 +73,11 @@ SetUpMods.py:
 localisator.py:
 
 -Generates and updates localisation keys from English to other languages
+
+modupdater3.*.py:
+
+- Updates old mod syntax: <https://forum.paradoxplaza.com/forum/threads/1491289/>
+
+Modded_Tech_Relations_Generator.py:
+
+- Generates a tech tree diagram as txt: <https://forum.paradoxplaza.com/forum/threads/1484867/>
