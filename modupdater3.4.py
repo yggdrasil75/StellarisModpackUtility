@@ -453,8 +453,8 @@ if code_cosmetic and not only_warning:
             # "Anniversary Portraits": 
             # "Apocalypse": 
             "Aquatics Species Pack": "aquatics",
-            "Arachnoid Portrait Pack": "arachnoid",
-            "Creatures of the Void Portrait Pack": "creature",
+            # "Arachnoid Portrait Pack":
+            # "Creatures of the Void Portrait Pack":
             "Distant Stars Story Pack": "distar",
             "Federations": "federations_dlc",
             "Humanoids Species Pack": "humanoids",
@@ -468,6 +468,8 @@ if code_cosmetic and not only_warning:
             "Synthetic Dawn Story Pack": "synthethic_dawn",
             # "Utopia": 
          }[p.group(1)] + " = yes"
+    targets3[r"\bhas_arachnoid = yes"] = 'host_has_dlc = "Arachnoid Portrait Pack"'
+    targets3[r"\bhas_creatures = yes"] = 'host_has_dlc = "Creatures of the Void Portrait Pack"'
     # targets3[r"\s*days\s*=\s*-1\s*"] = ' ' # still needed to execute immediately
     # targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
     targets3[r"#([^\-\s#])"] = r"# \1" # r"#([^\s#])": r"# \1", # format comment
