@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.4.3
-# @revision: 2022/06/18
+# @revision: 2022/06/19
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -350,7 +350,7 @@ else:
         ### End boolean operator merge
         r"\bany_country = \{[^{}#]*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_policy_flag|merg_is_default_empire = yes)": [r"any_country = (\{[^{}#]*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_policy_flag|merg_is_default_empire = yes))", r"any_playable_country = \1"],
         r"\s(?:every|random|count)_country = \{[^{}#]*limit = \{\s*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_special_project|merg_is_default_empire = yes)": [r"(\s(?:every|random|count))_country = (\{[^{}#]*limit = \{\s*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_special_project|merg_is_default_empire = yes))", r"\1_playable_country = \2"],
-        r"\s(?:every|random|count|any)_playable_country = \{[^{}#]*(?:limit = \{\s*)?(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes)\s*": [r"((?:every|random|count|any)_playable_country = \{[^{}#]*?(?:limit = \{\s*)?)(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes)\s*", r"\1"],
+        r"\s(?:every|random|count|any)_playable_country = \{[^{}#]*(?:limit = \{\s*)?(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes|merg_is_default_empire = yes)\s*": [r"((?:every|random|count|any)_playable_country = \{[^{}#]*?(?:limit = \{\s*)?)(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes|merg_is_default_empire = yes)\s*", r"\1"],
 
         r"\{\s+owner = \{\s*is_same_(?:empire|value) = [\w\._:]+\s*\}\s*\}": [r"\{\s+owner = \{\s*is_same_(?:empire|value) = ([\w\._:]+)\s*\}\s*\}", r"{ is_owned_by = \1 }"],
         r"NO[RT] = \{\s*is_country_type = (?:fallen_empire|awakened_fallen_empire)\s+is_country_type = (?:fallen_empire|awakened_fallen_empire)\s*\}": "is_fallen_empire = no",
@@ -375,7 +375,7 @@ else:
         ],
         r"\brandom_list = \{\s+\d+ = \{(?:\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+\d+ = \{\s*\}|\s*\}\s+\d+ = \{\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\} )\s*\}": [
             r"\brandom_list = \{\s+(?:(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+(\d+) = \{\s*\}|(\d+) = \{\s*\}\s+(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\})\s*", # r"random = { chance = \1\5 \2\6 "
-            lambda p: "random = { chance = " + str(round((int(p.group(1))/(int(p.group(1))+int(p.group(3))) if p.group(1) and len(p.group(1)) else int(p.group(5))/(int(p.group(5))+int(p.group(4))))*100)) + ' ' + (p.group(2) or p.group(6)) + ' '
+            lambda p: "random = { chance = " + str(round((int(p.group(1))/(int(p.group(1))+int(p.group(3))) if p.group(1) and len(p.group(1)) > 0 else int(p.group(5))/(int(p.group(5))+int(p.group(4))))*100)) + ' ' + (p.group(2) or p.group(6)) + ' '
         ],
         ### >=3.1
         #but not used for starbases
@@ -448,21 +448,30 @@ if code_cosmetic and not only_warning:
     targets3[r"((?:[<=>]\s|\.|PREV|FROM|Prev|From)+(PREV|FROM|ROOT|THIS|Prev|From|Root|This)+\b)"] = lambda p: p.group(1).lower()
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"^(\s+)limit = \{\s*\}"] = r"\1# limit = { }"
-    targets3[r'\bhost_has_dlc = "([\s\w]+) Pack"'] = lambda p: "has_" + {
-            "Ancient Relics Story": "ancrel",
-            "Aquatics Species": "aquatics",
-            "Distant Stars Story": "distar",
-            "Humanoids Species": "humanoids",
-            "Leviathans Story": "leviathans",
-            "Lithoids Species": "lithoids",
-            "Necroids Species": "necroids",
-            "Plantoids Species": "plantoids",
-            "Synthetic Dawn Story": "synthethic_dawn",
+    targets3[r'\bhost_has_dlc = "([\s\w]+)"'] = lambda p: "has_" + {
+            "Ancient Relics Story Pack": "ancrel",
+            # "Anniversary Portraits": 
+            # "Apocalypse": 
+            "Aquatics Species Pack": "aquatics",
+            "Arachnoid Portrait Pack": "arachnoid",
+            "Creatures of the Void Portrait Pack": "creature",
+            "Distant Stars Story Pack": "distar",
+            "Federations": "federations_dlc",
+            "Humanoids Species Pack": "humanoids",
+            "Leviathans Story Pack": "leviathans",
+            "Lithoids Species Pack": "lithoids",
+            # "Megacorp": 
+            "Necroids Species Pack": "necroids",
+            "Nemesis": "nemesis",
+            "Overlord": "overlord_dlc",
+            "Plantoids Species Pack": "plantoids",
+            "Synthetic Dawn Story Pack": "synthethic_dawn",
+            # "Utopia": 
          }[p.group(1)] + " = yes"
     # targets3[r"\s*days\s*=\s*-1\s*"] = ' ' # still needed to execute immediately
-    targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
+    # targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
     targets3[r"#([^\-\s#])"] = r"# \1" # r"#([^\s#])": r"# \1", # format comment
-    targets3[r"# +([A-Z][^\n=<>{}\[\]# ]+? [\w,\.;\'\/\\+\- ()&]+? \w+ \w+ \w+)$"] = r"# \1." # set comment punctuation mark
+    #  targets3[r"# +([A-Z][^\n=<>{}\[\]# ]+? [\w,\.;\'\/\\+\- ()&]+? \w+ \w+ \w+)$"] = r"# \1." # set comment punctuation mark
     targets3[r"# ([a-z])(\w+ +[^;:\s#=<>]+ [^\n]+?[\.!?])$"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
     # NOT NUM triggers. TODO <> ?
     targets3[r"\bNOT = \{\s*(num_\w+|\w+?(?:_passed)) = (\d+)\s*\}"] = r"\1 != \2"
