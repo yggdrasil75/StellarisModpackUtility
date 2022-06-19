@@ -8,6 +8,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import messagebox 
 import traceback
+import emoji
 
 mods_registry =  'mods_registry.json'
 modList = [] # The modId order (game, which is in reverse to hashList)
@@ -98,7 +99,7 @@ def genModList(STEAM_PATH):
 
 	files = _getFiles(STEAM_PATH)
 	# print(type(files),len(files),*files, sep="\n")
-	outlist = open(os.path.join(settingPath, 'list.txt'),'w+')
+	outlist = open('list.txt','w+')
 	out = []
 		
 	for f in files:
@@ -108,11 +109,11 @@ def genModList(STEAM_PATH):
 			print(f, "no descriptor.mod found")
 			file = next(f.glob("*.zip"), '')
 			if file and file.exists():
-				out.append(file.name.replace(".zip",""))
+				out.append(''.join(e for e in file.name.replace(".zip","") if e.isalnum()))
 			else:
 				f = str(f)
 				print("Error: no valid mod file found!", f)
-				os.rmdir(f) # Empty dir
+				#os.rmdir(f) # Empty dir
 			continue
 
 		descriptor = file.open(encoding="utf-8")
@@ -122,6 +123,7 @@ def genModList(STEAM_PATH):
 				name = re.search(r'^name\s*=\s*\"?([^"]+)\"?$', line)
 				name = name and name.group(1) or None
 				if name:
+					name = ''.join(e for e in name if e.isalnum())
 					print(name, file.name)
 					out.append(name.replace(".mod",""))
 					break
@@ -129,23 +131,29 @@ def genModList(STEAM_PATH):
 	if len(out):
 		out.sort()
 		for item in out:
-			outlist.write("%s\n" % item)
+			try: 
+				outlist.write("%s\n" % item)
+			except: 
+				print("-----ERRORED-----")
+				print(item)
+				print("-----------------")
+			
 		# outlist.write(json.dumps(out))
 		outlist.close()
-		whitelist = open(os.path.join(settingPath, 'whitelist.txt'),'w+')
+		#whitelist = open(os.path.join(settingPath, 'whitelist.txt'),'w+')
 
 
-if len(settingPath) > 0:
-	settingPath = settingPath[0]
+if True:
+	#settingPath = settingPath[0]
 	# print('Find Stellaris setting at %s' % settingPath)
-	try:
+	# try:
 		# run(settingPath)
 		genModList(STEAM_PATH)
 		mBox('', 'done')
 
-	except Exception as e:
-		print(errorMesssage(e))
-		mBox('error', errorMesssage(e))
+	# except Exception as e:
+	# 	print(errorMesssage(e))
+		#mBox('error', errorMesssage(e))
 else:
 	mBox('error', 'unable to locate "%s"' % mods_registry)
 

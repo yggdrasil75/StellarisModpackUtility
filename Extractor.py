@@ -54,6 +54,9 @@ def getWorkshopPath(SteamPath):
 
 def copyDirectory(src, dest):
 	try:
+		if os.path.exists(dest):
+			print(dest + " already exists, deleting")
+			shutil.rmtree(dest)
 		shutil.copytree(src, dest, ignore=shutil.ignore_patterns('*.zip'))
 	except (shutil.Error, OSError) as e:
 		print('Directory not copied. Error: %s' % e)
@@ -68,6 +71,9 @@ def getFiles(workshop):
 	return files, descriptors
 
 def unzip(src,dest):
+	if os.path.exists(dest):
+		print(dest + " already exists, deleting")
+		shutil.rmtree(dest)
 	subprocess.call(["7z", "x",src, '-o' + dest])
 
 STEAM_PATH = getWorkshopPath(STEAM_PATH)
@@ -98,8 +104,9 @@ def run(settingPath):
 			except Exception as e: 
 				print(e, " Using utf-8 charset", d)
 				descriptor = d.open(encoding="utf-8").read()
+			descriptor = ''.join(e for e in descriptor if e.isalnum())
 			entry = whiteList[i]
-			if "name=\"" + entry + "\"" in descriptor:
+			if entry in descriptor:
 				outDir = os.path.join(settingPath, 'mod', ''.join(e for e in entry if e.isalnum()))
 				print("Copying", entry)
 				whiteList.remove(entry)
@@ -108,23 +115,26 @@ def run(settingPath):
 	#For 2.3-
 	for entry in whiteList:
 		for f in files:
-			if entry + ".zip" == f.name:
-				print(entry, f.name)
-				unzip(f, os.path.join(settingPath, 'mod', ''.join(e for e in str(f) if e.isalnum())))
+			#print(f.name,entry)
+			if ''.join(e for e in (f.name.replace(".zip","")) if e.isalnum()) == entry:
+				#print(entry, f.name)
+				unzip(f, os.path.join(settingPath, 'mod', ''.join(e for e in (f.name.replace(".zip","")) if e.isalnum()) ))
 				break
+	
 
 if len(settingPath) > 0:
 	settingPath = settingPath[0]
 	# print('Find Stellaris setting at %s' % settingPath)
 	try:
 		run(settingPath)
-		mBox('', 'done')
+		print("done")
 	except Exception as e:
 		print(errorMesssage(e))
 		mBox('error', errorMesssage(e))
 else:
 	mBox('error', 'unable to locate the settings path.')
 
+input()
 
 
 

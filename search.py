@@ -2,20 +2,24 @@ import os
 import glob
 from shutil import copy2
 import filecmp
-#print("String to search: ")
-THING_TO_SEARCH = "days = 3"
+print("String to search: ")
+THING_TO_SEARCH = input()
 # print("Directory to search: ")
 # DIRECTORY_TO_SEARCH = input()
-
-modFiles = glob.glob('mod/! Modpack/common/on_actions/**',recursive=True)
+modFiles = []
+# modFiles += glob.glob('mod\\\! Modpack\\localisation\\english\\**',recursive=True)
+modFiles += glob.glob('mod\\\! Modpack\\common\\**',recursive=True)
+modFiles += glob.glob('mod\\\! Modpack\\events\\**',recursive=True)
+# modFiles += glob.glob('mod\\\! Modpack 2.8\\localisation\\english\\**',recursive=True)
 for _file in modFiles: 
-	if os.path.isfile(_file):
+	if os.path.isfile(_file) and ".txt" in _file:
 		try:
 			readFile = open(_file, "r",encoding="utf-8")
 			#print(_file)
 			if THING_TO_SEARCH in readFile.read():
 				print("Found in: " + _file)
 		except :
-			print("Error while reading " + _file)
+			continue
+			#print("Error while reading " + _file)
 print("Done!")
 input()
