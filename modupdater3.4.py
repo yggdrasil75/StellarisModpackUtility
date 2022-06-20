@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.4.3
-# @revision: 2022/06/19
+# @revision: 2022/06/21
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -448,28 +448,20 @@ if code_cosmetic and not only_warning:
     targets3[r"((?:[<=>]\s|\.|PREV|FROM|Prev|From)+(PREV|FROM|ROOT|THIS|Prev|From|Root|This)+\b)"] = lambda p: p.group(1).lower()
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"^(\s+)limit = \{\s*\}"] = r"\1# limit = { }"
-    targets3[r'\bhost_has_dlc = "([\s\w]+)"'] = lambda p: "has_" + {
+    targets3[r'\bhost_has_dlc = "([\s\w]+)"'] = lambda p: p.group(0) if p.group(1) and p.group(1) in {"Anniversary Portraits", "Apocalypse", "Arachnoid Portrait Pack", "Creatures of the Void Portrait Pack", "Megacorp", "Utopia"} else "has_" + {
             "Ancient Relics Story Pack": "ancrel",
-            # "Anniversary Portraits": 
-            # "Apocalypse": 
             "Aquatics Species Pack": "aquatics",
-            # "Arachnoid Portrait Pack":
-            # "Creatures of the Void Portrait Pack":
             "Distant Stars Story Pack": "distar",
             "Federations": "federations_dlc",
             "Humanoids Species Pack": "humanoids",
             "Leviathans Story Pack": "leviathans",
             "Lithoids Species Pack": "lithoids",
-            # "Megacorp": 
             "Necroids Species Pack": "necroids",
             "Nemesis": "nemesis",
             "Overlord": "overlord_dlc",
             "Plantoids Species Pack": "plantoids",
             "Synthetic Dawn Story Pack": "synthethic_dawn",
-            # "Utopia": 
-         }[p.group(1)] + " = yes"
-    targets3[r"\bhas_arachnoid = yes"] = 'host_has_dlc = "Arachnoid Portrait Pack"'
-    targets3[r"\bhas_creatures = yes"] = 'host_has_dlc = "Creatures of the Void Portrait Pack"'
+         }[p.group(1)] + " = yes" 
     # targets3[r"\s*days\s*=\s*-1\s*"] = ' ' # still needed to execute immediately
     # targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
     targets3[r"#([^\-\s#])"] = r"# \1" # r"#([^\s#])": r"# \1", # format comment
