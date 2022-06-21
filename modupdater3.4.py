@@ -1,5 +1,5 @@
 # @author: FirePrince
-# @version: 3.4.3
+# @version: 3.4.4
 # @revision: 2022/06/21
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
@@ -55,13 +55,17 @@ if only_actual:
         ("common\\ship_sizes", [r"^\s+empire_limit = \{", '"empire_limit" has been replaces by "ai_ship_data" and "country_limits"']),
         ("common\\country_types", [r"^\s+(?:ship_data|army_data) = { = \{", '"ship_data & army_data" has been replaces by "ai_ship_data" and "country_limits"']),
         r"\b(fire_warning_sign|add_unity_times_empire_size) = yes",
+        r"\boverlord_has_(num_constructors|more_than_num_constructors|num_science_ships|more_than_num_science_ships)_in_orbit\b",
     ]
     targets3 = {
         # >= 3.4
         r"\bis_subject_type = vassal": "is_subject = yes",
         r"\bis_subject_type = (\w+)": r"any_agreement = { agreement_preset = preset_\1 }",
         r"\bsubject_type = (\w+)": r"preset = preset_\1",
-        r"\badd_100_unity_per_year_passed = yes": "add_500_unity_per_year_passed = yes",
+        r"\badd_100_unity_per_year_passed =": "add_500_unity_per_year_passed =",
+        r"\bcount_drones_to_recycle =": "count_robots_to_recycle =",
+        # code opts/cosmetic only
+        re.compile(r"\bNOT = \{\s*((leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+) = \{)\s*([^\s]+) = yes\s*\}\s*\}", re.I): r"\1 \2 = no }",
     }
     targets4 = {
         # >= 3.4
@@ -79,6 +83,9 @@ if only_actual:
         r"\bOR = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+has_trait = trait_(?:zombie|nerve_stapled)\s+\}": "can_think = yes",
         r"\bNO[RT] = \{\s*has_modifier = doomsday_\d[\w\s=]+\}": [r"NO[RT] = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = no"],
         r"\bOR = \{\s*has_modifier = doomsday_\d[\w\s=]+\}": [r"OR = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = yes"],
+        r"\bOR = \{\s*(?:species_portrait = human(?:_legacy)?\s+){2}\}": "is_human_species = yes",
+        r"\b(?:species_portrait = human(?:_legacy)?\s+){1,2}": [r"species_portrait = human(?:_legacy)?\s+(?:species_portrait = human(?:_legacy)?)?", "is_human_species = yes"],
+        r"\bvalue = subject_loyalty_effects\s+\}\s+\}": [r"(subject_loyalty_effects\s+\})(\s+)\}", r"\1\2\t{ key = protectorate value = subject_is_not_protectorate }\2}"],
     }
 
 else:
@@ -140,6 +147,7 @@ else:
         ("common\\ship_sizes", [r"^\s+empire_limit = \{\s+", '"empire_limit" has been replaces by "ai_ship_data" and "country_limit"']),
         ("common\\country_types", [r"^\s+(?:ship_data|army_data) = { = \{", '"ship_data & army_data" has been replaces by "ai_ship_data" and "country_limits"']),
         r"\b(fire_warning_sign|add_unity_times_empire_size) = yes",
+        r"\boverlord_has_(num_constructors|more_than_num_constructors|num_science_ships|more_than_num_science_ships)_in_orbit\b",
     ]
 
     # targets2 = {
@@ -174,11 +182,12 @@ else:
         r"is_country_type = default\s+has_monthly_income = \{\s*resource = (\w+) value <=? \d": r"no_resource_for_component = { RESOURCE = \1",
         r"([^\._])owner = \{\s*is_same_(?:empire|value) = ([\w\._:]+)\s*\}": r"\1is_owned_by = \2",
         r"(\s+)is_(?:country|same_value) = ([\w\._:]+\.(?:controller|(?:space_)?owner)(?:[\s}]|$))": r"\1is_same_empire = \2",
-        r"(\s+)exists = (solar_system|planet)\.(?:space_)?owner": r"\1has_owner = yes",
+        r"exists = (solar_system|planet)\.(?:space_)?owner": "has_owner = yes",
         # code opts/cosmetic only
-        r"(\s+)NOT = \{\s*([^\s]+) = yes\s*\}": r"\1\2 = no",
-        r"(\s+)any_system_planet = \{\s*is_capital = (yes|no)\s*\}": r"\1is_capital_system = \2",
+        r"\bNOT = \{\s*([^\s]+) = yes\s*\}": r"\1 = no",
+        r"\bany_system_planet = \{\s*is_capital = (yes|no)\s*\}": r"is_capital_system = \1",
         r"(\s+has_(?:population|migration)_control) = (yes|no)": r"\1 = { value = \2 country = prev.owner }", # NOT SURE
+        re.compile(r"\bNOT = \{\s*((leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+) = \{)\s*([^\s]+) = yes\s*\}\s*\}", re.I): r"\1 \2 = no }",
 
         ## Since Megacorp removed: change_species_characteristics was false documented until 3.2
         r"[\s#]+(pops_can_(be_colonizers|migrate|reproduce|join_factions|be_slaves)|can_generate_leaders|pops_have_happiness|pops_auto_growth|pop_maintenance) = (yes|no)\s*": "",
@@ -321,7 +330,8 @@ else:
         r"\bis_subject_type = vassal": "is_subject = yes",
         r"\bis_subject_type = (\w+)": r"any_agreement = { agreement_preset = preset_\1 }",
         r"\bsubject_type = (\w+)": r"preset = preset_\1",
-        r"\badd_100_unity_per_year_passed = yes": "add_500_unity_per_year_passed = yes",
+        r"\badd_100_unity_per_year_passed =": "add_500_unity_per_year_passed =",
+        r"\bcount_drones_to_recycle =": "count_robots_to_recycle =",
     }
 
     # re flags=re.I|re.M|re.A
@@ -420,6 +430,9 @@ else:
         r"\s+(?:any|every|random)_(?:system|planet) = \{(?:\s+limit = \{)?\s+has_owner = yes\s+is_owned_by": [r"(any|every|random)_(system|planet) =", r"\1_\2_within_border ="],
         r"NO[RT] = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+(?:has_trait = trait_(?:zombie|nerve_stapled)\s+|NOT = \{\s*has_trait = trait_(?:zombie|nerve_stapled))\}": "can_think = no",
         r"OR = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+has_trait = trait_(?:zombie|nerve_stapled)\s+\}": "can_think = yes",
+        r"\bOR = \{\s*(?:species_portrait = human(?:_legacy)?\s+){2}\}": "is_human_species = yes",
+        r"\b(?:species_portrait = human(?:_legacy)?\s+){1,2}": [r"species_portrait = human(?:_legacy)?\s+(?:species_portrait = human(?:_legacy)?)?", "is_human_species = yes"],
+        r"\bvalue = subject_loyalty_effects\s+\}\s+\}": [r"(subject_loyalty_effects\s+\})(\s+)\}", r"\1\2\t{ key = protectorate value = subject_is_not_protectorate }\2}"],
     }
 
 if also_old:
@@ -483,8 +496,6 @@ if code_cosmetic and not only_warning:
     targets4[r"\b((?:%s) = \{(\s+)(?:AND|this) = \{(?:\2\t[^\n]+)+\2\}\n)" % triggerScopes] = [r"(%s) = \{\n(\s+)(?:AND|this) = \{\n\t(\2[^\n]+\n)(?(3)\t)(\2[^\n]+\n)?(?(4)\t)(\2[^\n]+\n)?(?(5)\t)(\2[^\n]+\n)?(?(6)\t)(\2[^\n]+\n)?(?(7)\t)(\2[^\n]+\n)?(?(8)\t)(\2[^\n]+\n)?(?(9)\t)(\2[^\n]+\n)?(?(10)\t)(\2[^\n]+\n)?(?(11)\t)(\2[^\n]+\n)?(?(12)\t)(\2[^\n]+\n)?(?(13)\t)(\2[^\n]+\n)?(?(14)\t)(\2[^\n]+\n)?(?(15)\t)(\2[^\n]+\n)?(?(16)\t)(\2[^\n]+\n)?(?(17)\t)(\2[^\n]+\n)?(?(18)\t)(\2[^\n]+\n)?(?(19)\t)(\2[^\n]+\n)?(?(20)\t)(\2[^\n]+\n)?\2\}\n" % triggerScopes, r"\1 = {\n\3\4\5\6\7\8\9\10\11\12\13\14\15\16\17\18\19\20\21"]
     targets4[r"(?:\s+add_resource = \{\s*\w+ = [^{}#]+\s*\})+"] = [r"(\s+add_resource = \{)(\s*\w+ = [^\s{}#]+)\s*\}\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\}(?(3)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?(?(4)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?(?(5)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?(?(6)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?(?(7)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?", r"\1\2\3\4\5\6\7 }"] # 6 items
     ### 3.4
-    targets4[r"\bNO[RT] = \{\s*has_modifier = doomsday_\d[\w\s=]+\}"] = [r"NO[RT] = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = no"]
-    targets4[r"\bOR = \{\s*has_modifier = doomsday_\d[\w\s=]+\}"] = [r"OR = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = yes"]
     targets4[r"\bNO[RT] = \{\s*has_modifier = doomsday_\d[\w\s=]+\}"] = [r"NO[RT] = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = no"]
     targets4[r"\bOR = \{\s*has_modifier = doomsday_\d[\w\s=]+\}"] = [r"OR = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = yes"]
 
