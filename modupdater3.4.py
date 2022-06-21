@@ -27,7 +27,7 @@ also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False   # for dev print
 mergerofrules = False   # Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
 
-stellaris_version = '3.4.3'
+stellaris_version = '3.4.4'
 mod_outpath = ''
 
 # mod_path = os.path.dirname(os.getcwd())
@@ -65,7 +65,7 @@ if only_actual:
         r"\badd_100_unity_per_year_passed =": "add_500_unity_per_year_passed =",
         r"\bcount_drones_to_recycle =": "count_robots_to_recycle =",
         # code opts/cosmetic only
-        re.compile(r"\bNOT = \{\s*((leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+) = \{)\s*([^\s]+) = yes\s*\}\s*\}", re.I): r"\1 \2 = no }",
+        re.compile(r"\bNOT = \{\s*((?:leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+) = \{)\s*([^\s]+) = yes\s*\}\s*\}", re.I): r"\1 \2 = no }",
     }
     targets4 = {
         # >= 3.4
@@ -85,7 +85,7 @@ if only_actual:
         r"\bOR = \{\s*has_modifier = doomsday_\d[\w\s=]+\}": [r"OR = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = yes"],
         r"\bOR = \{\s*(?:species_portrait = human(?:_legacy)?\s+){2}\}": "is_human_species = yes",
         r"\b(?:species_portrait = human(?:_legacy)?\s+){1,2}": [r"species_portrait = human(?:_legacy)?\s+(?:species_portrait = human(?:_legacy)?)?", "is_human_species = yes"],
-        r"\bvalue = subject_loyalty_effects\s+\}\s+\}": [r"(subject_loyalty_effects\s+\})(\s+)\}", r"\1\2\t{ key = protectorate value = subject_is_not_protectorate }\2}"],
+        r"\bvalue = subject_loyalty_effects\s+\}\s+\}": [r"(subject_loyalty_effects\s+\})(\s+)\}", ('common\\agreement_presets', r"\1\2\t{ key = protectorate value = subject_is_not_protectorate }\2}")],
     }
 
 else:
@@ -187,7 +187,7 @@ else:
         r"\bNOT = \{\s*([^\s]+) = yes\s*\}": r"\1 = no",
         r"\bany_system_planet = \{\s*is_capital = (yes|no)\s*\}": r"is_capital_system = \1",
         r"(\s+has_(?:population|migration)_control) = (yes|no)": r"\1 = { value = \2 country = prev.owner }", # NOT SURE
-        re.compile(r"\bNOT = \{\s*((leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+) = \{)\s*([^\s]+) = yes\s*\}\s*\}", re.I): r"\1 \2 = no }",
+        re.compile(r"\bNOT = \{\s*((?:leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+) = \{)\s*([^\s]+) = yes\s*\}\s*\}", re.I): r"\1 \2 = no }",
 
         ## Since Megacorp removed: change_species_characteristics was false documented until 3.2
         r"[\s#]+(pops_can_(be_colonizers|migrate|reproduce|join_factions|be_slaves)|can_generate_leaders|pops_have_happiness|pops_auto_growth|pop_maintenance) = (yes|no)\s*": "",
@@ -432,7 +432,7 @@ else:
         r"OR = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+has_trait = trait_(?:zombie|nerve_stapled)\s+\}": "can_think = yes",
         r"\bOR = \{\s*(?:species_portrait = human(?:_legacy)?\s+){2}\}": "is_human_species = yes",
         r"\b(?:species_portrait = human(?:_legacy)?\s+){1,2}": [r"species_portrait = human(?:_legacy)?\s+(?:species_portrait = human(?:_legacy)?)?", "is_human_species = yes"],
-        r"\bvalue = subject_loyalty_effects\s+\}\s+\}": [r"(subject_loyalty_effects\s+\})(\s+)\}", r"\1\2\t{ key = protectorate value = subject_is_not_protectorate }\2}"],
+        r"\bvalue = subject_loyalty_effects\s+\}\s+\}": [r"(subject_loyalty_effects\s+\})(\s+)\}", ('common\\agreement_presets', r"\1\2\t{ key = protectorate value = subject_is_not_protectorate }\2}")],
     }
 
 if also_old:
@@ -630,7 +630,7 @@ def modfix(file_list):
                             if rt:
                                 rt = re.search(rt, line) # , flags=re.I
                             if rt:
-                                print(" WARNING outdated removed syntax%s: %s in line %i file %s\n" % (msg, rt.group(0), i, basename))
+                                print(" WARNING outdated removed syntax%s: %s in line %i file %s\n" % (msg, rt.group(0).encode(errors='replace'), i, basename))
                         
                         # for pattern, repl in targets3.items(): old dict way
                         for pattern in targets3: # new list way
