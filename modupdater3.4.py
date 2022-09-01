@@ -1,6 +1,6 @@
 # @author: FirePrince
-# @version: 3.4.4
-# @revision: 2022/06/21
+# @version: 3.4.5
+# @revision: 2022/09/02
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -20,14 +20,14 @@ from tkinter import messagebox
 
 # ============== Initialize global parameter/variables ===============
 # True/False optional 
-only_warning = False # True implies code_cosmetic = False
+only_warning = False  # True implies code_cosmetic = False
 code_cosmetic = False # True/False optional (only if only_warning = False)
 only_actual = False   # True speedup search (from previous relevant) to actual version
 also_old = False      # Beta: only some pre 2.3 stuff
-debug_mode = False   # for dev print
-mergerofrules = False   # Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
+debug_mode = False    # for dev print
+mergerofrules = False # Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
 
-stellaris_version = '3.4.4'
+stellaris_version = '3.4.5'
 mod_outpath = ''
 
 # mod_path = os.path.dirname(os.getcwd())
@@ -49,6 +49,7 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 # +empire_size_colonies_mult = 0.5
 # -country_admin_cap_add = 15
 # +country_unity_produces_mult = 0.05
+
 # 3.0 removed ai_weight for buildings except branch_office_building = yes
 if only_actual:
     removedTargets = [
@@ -64,6 +65,7 @@ if only_actual:
         r"\bsubject_type = (\w+)": r"preset = preset_\1",
         r"\badd_100_unity_per_year_passed =": "add_500_unity_per_year_passed =",
         r"\bcount_drones_to_recycle =": "count_robots_to_recycle =",
+        r"\bbranch_office_building = yes": ("common\\buildings", r"owner_type = corporate"),
         # code opts/cosmetic only
         re.compile(r"\bNOT = \{\s*((?:leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+) = \{)\s*([^\s]+) = yes\s*\}\s*\}", re.I): r"\1 \2 = no }",
     }
@@ -332,11 +334,13 @@ else:
         r"\bsubject_type = (\w+)": r"preset = preset_\1",
         r"\badd_100_unity_per_year_passed =": "add_500_unity_per_year_passed =",
         r"\bcount_drones_to_recycle =": "count_robots_to_recycle =",
+        r"\bbranch_office_building = yes": ("common\\buildings", r"owner_type = corporate"),
     }
 
     # re flags=re.I|re.M|re.A
     targets4 = {
         ### < 3.0
+        r"\s+every_planet_army = \{\s*remove_army = yes\s*\}": [r"every_planet_army = \{\s*remove_army = yes\s*\}", r"remove_all_armies = yes"],
         r"\s(?:any|every|random)_neighbor_system = \{[^{}]+?\s+ignore_hyperlanes = (?:yes|no)\n?": [r"(_neighbor_system)( = \{[^{}]+?)\s+ignore_hyperlanes = (yes|no)\n?",
             lambda p: p.group(1) + p.group(2) if p.group(3) == "no" else p.group(1) + "_euclidean" + p.group(2)],
         ### 3.0.* (multiline)
@@ -383,7 +387,7 @@ else:
             r'\s+days\s*=\s*(\d{2,})\s*',
             lambda p: " years = " + str(int(p.group(1))//360) + ' ' if int(p.group(1)) > 320 and int(p.group(1))%360 < 41 else (" months = " + str(int(p.group(1))//30) if int(p.group(1)) > 28 and int(p.group(1))%30 < 3 else " days = " + p.group(1)) + ' '
         ],
-        r"\brandom_list = \{\s+\d+ = \{(?:\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+\d+ = \{\s*\}|\s*\}\s+\d+ = \{\s*(?:\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\} )\s*\}": [
+        r"\brandom_list = \{\s+\d+ = \{\s*(?:(?:[\w:]+ = \{\s+\w+ = \{\n?[^{}#\n]+\}\s*\}|\w+ = \{\n?[^{}#\n]+\}|[^{}#\n]+)\s*\}\s+\d+ = \{\s*\}|\s*\}\s+\d+ = \{\s*(?:[\w:]+\s*=\s*\{\s+\w+\s*=\s*\{\n?[^{}#\n]+\}\s*\}|\w+ = \{\n?[^{}#\n]+\}|[^{}#\n]+)\s*\}\s*)\s*\}": [
             r"\brandom_list = \{\s+(?:(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+(\d+) = \{\s*\}|(\d+) = \{\s*\}\s+(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\})\s*", # r"random = { chance = \1\5 \2\6 "
             lambda p: "random = { chance = " + str(round((int(p.group(1))/(int(p.group(1))+int(p.group(3))) if p.group(1) and len(p.group(1)) > 0 else int(p.group(5))/(int(p.group(5))+int(p.group(4))))*100)) + ' ' + (p.group(2) or p.group(6)) + ' '
         ],
@@ -436,6 +440,8 @@ else:
     }
 
 if also_old:
+    ## 2.0
+    # planet trigger fortification_health was removed
     ## 2.2
     targets3[r"\s+(?:outliner_planet_type|tile_set) = \w+\s*"] = ("common\\planet_classes", "")
     targets3[r"\b(?:add|set)_blocker = \"?tb_(\w+)\"?"] = r"add_deposit = d_\1" # More concrete? r"add_blocker = { type = d_\1 blocked_deposit = none }" 
@@ -458,7 +464,7 @@ if also_old:
 
 if code_cosmetic and not only_warning:
     triggerScopes = r"limit|trigger|any_\w+|leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+"
-    targets3[r"((?:[<=>]\s|\.|PREV|FROM|Prev|From)+(PREV|FROM|ROOT|THIS|Prev|From|Root|This)+\b)"] = lambda p: p.group(1).lower()
+    targets3[r"((?:[<=>]\s|\.|PREV|FROM|Prev|From)+(PREV|FROM|ROOT|THIS|Prev|From|Root|This)+)\b"] = lambda p: p.group(1).lower()
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"^(\s+)limit = \{\s*\}"] = r"\1# limit = { }"
     targets3[r'\bhost_has_dlc = "([\s\w]+)"'] = lambda p: p.group(0) if p.group(1) and p.group(1) in {"Anniversary Portraits", "Apocalypse", "Arachnoid Portrait Pack", "Creatures of the Void Portrait Pack", "Megacorp", "Utopia"} else "has_" + {
