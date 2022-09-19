@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.4.5
-# @revision: 2022/09/02
+# @revision: 2022/09/16
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -30,6 +30,9 @@ mergerofrules = False # Support global compatibility for The Merger of Rules; ne
 stellaris_version = '3.4.5'
 mod_outpath = ''
 
+# Single versions
+v3_4 = False
+
 # mod_path = os.path.dirname(os.getcwd())
 mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
 
@@ -38,11 +41,11 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 #     print("You are using Python {}.{}.".format(sys.version_info.major, sys.version_info.minor))
 #     sys.exit(1)
 
-# 3.4
+# v3.4
 # - new country_limits - replaced empire_limit
 # - new agreement_presets - replaced subjects
 # For performance reason option
-# 3.3 TODO soldier_job_check_trigger
+# v3.3 TODO soldier_job_check_trigger
 # ethics    value -> base
 # -empire_size_penalty_mult = 1.0
 # +empire_size_pops_mult = -0.15
@@ -51,8 +54,14 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 # +country_unity_produces_mult = 0.05
 
 # 3.0 removed ai_weight for buildings except branch_office_building = yes
-if only_actual:
+if only_actual: 
     removedTargets = [
+        # v3.5
+        [r"\b(any|every|random|ordered)_bordering_country = \{", 'just use xyz_country_neighbor_to_system instead'],
+       # [r"\b(restore|store)_galactic_community_leader_backup_data = ", 'now a scripted effect or just use store_country_backup_data instead'],
+#     ]
+# elif v3_4:
+#     removedTargets = [
         ("common\\ship_sizes", [r"^\s+empire_limit = \{", '"empire_limit" has been replaces by "ai_ship_data" and "country_limits"']),
         ("common\\country_types", [r"^\s+(?:ship_data|army_data) = { = \{", '"ship_data & army_data" has been replaces by "ai_ship_data" and "country_limits"']),
         r"\b(fire_warning_sign|add_unity_times_empire_size) = yes",
@@ -66,6 +75,7 @@ if only_actual:
         r"\badd_100_unity_per_year_passed =": "add_500_unity_per_year_passed =",
         r"\bcount_drones_to_recycle =": "count_robots_to_recycle =",
         r"\bbranch_office_building = yes": ("common\\buildings", r"owner_type = corporate"),
+        r"\bhas_species_flag = racket_species_flag":  r"exists = event_target:racket_species is_same_species = event_target:racket_species",
         # code opts/cosmetic only
         re.compile(r"\bNOT = \{\s*((?:leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+) = \{)\s*([^\s]+) = yes\s*\}\s*\}", re.I): r"\1 \2 = no }",
     }
@@ -86,7 +96,7 @@ if only_actual:
         r"\bNO[RT] = \{\s*has_modifier = doomsday_\d[\w\s=]+\}": [r"NO[RT] = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = no"],
         r"\bOR = \{\s*has_modifier = doomsday_\d[\w\s=]+\}": [r"OR = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = yes"],
         r"\bOR = \{\s*(?:species_portrait = human(?:_legacy)?\s+){2}\}": "is_human_species = yes",
-        r"\b(?:species_portrait = human(?:_legacy)?\s+){1,2}": [r"species_portrait = human(?:_legacy)?\s+(?:species_portrait = human(?:_legacy)?)?", "is_human_species = yes"],
+        r"\b(?:species_portrait = human(?:_legacy)?\s+){1,2}": [r"species_portrait = human(?:_legacy)?(\s+)(?:species_portrait = human(?:_legacy)?)?", r"is_human_species = yes\1"],
         r"\bvalue = subject_loyalty_effects\s+\}\s+\}": [r"(subject_loyalty_effects\s+\})(\s+)\}", ('common\\agreement_presets', r"\1\2\t{ key = protectorate value = subject_is_not_protectorate }\2}")],
     }
 
@@ -150,6 +160,8 @@ else:
         ("common\\country_types", [r"^\s+(?:ship_data|army_data) = { = \{", '"ship_data & army_data" has been replaces by "ai_ship_data" and "country_limits"']),
         r"\b(fire_warning_sign|add_unity_times_empire_size) = yes",
         r"\boverlord_has_(num_constructors|more_than_num_constructors|num_science_ships|more_than_num_science_ships)_in_orbit\b",
+        # 3.5
+        [r"\b(any|every|random|ordered)_bordering_country = \{", 'just use xyz_country_neighbor_to_system instead'],
     ]
 
     # targets2 = {
@@ -335,6 +347,7 @@ else:
         r"\badd_100_unity_per_year_passed =": "add_500_unity_per_year_passed =",
         r"\bcount_drones_to_recycle =": "count_robots_to_recycle =",
         r"\bbranch_office_building = yes": ("common\\buildings", r"owner_type = corporate"),
+         r"\bhas_species_flag = racket_species_flag":  r"exists = event_target:racket_species is_same_species = event_target:racket_species",
     }
 
     # re flags=re.I|re.M|re.A
@@ -368,10 +381,10 @@ else:
 
         r"\{\s+owner = \{\s*is_same_(?:empire|value) = [\w\._:]+\s*\}\s*\}": [r"\{\s+owner = \{\s*is_same_(?:empire|value) = ([\w\._:]+)\s*\}\s*\}", r"{ is_owned_by = \1 }"],
         r"NO[RT] = \{\s*is_country_type = (?:fallen_empire|awakened_fallen_empire)\s+is_country_type = (?:fallen_empire|awakened_fallen_empire)\s*\}": "is_fallen_empire = no",
-        r"\n\s+(?:OR = \{)?\s{4,}is_country_type = (?:fallen_empire|awakened_fallen_empire)\s+is_country_type = (?:fallen_empire|awakened_fallen_empire)\s+\}?": [r"(\s+)(OR = \{)?(\s{4,})is_country_type = (?:fallen_empire|awakened_fallen_empire)\s+is_country_type = (?:fallen_empire|awakened_fallen_empire)(?(2)\1\})", r"\1\3is_fallen_empire = yes"],
+        r"\n\s+(?:OR = \{)?\s{4,}is_country_type = (?:fallen_empire|awakened_fallen_empire)\s+is_country_type = (?:fallen_empire|awakened_fallen_empire)\s+\}?": [r"(\s+)(OR = \{)?(?(2)\s{4,}|(\s{4,}))is_country_type = (?:fallen_empire|awakened_fallen_empire)\s+is_country_type = (?:fallen_empire|awakened_fallen_empire)(?(2)\1\})", r"\1is_fallen_empire = yes"],
         r"\bNO[RT] = \{\s*is_country_type = (?:default|awakened_fallen_empire)\s+is_country_type = (?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = no",
         r"\bOR = \{\s*is_country_type = (?:default|awakened_fallen_empire)\s+is_country_type = (?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = yes",
-        r"\s+(?:OR = \{)?\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+\}?": [r"(\s+)(OR = \{)?(\s+)(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)(?(2)\1\})", r"\1\3is_synthetic_empire = yes"], # \s{4,}
+        r"\s+(?:OR = \{)?\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+\}?": [r"(\s+)(OR = \{)?(?(2)\s+|(\s+))(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)(?(2)\1\})", r"\1\3is_synthetic_empire = yes"], # \s{4,}
         r"NO[RT] = \{\s*(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+\}": "is_synthetic_empire = no",
         r"NO[RT] = \{\s*has_(?:valid_)?civic = \"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*has_(?:valid_)?civic = \"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*has_(?:valid_)?civic = \"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*\}": "is_homicidal = no",
         r"(?:OR = \{)\s{4,}?has_(?:valid_)?civic = \"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s*\}?": [r"(OR = \{\s*)?has_(?:valid_)?civic = \"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?(?:civic_fanatic_purifiers|civic_machine_terminator|civic_hive_devouring_swarm)\"?(?(1)\s*\})", "is_homicidal = yes"],
@@ -435,7 +448,7 @@ else:
         r"NO[RT] = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+(?:has_trait = trait_(?:zombie|nerve_stapled)\s+|NOT = \{\s*has_trait = trait_(?:zombie|nerve_stapled))\}": "can_think = no",
         r"OR = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+has_trait = trait_(?:zombie|nerve_stapled)\s+\}": "can_think = yes",
         r"\bOR = \{\s*(?:species_portrait = human(?:_legacy)?\s+){2}\}": "is_human_species = yes",
-        r"\b(?:species_portrait = human(?:_legacy)?\s+){1,2}": [r"species_portrait = human(?:_legacy)?\s+(?:species_portrait = human(?:_legacy)?)?", "is_human_species = yes"],
+        r"\b(?:species_portrait = human(?:_legacy)?\s+){1,2}": [r"species_portrait = human(?:_legacy)?(\s+)(?:species_portrait = human(?:_legacy)?)?", r"is_human_species = yes\1"],
         r"\bvalue = subject_loyalty_effects\s+\}\s+\}": [r"(subject_loyalty_effects\s+\})(\s+)\}", ('common\\agreement_presets', r"\1\2\t{ key = protectorate value = subject_is_not_protectorate }\2}")],
     }
 
@@ -509,13 +522,19 @@ if code_cosmetic and not only_warning:
 # like targets3 but later
 if mergerofrules:
     # without is_country_type_with_subjects & without is_fallen_empire = yes
-    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes))|(?:(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = default|merg_is_default_empire = yes))|(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_country_type = fallen_empire|merg_is_fallen_empire = yes|is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)(\s+)){2,}", ("events", r"merg_is_standard_empire = yes\2")]
+    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes))|(?:(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = default|merg_is_default_empire = yes))|(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_country_type = fallen_empire|merg_is_fallen_empire = yes|is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)(\s+)){2,}", (["events", "common\\buildings"], r"merg_is_standard_empire = yes\2")]
     # with is_country_type_with_subjects & without AFE but with is_fallen_empire 
-    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)\s+is_fallen_empire = yes)|(?:is_fallen_empire = yes\s+(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_fallen_empire = yes|is_country_type_with_subjects = yes)(\s+)){2,}", ("events", r"merg_is_standard_empire = yes\2")]
-    targets3[r"\bis_country_type = default\b"] = ("events", "merg_is_default_empire = yes")
-    targets3[r"\bis_country_type = fallen_empire\b"] = ("events", "merg_is_fallen_empire = yes")
-    targets3[r"\bis_country_type = awakened_fallen_empire\b"] = ("events", "merg_is_awakened_fe = yes")
-    targets3[r"\bis_planet_class = pc_habitat\b"] = ("events", "merg_is_habitat = yes")
+    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)\s+is_fallen_empire = yes)|(?:is_fallen_empire = yes\s+(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_fallen_empire = yes|is_country_type_with_subjects = yes)(\s+)){2,}", (["events", "common\\buildings"], r"merg_is_standard_empire = yes\2")]
+    targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)(?(2)\1\})", (["events", "common\\buildings"], r"\1\3is_mechanical_empire = yes")]
+    targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))(?(2)\1\})", (["events", "common\\buildings"], r"\1\3is_robot_empire = yes")]
+    targets3[r"\bis_country_type = default\b"] = (["events", "common\\buildings"], "merg_is_default_empire = yes")
+    targets3[r"\bis_country_type = fallen_empire\b"] = (["events", "common\\buildings"], "merg_is_fallen_empire = yes")
+    targets3[r"\bis_country_type = awakened_fallen_empire\b"] = (["events", "common\\buildings"], "merg_is_awakened_fe = yes")
+    targets3[r"\bis_planet_class = pc_habitat\b"] = (["events", "common\\buildings"], "merg_is_habitat = yes")
+    targets3[r"\bhas_ethic = ethic_gestalt_consciousness\b"] = (["events", "common\\buildings"], "is_gestalt = yes")
+    targets3[r"\bhas_authority = auth_machine_intelligence\b"] = (["events", "common\\buildings"], "is_machine_empire = yes")
+    targets3[r"\bhas_authority = auth_hive_mind\b"] = (["events", "common\\buildings"], "is_hive_empire = yes")
+    targets3[r"\bowner_species = \{ has_trait = trait_cybernetic \}\b"] = (["events", "common\\buildings"], "is_cyborg_empire = yes")
     # targets31 = [(re.compile(k, flags=0), targets31[k]) for k in targets31]
 
 
