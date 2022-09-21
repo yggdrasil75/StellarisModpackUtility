@@ -1,6 +1,6 @@
 # @author: FirePrince
-# @version: 3.4.5
-# @revision: 2022/09/16
+# @version: 3.5.1
+# @revision: 2022/09/21
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -22,12 +22,12 @@ from tkinter import messagebox
 # True/False optional 
 only_warning = False  # True implies code_cosmetic = False
 code_cosmetic = False # True/False optional (only if only_warning = False)
-only_actual = False   # True speedup search (from previous relevant) to actual version
+only_actual = True   # True speedup search (from previous relevant) to actual version
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False    # for dev print
 mergerofrules = False # Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
 
-stellaris_version = '3.4.5'
+stellaris_version = '3.5.1'
 mod_outpath = ''
 
 # Single versions
@@ -58,11 +58,13 @@ if only_actual:
     removedTargets = [
         # v3.5
         [r"\b(any|every|random|ordered)_bordering_country = \{", 'just use xyz_country_neighbor_to_system instead'],
-
-       # [r"\b(restore|store)_galactic_community_leader_backup_data = ", 'now a scripted effect or just use store_country_backup_data instead'],
+       # [r"\b(restore|store)_galactic_community_leader_backup_data = ", 'now a scripted effect or just use store_country_backup_data instead']
     ]
     targets3 = {
+        r"\b(any|every|random|ordered)_bordering_country\b": r'\1_country_neighbor_to_system',
+        r"\bhair(\s*)=": ("prescripted_countries", r"attachment\1=")
     }
+    targets4 = {}
 elif v3_4:
     removedTargets = [
         ("common\\ship_sizes", [r"^\s+empire_limit = \{", '"empire_limit" has been replaces by "ai_ship_data" and "country_limits"']),
@@ -164,7 +166,7 @@ else:
         r"\b(fire_warning_sign|add_unity_times_empire_size) = yes",
         r"\boverlord_has_(num_constructors|more_than_num_constructors|num_science_ships|more_than_num_science_ships)_in_orbit\b",
         # 3.5
-        [r"\b(any|every|random|ordered)_bordering_country = \{", 'just use xyz_country_neighbor_to_system instead'],
+        # [r"\b(any|every|random|ordered)_bordering_country = \{", 'just use xyz_country_neighbor_to_system instead'],
     ]
 
     # targets2 = {
@@ -351,7 +353,10 @@ else:
         r"\badd_100_unity_per_year_passed =": "add_500_unity_per_year_passed =",
         r"\bcount_drones_to_recycle =": "count_robots_to_recycle =",
         r"\bbranch_office_building = yes": ("common\\buildings", r"owner_type = corporate"),
-         r"\bhas_species_flag = racket_species_flag":  r"exists = event_target:racket_species is_same_species = event_target:racket_species",
+        r"\bhas_species_flag = racket_species_flag":  r"exists = event_target:racket_species is_same_species = event_target:racket_species",
+        ### >= 3.5 ###
+        r"\b(any|every|random|ordered)_bordering_country\b": r'\1_country_neighbor_to_system',
+        r"\bhair(\s*)=": ("prescripted_countries", r"attachment\1=")
     }
 
     # re flags=re.I|re.M|re.A
@@ -643,9 +648,10 @@ def modfix(file_list):
                 out = ""
                 changed = False
                 for i, line in enumerate(file_contents):
-                    if len(line) > 10:
+                    if len(line) > 8:
                         # for line in file_contents:
-                        # print(line)
+                        # if subfolder in "prescripted_countries":
+                        #     print(line.strip().encode(errors='replace'))
                         for rt in removedTargets:
                             msg = ''
                             if isinstance(rt, tuple):
@@ -665,15 +671,17 @@ def modfix(file_list):
                         for pattern in targets3: # new list way
                             repl = pattern[1]
                             pattern = pattern[0]
-                            if debug_mode:
-                                print("targets3",line)
-                                print(pattern, repl)
+
                             # check valid folder
                             rt = False
                             # File name check
                             if isinstance(repl, dict):
                                 # is a 3 tuple
                                 file, repl = list(repl.items())[0]
+
+                                if debug_mode:
+                                    print("targets3", line.strip().encode(errors='replace'))
+                                    print(pattern, repl, file)
 
                                 if file in basename:
                                     if debug_mode:
@@ -703,10 +711,14 @@ def modfix(file_list):
                             if rt: # , flags=re.I # , count=0, flags=0
                                 rt = pattern.search(line) # , flags=re.I
                                 if rt:
-                                    line = pattern.sub(repl, line) # , flags=re.I
+                                    line = pattern.sub(repl, line) # , flags=re.I                                  
                                     # line = line.replace(t, r)
                                     changed = True
                                     print("\tUpdated file: %s at line %i with %s\n" % (basename, i, line.strip().encode(errors='replace')))
+                                elif debug_mode:
+                                    # print("targets3", line.strip().encode(errors='replace'))
+                                    print("DEBUG Match:", pattern, repl, type(repl), line)
+
                     out += line
 
                 # for pattern, repl in targets4.items(): old dict way
