@@ -1,5 +1,5 @@
 # @author: FirePrince
-# @version: 3.5.1
+# @version: 3.5.2
 # @revision: 2022/09/21
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
@@ -22,12 +22,12 @@ from tkinter import messagebox
 # True/False optional 
 only_warning = False  # True implies code_cosmetic = False
 code_cosmetic = False # True/False optional (only if only_warning = False)
-only_actual = True   # True speedup search (from previous relevant) to actual version
+only_actual = False   # True speedup search (from previous relevant) to actual version
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False    # for dev print
 mergerofrules = False # Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
 
-stellaris_version = '3.5.1'
+stellaris_version = '3.5.2'
 mod_outpath = ''
 
 # Single versions
@@ -41,6 +41,7 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 #     print("You are using Python {}.{}.".format(sys.version_info.major, sys.version_info.minor))
 #     sys.exit(1)
 
+# v3.5
 # v3.4
 # - new country_limits - replaced empire_limit
 # - new agreement_presets - replaced subjects
@@ -57,14 +58,23 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 if only_actual: 
     removedTargets = [
         # v3.5
-        [r"\b(any|every|random|ordered)_bordering_country = \{", 'just use xyz_country_neighbor_to_system instead'],
-       # [r"\b(restore|store)_galactic_community_leader_backup_data = ", 'now a scripted effect or just use store_country_backup_data instead']
+        # [r"\b(any|every|random|count|ordered)_bordering_country = \{", 'just use xyz_country_neighbor_to_system instead'],
+        # [r"\b(restore|store)_galactic_community_leader_backup_data = ", 'now a scripted effect or just use store_country_backup_data instead']
     ]
     targets3 = {
-        r"\b(any|every|random|ordered)_bordering_country\b": r'\1_country_neighbor_to_system',
-        r"\bhair(\s*)=": ("prescripted_countries", r"attachment\1=")
+        r"\b(any|every|random|count|ordered)_bordering_country\b": r'\1_country_neighbor_to_system',
+        r"\bhair(\s*)=": ("prescripted_countries", r"attachment\1="),
+        r"\bship_archeaological_site_clues_add\s*=": r"ship_archaeological_site_clues_add =",
+        r"\bfraction(\s*)=\s*\{": ("common\\ai_budget", r"weight\1=\1{"),
+        r"\bstatic_m([ai])x(\s*)=\s*\{": ("common\\ai_budget", r"desired_m\1x\2=\2{"),
+        # r"(\"NAME_[^-\s\"]+)-([^-\s\"]+)\"": r'\1_\2"', mostly but not generally done
     }
-    targets4 = {}
+    targets4 = {
+        r"\bany_system_planet = \{[^{}#]*(?:has_owner = yes|is_colony = yes|exists = owner)": [r"any_system_planet = (\{[^{}#]*)(?:has_owner = yes|is_colony = yes|exists = owner)", r"any_system_colony = \1"],
+        r"\s(?:every|random|count|ordered)_system_planet = \{[^{}#]*limit = \{\s*(?:has_owner = yes|is_colony = yes|exists = owner)": [r"(every|random|count)_system_planet = (\{[^{}#]*limit = \{\s*)(?:has_owner = yes|is_colony = yes|exists = owner)", r"\1_system_colony = \2"],
+        r"\bOR = \{\s+has_trait = (?:trait_plantoid_budding|trait_lithoid_budding)\s+has_trait = (?:trait_plantoid_budding|trait_lithoid_budding)\s+\}": "has_budding_trait = yes",
+        r"_pop = \{\s+unemploy_pop = yes\s+kill_pop = yes": [r"(_pop = \{\s+)unemploy_pop = yes\s+(kill_pop = yes)", r"\1\2"], # ghost pop bug fixed
+    }
 elif v3_4:
     removedTargets = [
         ("common\\ship_sizes", [r"^\s+empire_limit = \{", '"empire_limit" has been replaces by "ai_ship_data" and "country_limits"']),
@@ -355,8 +365,12 @@ else:
         r"\bbranch_office_building = yes": ("common\\buildings", r"owner_type = corporate"),
         r"\bhas_species_flag = racket_species_flag":  r"exists = event_target:racket_species is_same_species = event_target:racket_species",
         ### >= 3.5 ###
-        r"\b(any|every|random|ordered)_bordering_country\b": r'\1_country_neighbor_to_system',
-        r"\bhair(\s*)=": ("prescripted_countries", r"attachment\1=")
+        r"\b(any|every|random|count|ordered)_bordering_country\b": r'\1_country_neighbor_to_system',
+        r"\bhair(\s*)=": ("prescripted_countries", r"attachment\1="),
+        r"\bship_archeaological_site_clues_add\s*=": r"ship_archaeological_site_clues_add =",
+        r"\bfraction(\s*)=\s*\{": ("common\\ai_budget", r"weight\1=\1{"),
+        r"\bstatic_m([ai])x(\s*)=\s*\{": ("common\\ai_budget", r"desired_m\1x\2=\2{"),
+        # r"(\"NAME_[^-\s\"]+)-([^-\s\"]+)\"": r'\1_\2"', mostly but not generally done
     }
 
     # re flags=re.I|re.M|re.A
@@ -459,6 +473,11 @@ else:
         r"\bOR = \{\s*(?:species_portrait = human(?:_legacy)?\s+){2}\}": "is_human_species = yes",
         r"\b(?:species_portrait = human(?:_legacy)?\s+){1,2}": [r"species_portrait = human(?:_legacy)?(\s+)(?:species_portrait = human(?:_legacy)?)?", r"is_human_species = yes\1"],
         r"\bvalue = subject_loyalty_effects\s+\}\s+\}": [r"(subject_loyalty_effects\s+\})(\s+)\}", ('common\\agreement_presets', r"\1\2\t{ key = protectorate value = subject_is_not_protectorate }\2}")],
+        ### >= 3.5
+        r"\bany_system_planet = \{[^{}#]*(?:has_owner = yes|is_colony = yes|exists = owner)": [r"any_system_planet = (\{[^{}#]*)(?:has_owner = yes|is_colony = yes|exists = owner)", r"any_system_colony = \1"],
+        r"\s(?:every|random|count|ordered)_system_planet = \{[^{}#]*limit = \{\s*(?:has_owner = yes|is_colony = yes|exists = owner)": [r"(every|random|count)_system_planet = (\{[^{}#]*limit = \{\s*)(?:has_owner = yes|is_colony = yes|exists = owner)", r"\1_system_colony = \2"],
+        r"\bOR = \{\s+has_trait = (?:trait_plantoid_budding|trait_lithoid_budding)\s+has_trait = (?:trait_plantoid_budding|trait_lithoid_budding)\s+\}": "has_budding_trait = yes",
+        r"_pop = \{\s+unemploy_pop = yes\s+kill_pop = yes": [r"(_pop = \{\s+)unemploy_pop = yes\s+(kill_pop = yes)", r"\1\2"], # ghost pop bug fixed
     }
 
 if also_old:
