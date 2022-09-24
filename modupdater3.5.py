@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.5.2
-# @revision: 2022/09/21
+# @revision: 2022/09/24
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -70,8 +70,8 @@ if only_actual:
         # r"(\"NAME_[^-\s\"]+)-([^-\s\"]+)\"": r'\1_\2"', mostly but not generally done
     }
     targets4 = {
-        r"\bany_system_planet = \{[^{}#]*(?:has_owner = yes|is_colony = yes|exists = owner)": [r"any_system_planet = (\{[^{}#]*)(?:has_owner = yes|is_colony = yes|exists = owner)", r"any_system_colony = \1"],
-        r"\s(?:every|random|count|ordered)_system_planet = \{[^{}#]*limit = \{\s*(?:has_owner = yes|is_colony = yes|exists = owner)": [r"(every|random|count)_system_planet = (\{[^{}#]*limit = \{\s*)(?:has_owner = yes|is_colony = yes|exists = owner)", r"\1_system_colony = \2"],
+        r"\bany_system_planet = \{[^{}#]*(?:has_owner = yes|is_colony = yes|exists = owner)\s+": [r"any_system_planet = (\{[^{}#]*)(?:has_owner = yes|is_colony = yes|exists = owner)\s+", r"any_system_colony = \1"],
+        r"\s(?:every|random|count|ordered)_system_planet = \{[^{}#]*limit = \{\s*(?:has_owner = yes|is_colony = yes|exists = owner)\s+": [r"(every|random|count)_system_planet = (\{[^{}#]*limit = \{\s*)(?:has_owner = yes|is_colony = yes|exists = owner)\s+", r"\1_system_colony = \2"],
         r"\bOR = \{\s+has_trait = (?:trait_plantoid_budding|trait_lithoid_budding)\s+has_trait = (?:trait_plantoid_budding|trait_lithoid_budding)\s+\}": "has_budding_trait = yes",
         r"_pop = \{\s+unemploy_pop = yes\s+kill_pop = yes": [r"(_pop = \{\s+)unemploy_pop = yes\s+(kill_pop = yes)", r"\1\2"], # ghost pop bug fixed
     }
@@ -474,8 +474,8 @@ else:
         r"\b(?:species_portrait = human(?:_legacy)?\s+){1,2}": [r"species_portrait = human(?:_legacy)?(\s+)(?:species_portrait = human(?:_legacy)?)?", r"is_human_species = yes\1"],
         r"\bvalue = subject_loyalty_effects\s+\}\s+\}": [r"(subject_loyalty_effects\s+\})(\s+)\}", ('common\\agreement_presets', r"\1\2\t{ key = protectorate value = subject_is_not_protectorate }\2}")],
         ### >= 3.5
-        r"\bany_system_planet = \{[^{}#]*(?:has_owner = yes|is_colony = yes|exists = owner)": [r"any_system_planet = (\{[^{}#]*)(?:has_owner = yes|is_colony = yes|exists = owner)", r"any_system_colony = \1"],
-        r"\s(?:every|random|count|ordered)_system_planet = \{[^{}#]*limit = \{\s*(?:has_owner = yes|is_colony = yes|exists = owner)": [r"(every|random|count)_system_planet = (\{[^{}#]*limit = \{\s*)(?:has_owner = yes|is_colony = yes|exists = owner)", r"\1_system_colony = \2"],
+        r"\bany_system_planet = \{[^{}#]*(?:has_owner = yes|is_colony = yes|exists = owner)\s+": [r"any_system_planet = (\{[^{}#]*)(?:has_owner = yes|is_colony = yes|exists = owner)\s+", r"any_system_colony = \1"],
+        r"\s(?:every|random|count|ordered)_system_planet = \{[^{}#]*limit = \{\s*(?:has_owner = yes|is_colony = yes|exists = owner)\s+": [r"(every|random|count)_system_planet = (\{[^{}#]*limit = \{\s*)(?:has_owner = yes|is_colony = yes|exists = owner)\s+", r"\1_system_colony = \2"],
         r"\bOR = \{\s+has_trait = (?:trait_plantoid_budding|trait_lithoid_budding)\s+has_trait = (?:trait_plantoid_budding|trait_lithoid_budding)\s+\}": "has_budding_trait = yes",
         r"_pop = \{\s+unemploy_pop = yes\s+kill_pop = yes": [r"(_pop = \{\s+)unemploy_pop = yes\s+(kill_pop = yes)", r"\1\2"], # ghost pop bug fixed
     }
