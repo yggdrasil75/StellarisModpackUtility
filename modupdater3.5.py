@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.5.2
-# @revision: 2022/09/24
+# @revision: 2022/09/30
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -564,6 +564,7 @@ if mergerofrules:
     targets3[r"\bhas_ethic = ethic_gestalt_consciousness\b"] = (["events", "common\\buildings"], "is_gestalt = yes")
     targets3[r"\bhas_authority = auth_machine_intelligence\b"] = (["events", "common\\buildings"], "is_machine_empire = yes")
     targets3[r"\bhas_authority = auth_hive_mind\b"] = (["events", "common\\buildings"], "is_hive_empire = yes")
+    targets3[r"\bhas_authority = auth_corporate\b"] = (["events", "common\\buildings"], "is_megacorp = yes")
     targets3[r"\bowner_species = \{ has_trait = trait_cybernetic \}\b"] = (["events", "common\\buildings"], "is_cyborg_empire = yes")
     # targets31 = [(re.compile(k, flags=0), targets31[k]) for k in targets31]
 
