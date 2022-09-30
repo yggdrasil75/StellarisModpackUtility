@@ -65,9 +65,9 @@ if only_actual:
         r"\b(any|every|random|count|ordered)_bordering_country\b": r'\1_country_neighbor_to_system',
         r"\bhair(\s*)=": ("prescripted_countries", r"attachment\1="),
         r"\bship_archeaological_site_clues_add\s*=": r"ship_archaeological_site_clues_add =",
-        r"\bfraction(\s*)=\s*\{": ("common\\ai_budget", r"weight\1=\1{"),
-        r"\bstatic_m([ai])x(\s*)=\s*\{": ("common\\ai_budget", r"desired_m\1x\2=\2{"),
-        r"^(\s+)([^#]*?\bbuildings_(?:simple_allow|no_\w+) = yes.*)": ("common\\buildings", r"\1# \2"), # removed scripted triggers
+        r"\bfraction(\s*)=\s*\{": ("common/ai_budget", r"weight\1=\1{"),
+        r"\bstatic_m([ai])x(\s*)=\s*\{": ("common/ai_budget", r"desired_m\1x\2=\2{"),
+        r"^(\s+)([^#]*?\bbuildings_(?:simple_allow|no_\w+) = yes.*)": ("common/buildings", r"\1# \2"), # removed scripted triggers
         # r"(\"NAME_[^-\s\"]+)-([^-\s\"]+)\"": r'\1_\2"', mostly but not generally done
     }
     targets4 = {
@@ -78,8 +78,8 @@ if only_actual:
     }
 elif v3_4:
     removedTargets = [
-        ("common\\ship_sizes", [r"^\s+empire_limit = \{", '"empire_limit" has been replaces by "ai_ship_data" and "country_limits"']),
-        ("common\\country_types", [r"^\s+(?:ship_data|army_data) = { = \{", '"ship_data & army_data" has been replaces by "ai_ship_data" and "country_limits"']),
+        ("common/ship_sizes", [r"^\s+empire_limit = \{", '"empire_limit" has been replaces by "ai_ship_data" and "country_limits"']),
+        ("common/country_types", [r"^\s+(?:ship_data|army_data) = { = \{", '"ship_data & army_data" has been replaces by "ai_ship_data" and "country_limits"']),
         r"\b(fire_warning_sign|add_unity_times_empire_size) = yes",
         r"\boverlord_has_(num_constructors|more_than_num_constructors|num_science_ships|more_than_num_science_ships)_in_orbit\b",
     ]
@@ -90,19 +90,19 @@ elif v3_4:
         r"\bsubject_type = (\w+)": r"preset = preset_\1",
         r"\badd_100_unity_per_year_passed =": "add_500_unity_per_year_passed =",
         r"\bcount_drones_to_recycle =": "count_robots_to_recycle =",
-        r"\bbranch_office_building = yes": ("common\\buildings", r"owner_type = corporate"),
+        r"\bbranch_office_building = yes": ("common/buildings", r"owner_type = corporate"),
         r"\bhas_species_flag = racket_species_flag":  r"exists = event_target:racket_species is_same_species = event_target:racket_species",
         # code opts/cosmetic only
         re.compile(r"\bNOT = \{\s*((?:leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+) = \{)\s*([^\s]+) = yes\s*\}\s*\}", re.I): r"\1 \2 = no }",
     }
     targets4 = {
         # >= 3.4
-        r"\n(?:\t| {4})empire_limit = \{\s+base = [\w\W]+\n(?:\t| {4})\}": [r"(\s+)empire_limit = \{(\s+)base = (\d+\s+max = \d+|\d+)[\w\W]+?(?(1)\s+\})\s+\}", ('common\\ship_sizes', r'\1ai_ship_data = {\2min = \3\1}')],
-        r"\bpotential = \{\s+always = no\s+\}": ["potential", ('common\\armies', 'potential_country')],
-        #r"(?:\t| {4})potential = \{\s+(?:exists = )?owner[\w\W]+\n(?:\t| {4})\}": [r"potential = \{\s+(?:exists = owner)?(\s+)owner = \{\s+([\w\W]+?)(?(1)\s+\})\s+\}", ("common\\armies", r'potential_country = { \2 }')],
-        r"\s+construction_block(?:s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no": [r"construction_block(s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type')],
-        r"construction_blocks_others = no": ["construction_blocks_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = none')],
-        # r"construction_blocked_by_others = no": ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type'),
+        r"\n(?:\t| {4})empire_limit = \{\s+base = [\w\W]+\n(?:\t| {4})\}": [r"(\s+)empire_limit = \{(\s+)base = (\d+\s+max = \d+|\d+)[\w\W]+?(?(1)\s+\})\s+\}", ('common/ship_sizes', r'\1ai_ship_data = {\2min = \3\1}')],
+        r"\bpotential = \{\s+always = no\s+\}": ["potential", ('common/armies', 'potential_country')],
+        #r"(?:\t| {4})potential = \{\s+(?:exists = )?owner[\w\W]+\n(?:\t| {4})\}": [r"potential = \{\s+(?:exists = owner)?(\s+)owner = \{\s+([\w\W]+?)(?(1)\s+\})\s+\}", ("common/armies", r'potential_country = { \2 }')],
+        r"\s+construction_block(?:s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no": [r"construction_block(s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no", ("common/megastructures", 'construction_blocks_and_blocked_by = self_type')],
+        r"construction_blocks_others = no": ["construction_blocks_others = no", ("common/megastructures", 'construction_blocks_and_blocked_by = none')],
+        # r"construction_blocked_by_others = no": ("common/megastructures", 'construction_blocks_and_blocked_by = self_type'),
         r"(?:contact|any_playable)_country\s*=\s*{\s+(?:NOT = \{\s+)?(?:any|count)_owned_(?:fleet|ship) = \{": [r"(any|count)_owned_(fleet|ship) =", r"\1_controlled_\2 ="], # only playable empire!?
         # r"\s+every_owned_fleet = \{\s+limit\b": [r"owned_fleet", r"controlled_fleet"], # only playable empire and not with is_ship_size!?
         # r"\s+(?:any|every|random)_owned_ship = \{": [r"(any|every|random)_owned_ship =", r"\1_controlled_fleet ="], # only playable empire!?
@@ -113,7 +113,7 @@ elif v3_4:
         r"\bOR = \{\s*has_modifier = doomsday_\d[\w\s=]+\}": [r"OR = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = yes"],
         r"\bOR = \{\s*(?:species_portrait = human(?:_legacy)?\s+){2}\}": "is_human_species = yes",
         r"\b(?:species_portrait = human(?:_legacy)?\s+){1,2}": [r"species_portrait = human(?:_legacy)?(\s+)(?:species_portrait = human(?:_legacy)?)?", r"is_human_species = yes\1"],
-        r"\bvalue = subject_loyalty_effects\s+\}\s+\}": [r"(subject_loyalty_effects\s+\})(\s+)\}", ('common\\agreement_presets', r"\1\2\t{ key = protectorate value = subject_is_not_protectorate }\2}")],
+        r"\bvalue = subject_loyalty_effects\s+\}\s+\}": [r"(subject_loyalty_effects\s+\})(\s+)\}", ('common/agreement_presets', r"\1\2\t{ key = protectorate value = subject_is_not_protectorate }\2}")],
     }
 
 else:
@@ -134,15 +134,15 @@ else:
         [r"[^# \t]\s+is_planet_class = pc_ringworld_habitable", 'could possibly be replaced with "is_ringworld = yes"'],
         # r"\sadd_tech_progress_effect = ", # replaced with add_tech_progress
         # r"\sgive_scaled_tech_bonus_effect = ", # replaced with add_monthly_resource_mult
-        ("common\\districts", r"\sdistricts_build_district\b"), # scripted trigger
-        ("common\\pop_jobs", r"\s(drone|worker|specialist|ruler)_job_check_trigger\b"), # scripted trigger
+        ("common/districts", r"\sdistricts_build_district\b"), # scripted trigger
+        ("common/pop_jobs", r"\s(drone|worker|specialist|ruler)_job_check_trigger\b"), # scripted trigger
 
         # 3.1
         [r"\b(any|every|random)_(research|mining)_station\b", 'use just mining_station/research_station instead'], # = 2 trigger & 4 effects
         [r"\sobservation_outpost = \{\s*limit", 'is now a scope (from planet) rather than a trigger/effect'],
         r"\spop_can_live_on_planet\b", # r"\1can_live_on_planet", needs planet target
         r"\scount_armies\b", # (scope split: depending on planet/country)
-        (["common\\bombardment_stances", "common\\ship_sizes"], [r"^\s+icon_frame = \d+", '"icon_frame" now only used for starbases']), # [6-9]  # Value of 2 or more means it shows up on the galaxy map, 1-5 denote which icon it uses on starbase sprite sheets (e.g. gfx/interface/icons/starbase_ship_sizes.dds)
+        (["common/bombardment_stances", "common/ship_sizes"], [r"^\s+icon_frame = \d+", '"icon_frame" now only used for starbases']), # [6-9]  # Value of 2 or more means it shows up on the galaxy map, 1-5 denote which icon it uses on starbase sprite sheets (e.g. gfx/interface/icons/starbase_ship_sizes.dds)
 
         # PRE TEST
         # r"\sspaceport\W", # scope replace?
@@ -161,19 +161,19 @@ else:
         r"\shas_(population|migration)_control = (yes|no)",
         r"\s(any|every|random)_planet\b", # split in owner and galaxy and system scope
         r"\s(any|every|random)_ship\b", # split in owner and galaxy and system scope
-        ("common\\buildings", [r"^\s+ai_weight\s*=", 'ai_weight for buildings removed except for branch office']), # replaced buildings ai
+        ("common/buildings", [r"^\s+ai_weight\s*=", 'ai_weight for buildings removed except for branch office']), # replaced buildings ai
         # < 2.0
         r"\scan_support_spaceport = (yes|no)",
         # 3.3
         "tech_repeatable_improved_edict_length",
         r"(^\s+|[^#] )country_admin_cap_(add|mult)",
-        ("common\\buildings", r"\sbuilding(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*="), # replaced buildings ai
+        ("common/buildings", r"\sbuilding(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*="), # replaced buildings ai
         [r"\bnum_\w+\s*[<=>]+\s*[a-z]+[\s}]", 'no scope alone'], #  [^\d{$@] too rare (could also be auto fixed)
         [r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}", 'can be merged to NOR if not in an OR'], #  [^\d{$@] too rare (could also be auto fixed)
-        ("common\\traits", [r"^\s+modification = (?:no|yes)\s*", '"modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.']),
+        ("common/traits", [r"^\s+modification = (?:no|yes)\s*", '"modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.']),
         # 3.4
-        ("common\\ship_sizes", [r"^\s+empire_limit = \{\s+", '"empire_limit" has been replaces by "ai_ship_data" and "country_limit"']),
-        ("common\\country_types", [r"^\s+(?:ship_data|army_data) = { = \{", '"ship_data & army_data" has been replaces by "ai_ship_data" and "country_limits"']),
+        ("common/ship_sizes", [r"^\s+empire_limit = \{\s+", '"empire_limit" has been replaces by "ai_ship_data" and "country_limit"']),
+        ("common/country_types", [r"^\s+(?:ship_data|army_data) = { = \{", '"ship_data & army_data" has been replaces by "ai_ship_data" and "country_limits"']),
         r"\b(fire_warning_sign|add_unity_times_empire_size) = yes",
         r"\boverlord_has_(num_constructors|more_than_num_constructors|num_science_ships|more_than_num_science_ships)_in_orbit\b",
         # 3.5
@@ -223,21 +223,21 @@ else:
         r"[\s#]+(pops_can_(be_colonizers|migrate|reproduce|join_factions|be_slaves)|can_generate_leaders|pops_have_happiness|pops_auto_growth|pop_maintenance) = (yes|no)\s*": "",
         ### somewhat older
         r"(\s+)ship_upkeep_mult\s*=": r"\1ships_upkeep_mult =",
-        r"\b(contact_rule = )script_only": ("common\\country_types", r"\1on_action_only"),
+        r"\b(contact_rule = )script_only": ("common/country_types", r"\1on_action_only"),
         r"\b(any|every|random)_(research|mining)_station\b": r"\2_station",
         r"(\s+)add_(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research))) = (-?@\w+|-?\d+)": r"\1add_resource = { \2 = \3 }",
         ### > 3.1.* beta
         r"(\s+set_)(primitive) = yes": r"\1country_type = \2",
         # r"(\s+)count_armies": r"\1count_owned_army", # count_planet_army (scope split: depending on planet/country)
         # r"(\s+)(icon_frame = [0-5])": "", # remove
-        r"text_icon = military_size_space_creature": ("common\\ship_sizes", "icon = ship_size_space_monster"),
+        r"text_icon = military_size_space_creature": ("common/ship_sizes", "icon = ship_size_space_monster"),
         # conflict used for starbase
-        # r"icon_frame = 2": ("common\\ship_sizes", lambda p: p.group(1)+"icon = }[p.group(2)]),
-        r"text_icon = military_size_": ("common\\ship_sizes", "icon = ship_size_military_"),
-        # r"\s+icon_frame = \d": (["common\\bombardment_stances", "common\\ship_sizes"], ""), used for starbase
-        r"^\s+robotic = (yes|no)[ \t]*\n": ("common\\species_classes", ""),
+        # r"icon_frame = 2": ("common/ship_sizes", lambda p: p.group(1)+"icon = }[p.group(2)]),
+        r"text_icon = military_size_": ("common/ship_sizes", "icon = ship_size_military_"),
+        # r"\s+icon_frame = \d": (["common/bombardment_stances", "common/ship_sizes"], ""), used for starbase
+        r"^\s+robotic = (yes|no)[ \t]*\n": ("common/species_classes", ""),
         r"^(\s+icon)_frame = ([1-9][0-4]?)":
-            ("common\\armies", lambda p:
+            ("common/armies", lambda p:
              p.group(1) + " = GFX_army_type_" + {
                  "1": "defensive",
                  "2": "assault",
@@ -255,7 +255,7 @@ else:
                  "14": "imperial"
              }[p.group(2)]),
         r"^(\s+icon)_frame = (\d+)":
-            ("common\\planet_classes", lambda p:
+            ("common/planet_classes", lambda p:
              p.group(1) + " = GFX_planet_type_" + {
                  "1": "desert",
                  "2": "arid",
@@ -290,7 +290,7 @@ else:
                  "32": "black_hole"
              }[p.group(2)]),
         r"^(\s+icon) = (\d+)":
-            ("common\\colony_types", lambda p:
+            ("common/colony_types", lambda p:
              p.group(1)+" = GFX_colony_type_"+{
                  "1": "urban",
                  "2": "mine",
@@ -338,24 +338,24 @@ else:
         r"\badd_tech_progress_effect":  "add_tech_progress",
         r"\bgive_scaled_tech_bonus_effect": "add_monthly_resource_mult",
         r"\bclear_uncharted_space = \{\s*from = ([^\n{}# ])\s*\}": r"clear_uncharted_space = \1",
-        r"\bhomeworld = ": ("common\\governments\\civics", r"starting_colony = "),
-        # r"^((?:\t|    )parent = planet_jobs)\b": ("common\\economic_categories", r"\1_productive"), TODO
-        r"^(\t|    )energy = (\d+|@\w+)": ("common\\terraform", r"\1resources = {\n\1\1category = terraforming\n\1\1cost = { energy = \2 }\n\1}"),
+        r"\bhomeworld = ": ("common/governments/civics", r"starting_colony = "),
+        # r"^((?:\t|    )parent = planet_jobs)\b": ("common/economic_categories", r"\1_productive"), TODO
+        r"^(\t|    )energy = (\d+|@\w+)": ("common/terraform", r"\1resources = {\n\1\1category = terraforming\n\1\1cost = { energy = \2 }\n\1}"),
         ### 3.3 ###
-        r"\s+building(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow) = (?:yes|no)\n?": ("common\\buildings", ''),
-        r"\bGFX_ship_part_auto_repair": (["common\\component_sets", "common\\component_templates"], 'GFX_ship_part_ship_part_nanite_repair_system'), # because icons.gfx
+        r"\s+building(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow) = (?:yes|no)\n?": ("common/buildings", ''),
+        r"\bGFX_ship_part_auto_repair": (["common/component_sets", "common/component_templates"], 'GFX_ship_part_ship_part_nanite_repair_system'), # because icons.gfx
         r"\b(country_election_)influence_(cost_mult)": r'\1\2',
-        r"\bwould_work_job": ("common\\game_rules", 'can_work_specific_job'),
+        r"\bwould_work_job": ("common/game_rules", 'can_work_specific_job'),
         r"\bhas_civic = civic_reanimated_armies": 'is_reanimator = yes',
-        # r"^(?:\t\t| {4,8})value\s*=": ("common\\ethics", 'base ='), maybe too cheap
-        # r"\bcountry_admin_cap_mult\b": ("common\\**", 'empire_size_colonies_mult'),
-        # r"\bcountry_admin_cap_add\b": ("common\\**", 'country_edict_fund_add'), 
-        # r"\bcountry_edict_cap_add\b": ("common\\**", 'country_power_projection_influence_produces_add'), 
+        # r"^(?:\t\t| {4,8})value\s*=": ("common/ethics", 'base ='), maybe too cheap
+        # r"\bcountry_admin_cap_mult\b": ("common/**", 'empire_size_colonies_mult'),
+        # r"\bcountry_admin_cap_add\b": ("common/**", 'country_edict_fund_add'), 
+        # r"\bcountry_edict_cap_add\b": ("common/**", 'country_power_projection_influence_produces_add'), 
         r"\bjob_administrator": 'job_politician',
         r"\b(has_any_(?:farming|generator)_district)\b": r'\1_or_building', # 3.3.4 scripted trigger
-        r"^\t\tvalue\b": ("common\\ethics", 'base'),
+        r"^\t\tvalue\b": ("common/ethics", 'base'),
         # Replaces only in filename with species
-        r"^(\s+)modification = (?:no|yes)\s*?\n": {"species": ("common\\traits", r'\1species_potential_add = { always = no }\n' , '')},  # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
+        r"^(\s+)modification = (?:no|yes)\s*?\n": {"species": ("common/traits", r'\1species_potential_add = { always = no }\n' , '')},  # "modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.       
         ### >= 3.4 ###
         r"\bis_subject_type = vassal": "is_subject = yes",
         r"\bhas_tributary = yes": "any_agreement = { agreement_preset = preset_tributary }",
@@ -363,15 +363,15 @@ else:
         r"\bsubject_type = (\w+)": r"preset = preset_\1",
         r"\badd_100_unity_per_year_passed =": "add_500_unity_per_year_passed =",
         r"\bcount_drones_to_recycle =": "count_robots_to_recycle =",
-        r"\bbranch_office_building = yes": ("common\\buildings", r"owner_type = corporate"),
+        r"\bbranch_office_building = yes": ("common/buildings", r"owner_type = corporate"),
         r"\bhas_species_flag = racket_species_flag":  r"exists = event_target:racket_species is_same_species = event_target:racket_species",
         ### >= 3.5 ###
         r"\b(any|every|random|count|ordered)_bordering_country\b": r'\1_country_neighbor_to_system',
         r"\bhair(\s*)=": ("prescripted_countries", r"attachment\1="),
         r"\bship_archeaological_site_clues_add\s*=": r"ship_archaeological_site_clues_add =",
-        r"\bfraction(\s*)=\s*\{": ("common\\ai_budget", r"weight\1=\1{"),
-        r"\bstatic_m([ai])x(\s*)=\s*\{": ("common\\ai_budget", r"desired_m\1x\2=\2{"),
-        r"^(\s+)([^#]*?\bbuildings_(?:simple_allow|no_\w+) = yes.*)": ("common\\buildings", r"\1# \2"), # removed scripted triggers
+        r"\bfraction(\s*)=\s*\{": ("common/ai_budget", r"weight\1=\1{"),
+        r"\bstatic_m([ai])x(\s*)=\s*\{": ("common/ai_budget", r"desired_m\1x\2=\2{"),
+        r"^(\s+)([^#]*?\bbuildings_(?:simple_allow|no_\w+) = yes.*)": ("common/buildings", r"\1# \2"), # removed scripted triggers
         # r"(\"NAME_[^-\s\"]+)-([^-\s\"]+)\"": r'\1_\2"', mostly but not generally done
     }
 
@@ -433,7 +433,7 @@ else:
         #but not used for starbases
         r"\bis_space_station = no\s*icon_frame = \d+":
             [r"(is_space_station = no\s*)icon_frame = ([1-9][0-2]?)",
-             ("common\\ship_sizes", lambda p:
+             ("common/ship_sizes", lambda p:
               p.group(1) + "icon = ship_size_" + {
                   "1": "military_1",
                   "2": "military_1",
@@ -455,26 +455,26 @@ else:
         ### >= 3.2
         r"\bNO[RT] = \{\s*is_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex)\s+is_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex)(?:\s+is_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex))?\s*\}": [r"\bNO[RT] = \{\s*is_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex)\s+is_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex)(?:\s+is_planet_class = (?:pc_ringworld_habitable|pc_cybrex))?\s*\}", r"is_artificial = no"],
         r"\n\s+is_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex)\s+is_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex)(?:\s+is_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex))?\b": [r"\bis_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex)\s+is_planet_class = (?:pc_ringworld_habitable|pc_habitat|pc_cybrex)(?:\s+is_planet_class = (?:pc_ringworld_habitable|pc_cybrex))?\b", r"is_artificial = yes"],
-        r"\n\s+possible = \{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)(?:drone|worker|specialist|ruler)_job_check_trigger = yes\s*": [r"(\s+)(possible = \{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?))(drone|worker|specialist|ruler)_job_check_trigger = yes\s*", ("common\\pop_jobs", r"\1possible_precalc = can_fill_\4_job\1\2")], # only with 6 possible prior lines
-        r"(?:[^b]\n\n|[^b][^b]\n)\s+possible = \{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)complex_specialist_job_check_trigger = yes\s*": [r"\n(\s+)(possible = \{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)complex_specialist_job_check_trigger = yes\s*)", ("common\\pop_jobs", r"\1possible_precalc = can_fill_specialist_job\1\2")], # only with 6 possible prior lines
+        r"\n\s+possible = \{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)(?:drone|worker|specialist|ruler)_job_check_trigger = yes\s*": [r"(\s+)(possible = \{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?))(drone|worker|specialist|ruler)_job_check_trigger = yes\s*", ("common/pop_jobs", r"\1possible_precalc = can_fill_\4_job\1\2")], # only with 6 possible prior lines
+        r"(?:[^b]\n\n|[^b][^b]\n)\s+possible = \{(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?(?:\n.*\s*?|\s*)|\s*)|\s*)|\s*)|\s*)|\s*)complex_specialist_job_check_trigger = yes\s*": [r"\n(\s+)(possible = \{(\1\t)?(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3(?(3).*\3|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)?|\s*?)complex_specialist_job_check_trigger = yes\s*)", ("common/pop_jobs", r"\1possible_precalc = can_fill_specialist_job\1\2")], # only with 6 possible prior lines
         ### >= 3.3
-        r"(?:random_weight|pop_attraction(_tag)?|country_attraction)\s+value\s*=": [r"\bvalue\b", ("common\\ethics", 'base')],
+        r"(?:random_weight|pop_attraction(_tag)?|country_attraction)\s+value\s*=": [r"\bvalue\b", ("common/ethics", 'base')],
         #r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}": [r"([\t ]+)NO[TR] = \{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR] = \{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"], not valid if in OR
         r"\bany_\w+ = \{[^{}]+?\bcount\s*[<=>]+\s*[^{}\s]+\s+[^{}]*\}": [r"\bany_(\w+) = \{\s*(?:([^{}]+?)\s+(\bcount\s*[<=>]+\s*[^{}\s]+)|(\bcount\s*[<=>]+\s*[^{}\s]+)\s+([^{}]*))\s+\}", r"count_\1 = { limit = { \2\5 } \3\4 }"], # too rare!? only simple supported TODO
         ### >= 3.4
-        r"\n(?:\t| {4})empire_limit = \{\s+base = [\w\W]+\n(?:\t| {4})\}": [r"(\s+)empire_limit = \{(\s+)base = (\d+\s+max = \d+|\d+)[\w\W]+?(?(1)\s+\})\s+\}", ('common\\ship_sizes', r'\1ai_ship_data = {\2min = \3\1}')],
-        r"\bpotential = \{\s+always = no\s+\}": ["potential", ('common\\armies', 'potential_country')],
-        r"(?:\t| {4})potential = \{\s+(?:exists = )?owner[\w\W]+\n(?:\t| {4})\}": [r"potential = \{\s+(?:exists = owner)?(\s+)owner = \{\s+([\w\W]+?)(?(1)\s+\})\s+\}", ("common\\armies", r'potential_country = { \2 }')],
-        r"\s+construction_block(?:s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no": [r"construction_block(s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type')],
-        r"construction_blocks_others = no": [r"construction_blocks_others = no", ("common\\megastructures", 'construction_blocks_and_blocked_by = none')],
-        # r"construction_blocked_by_others = no": ("common\\megastructures", 'construction_blocks_and_blocked_by = self_type'),
+        r"\n(?:\t| {4})empire_limit = \{\s+base = [\w\W]+\n(?:\t| {4})\}": [r"(\s+)empire_limit = \{(\s+)base = (\d+\s+max = \d+|\d+)[\w\W]+?(?(1)\s+\})\s+\}", ('common/ship_sizes', r'\1ai_ship_data = {\2min = \3\1}')],
+        r"\bpotential = \{\s+always = no\s+\}": ["potential", ('common/armies', 'potential_country')],
+        r"(?:\t| {4})potential = \{\s+(?:exists = )?owner[\w\W]+\n(?:\t| {4})\}": [r"potential = \{\s+(?:exists = owner)?(\s+)owner = \{\s+([\w\W]+?)(?(1)\s+\})\s+\}", ("common/armies", r'potential_country = { \2 }')],
+        r"\s+construction_block(?:s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no": [r"construction_block(s_others = no\s+construction_blocked_by|ed_by_others = no\s+construction_blocks|ed_by)_others = no", ("common/megastructures", 'construction_blocks_and_blocked_by = self_type')],
+        r"construction_blocks_others = no": [r"construction_blocks_others = no", ("common/megastructures", 'construction_blocks_and_blocked_by = none')],
+        # r"construction_blocked_by_others = no": ("common/megastructures", 'construction_blocks_and_blocked_by = self_type'),
         r"(?:contact|any_playable)_country\s*=\s*{\s+(?:NOT = \{\s+)?(?:any|count)_owned_(?:fleet|ship) = \{": [r"(any|count)_owned_(fleet|ship) =", r"\1_controlled_\2 ="], # only playable empire!?
         r"\s+(?:any|every|random)_(?:system|planet) = \{(?:\s+limit = \{)?\s+has_owner = yes\s+is_owned_by": [r"(any|every|random)_(system|planet) =", r"\1_\2_within_border ="],
         r"NO[RT] = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+(?:has_trait = trait_(?:zombie|nerve_stapled)\s+|NOT = \{\s*has_trait = trait_(?:zombie|nerve_stapled))\}": "can_think = no",
         r"OR = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+has_trait = trait_(?:zombie|nerve_stapled)\s+\}": "can_think = yes",
         r"\bOR = \{\s*(?:species_portrait = human(?:_legacy)?\s+){2}\}": "is_human_species = yes",
         r"\b(?:species_portrait = human(?:_legacy)?\s+){1,2}": [r"species_portrait = human(?:_legacy)?(\s+)(?:species_portrait = human(?:_legacy)?)?", r"is_human_species = yes\1"],
-        r"\bvalue = subject_loyalty_effects\s+\}\s+\}": [r"(subject_loyalty_effects\s+\})(\s+)\}", ('common\\agreement_presets', r"\1\2\t{ key = protectorate value = subject_is_not_protectorate }\2}")],
+        r"\bvalue = subject_loyalty_effects\s+\}\s+\}": [r"(subject_loyalty_effects\s+\})(\s+)\}", ('common/agreement_presets', r"\1\2\t{ key = protectorate value = subject_is_not_protectorate }\2}")],
         ### >= 3.5
         r"\bany_system_planet = \{[^{}#]*(?:has_owner = yes|is_colony = yes|exists = owner)\s+": [r"any_system_planet = (\{[^{}#]*)(?:has_owner = yes|is_colony = yes|exists = owner)\s+", r"any_system_colony = \1"],
         r"\s(?:every|random|count|ordered)_system_planet = \{[^{}#]*limit = \{\s*(?:has_owner = yes|is_colony = yes|exists = owner)\s+": [r"(every|random|count)_system_planet = (\{[^{}#]*limit = \{\s*)(?:has_owner = yes|is_colony = yes|exists = owner)\s+", r"\1_system_colony = \2"],
@@ -486,7 +486,7 @@ if also_old:
     ## 2.0
     # planet trigger fortification_health was removed
     ## 2.2
-    targets3[r"\s+(?:outliner_planet_type|tile_set) = \w+\s*"] = ("common\\planet_classes", "")
+    targets3[r"\s+(?:outliner_planet_type|tile_set) = \w+\s*"] = ("common/planet_classes", "")
     targets3[r"\b(?:add|set)_blocker = \"?tb_(\w+)\"?"] = r"add_deposit = d_\1" # More concrete? r"add_blocker = { type = d_\1 blocked_deposit = none }" 
     targets3[r"\btb_(\w+)"] = r"d_\1"
     targets3[r"\b(building_capital)(?:_\d)\b"] = r"\1"
@@ -498,11 +498,11 @@ if also_old:
     targets3[r"\bbuilding_power_plant_[345]\b"] = r"building_energy_nexus"
     targets3[r"\bbuilding_mining_network_[12]\b"] = "building_mineral_purification_plant"
     targets3[r"\bbuilding_mining_network_[345]\b"] = "building_mineral_purification_hub"
-    targets3[r"(?<!add_resource = \{)(\s+)(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research)))\s*([<=>]+\s*-?\s*(?:@\w+|\d+))\1(?!(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research))))"] = (["common\\scripted_triggers", "common\\scripted_effects", "events"], r"\1has_resource = { type = \2 amount \3 }")
+    targets3[r"(?<!add_resource = \{)(\s+)(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research)))\s*([<=>]+\s*-?\s*(?:@\w+|\d+))\1(?!(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research))))"] = (["common/scripted_triggers", "common/scripted_effects", "events"], r"\1has_resource = { type = \2 amount \3 }")
     # not sure because multiline
-    # targets3[r"(?<!add_resource = \{)(\s+)(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research)))\s*([<=>]+\s*-?\s*(?:@\w+|\d+))"] = (["common\\scripted_triggers", "common\\scripted_effects", "events"], r"\1has_resource = { type = \2 amount \3 }")
+    # targets3[r"(?<!add_resource = \{)(\s+)(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research)))\s*([<=>]+\s*-?\s*(?:@\w+|\d+))"] = (["common/scripted_triggers", "common/scripted_effects", "events"], r"\1has_resource = { type = \2 amount \3 }")
     # tmp fix
-    # targets3[r"\bhas_resource = \{ type = (energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research))) amount( = (?:\d+|@\w+)) \}"] = (["common\\scripted_triggers", "common\\scripted_effects", "events"], r"\1\2 ")
+    # targets3[r"\bhas_resource = \{ type = (energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research))) amount( = (?:\d+|@\w+)) \}"] = (["common/scripted_triggers", "common/scripted_effects", "events"], r"\1\2 ")
 
 
 if code_cosmetic and not only_warning:
@@ -527,7 +527,7 @@ if code_cosmetic and not only_warning:
     # targets3[r"\s*days\s*=\s*-1\s*"] = ' ' # still needed to execute immediately
     # targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
     targets3[r"#([^\-\s#])"] = r"# \1" # r"#([^\s#])": r"# \1", # format comment
-    #  targets3[r"# +([A-Z][^\n=<>{}\[\]# ]+? [\w,\.;\'\/\\+\- ()&]+? \w+ \w+ \w+)$"] = r"# \1." # set comment punctuation mark
+    #  targets3[r"# +([A-Z][^\n=<>{}\[\]# ]+? [\w,\.;\'\//+\- ()&]+? \w+ \w+ \w+)$"] = r"# \1." # set comment punctuation mark
     targets3[r"# ([a-z])(\w+ +[^;:\s#=<>]+ [^\n]+?[\.!?])$"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
     # NOT NUM triggers. TODO <> ?
     targets3[r"\bNOT = \{\s*(num_\w+|\w+?(?:_passed)) = (\d+)\s*\}"] = r"\1 != \2"
@@ -552,20 +552,20 @@ if code_cosmetic and not only_warning:
 # like targets3 but later
 if mergerofrules:
     # without is_country_type_with_subjects & without is_fallen_empire = yes
-    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes))|(?:(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = default|merg_is_default_empire = yes))|(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_country_type = fallen_empire|merg_is_fallen_empire = yes|is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)(\s+)){2,}", (["events", "common\\buildings"], r"merg_is_standard_empire = yes\2")]
+    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes))|(?:(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = default|merg_is_default_empire = yes))|(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_country_type = fallen_empire|merg_is_fallen_empire = yes|is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)(\s+)){2,}", (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", r"merg_is_standard_empire = yes\2")]
     # with is_country_type_with_subjects & without AFE but with is_fallen_empire 
-    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)\s+is_fallen_empire = yes)|(?:is_fallen_empire = yes\s+(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_fallen_empire = yes|is_country_type_with_subjects = yes)(\s+)){2,}", (["events", "common\\buildings"], r"merg_is_standard_empire = yes\2")]
-    targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)(?(2)\1\})", (["events", "common\\buildings"], r"\1\3is_mechanical_empire = yes")]
-    targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))(?(2)\1\})", (["events", "common\\buildings"], r"\1\3is_robot_empire = yes")]
-    targets3[r"\bis_country_type = default\b"] = (["events", "common\\buildings"], "merg_is_default_empire = yes")
-    targets3[r"\bis_country_type = fallen_empire\b"] = (["events", "common\\buildings"], "merg_is_fallen_empire = yes")
-    targets3[r"\bis_country_type = awakened_fallen_empire\b"] = (["events", "common\\buildings"], "merg_is_awakened_fe = yes")
-    targets3[r"\bis_planet_class = pc_habitat\b"] = (["events", "common\\buildings"], "merg_is_habitat = yes")
-    targets3[r"\bhas_ethic = ethic_gestalt_consciousness\b"] = (["events", "common\\buildings"], "is_gestalt = yes")
-    targets3[r"\bhas_authority = auth_machine_intelligence\b"] = (["events", "common\\buildings"], "is_machine_empire = yes")
-    targets3[r"\bhas_authority = auth_hive_mind\b"] = (["events", "common\\buildings"], "is_hive_empire = yes")
-    targets3[r"\bhas_authority = auth_corporate\b"] = (["events", "common\\buildings"], "is_megacorp = yes")
-    targets3[r"\bowner_species = \{ has_trait = trait_cybernetic \}\b"] = (["events", "common\\buildings"], "is_cyborg_empire = yes")
+    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)\s+is_fallen_empire = yes)|(?:is_fallen_empire = yes\s+(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_fallen_empire = yes|is_country_type_with_subjects = yes)(\s+)){2,}", (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", r"merg_is_standard_empire = yes\2")]
+    targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)(?(2)\1\})", (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", r"\1\3is_mechanical_empire = yes")]
+    targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))(?(2)\1\})", (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", r"\1\3is_robot_empire = yes")]
+    targets3[r"\bis_country_type = default\b"] = (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "merg_is_default_empire = yes")
+    targets3[r"\bis_country_type = fallen_empire\b"] = (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "merg_is_fallen_empire = yes")
+    targets3[r"\bis_country_type = awakened_fallen_empire\b"] = (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "merg_is_awakened_fe = yes")
+    targets3[r"\bis_planet_class = pc_habitat\b"] = (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "merg_is_habitat = yes")
+    targets3[r"\bhas_ethic = ethic_gestalt_consciousness\b"] = (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "is_gestalt = yes")
+    targets3[r"\bhas_authority = auth_machine_intelligence\b"] = (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "is_machine_empire = yes")
+    targets3[r"\bhas_authority = auth_hive_mind\b"] = (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "is_hive_empire = yes")
+    targets3[r"\bhas_authority = auth_corporate\b"] = (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "is_megacorp = yes")
+    targets3[r"\bowner_species = \{ has_trait = trait_cybernetic \}\b"] = (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "is_cyborg_empire = yes")
     # targets31 = [(re.compile(k, flags=0), targets31[k]) for k in targets31]
 
 
@@ -667,6 +667,7 @@ def modfix(file_list):
                 subfolder, basename = os.path.split(subfolder)
                 # basename = os.path.basename(_file)
                 # txtfile.close()
+                subfolder = subfolder.replace("\\", "/")
                 out = ""
                 changed = False
                 for i, line in enumerate(file_contents):
@@ -721,11 +722,14 @@ def modfix(file_list):
                             # Folder check
                             elif isinstance(repl, tuple):
                                 folder, repl = repl
+                                # print("subfolder", subfolder)
                                 if isinstance(folder, list):
                                     for fo in folder:
                                         if subfolder in fo:
                                             rt = True
-                                elif subfolder in folder:
+                                # elif subfolder in folder:
+                                elif re.search(folder, subfolder):
+                                    # ^([^_]+)(_(?!trigger)[^_]+|[^_]*)$
                                     rt = True
                                 else: rt = False
 
