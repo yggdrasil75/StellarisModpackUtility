@@ -53,8 +53,8 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 # +empire_size_colonies_mult = 0.5
 # -country_admin_cap_add = 15
 # +country_unity_produces_mult = 0.05
-
 # 3.0 removed ai_weight for buildings except branch_office_building = yes
+
 if only_actual: 
     removedTargets = [
         # v3.5
@@ -67,6 +67,7 @@ if only_actual:
         r"\bship_archeaological_site_clues_add\s*=": r"ship_archaeological_site_clues_add =",
         r"\bfraction(\s*)=\s*\{": ("common\\ai_budget", r"weight\1=\1{"),
         r"\bstatic_m([ai])x(\s*)=\s*\{": ("common\\ai_budget", r"desired_m\1x\2=\2{"),
+        r"^(\s+)([^#]*?\bbuildings_(?:simple_allow|no_\w+) = yes.*)": ("common\\buildings", r"\1# \2"), # removed scripted triggers
         # r"(\"NAME_[^-\s\"]+)-([^-\s\"]+)\"": r'\1_\2"', mostly but not generally done
     }
     targets4 = {
@@ -370,6 +371,7 @@ else:
         r"\bship_archeaological_site_clues_add\s*=": r"ship_archaeological_site_clues_add =",
         r"\bfraction(\s*)=\s*\{": ("common\\ai_budget", r"weight\1=\1{"),
         r"\bstatic_m([ai])x(\s*)=\s*\{": ("common\\ai_budget", r"desired_m\1x\2=\2{"),
+        r"^(\s+)([^#]*?\bbuildings_(?:simple_allow|no_\w+) = yes.*)": ("common\\buildings", r"\1# \2"), # removed scripted triggers
         # r"(\"NAME_[^-\s\"]+)-([^-\s\"]+)\"": r'\1_\2"', mostly but not generally done
     }
 
