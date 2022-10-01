@@ -11,6 +11,7 @@
 import os  # io for high level usage
 import glob
 import re
+import ctypes.wintypes
 
 # from pathlib import Path
 # import sys
@@ -34,7 +35,14 @@ mod_outpath = ''
 v3_4 = False
 
 # mod_path = os.path.dirname(os.getcwd())
-mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
+if os.path.exists(os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'):
+    mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
+else:
+    CSIDL_PERSONAL = 5
+    SHGFP_TYPE_CURRENT = 0
+    temp = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
+    ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_PERSONAL, None, SHGFP_TYPE_CURRENT, temp)
+    mod_path = temp.value + '/Paradox Interactive/Stellaris/mod'
 
 # if not sys.version_info.major == 3 and sys.version_info.minor >= 6:
 #     print("Python 3.6 or higher is required.")
