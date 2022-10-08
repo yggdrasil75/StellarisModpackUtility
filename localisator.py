@@ -29,11 +29,11 @@ except: print("Not running Windows")
 
 #============== Initialize global variables ===============
 
-optimizeLoc = False # True/False BETA! Best results if event keys have "event" in they name or they are in a file with event in the name.
+optimizeLoc = False   # True/False BETA! Best results if event keys have "event" in they name or they are in a file with event in the name.
 optimizeLocString = "event" # only used if optimizeLoc is True
 
 loadVanillaLoc = False # True BETA: replaces exact matching strings with vanilla ones
-loadVanillaLocUpdateDefault = True # only true if loadVanillaLoc
+loadVanillaLocUpdateDefault = False # only true if loadVanillaLoc
 
 
 # loadDependingMods = False # replaces exact matching strings with ones from the depending mod(s)
@@ -45,27 +45,27 @@ key_IGNORE = "" # stops copying over localisations keys with this starting patte
 # Write here your mod folder name and languages to replace/update
 # localModPath = ["CrisisManager_Sleeper", ["french", "polish"]]
 # localModPath = ["more_midgame_crisis", ["russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
-# localModPath = ["TheGreatKhanExpanded", []]
 # localModPath = ["SEoOC", ["german", "russian", "spanish", "braz_por", "french", "polish"]]
 # localModPath = ["Starbase_Strong", ["russian", "simp_chinese", "french", "polish"]] # "braz_por",
 # localModPath = ["SEoOC", ["german", "russian", "spanish", "braz_por", "french", "polish"]]
 # localModPath = ["Nomads The wondering Void Farers", []] # "english"
 # localModPath = ["UAP", ["english", "german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
 # localModPath = ["distant_stars_overhaul", []] #["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
-# localModPath = ["FATALF", []]
 # localModPath = ["CrisisManager_EndGame", ["french", "polish"]]
-# localModPath = ["Realistic_Pirates", ["english", "polish"]]
 # localModPath = ["Decentralized Empires", []] # ["spanish", "braz_por", "french", "polish", "simp_chinese"]
 # localModPath = ["CrisisManager_MidGame", ["french", "polish"]]
-# localModPath = ["prob", []]
-localModPath = ["ADeadlyTempest", ["english", "french", "polish", "japanese", "korean"]]
-localModPath = ["honored_leader", ["english"]] # "english"
+localModPath = ["FATALF", ["english", "japanese", "korean"]]
+localModPath = ["honored_leader", ["english", "korean"]] 
+localModPath = ["prob", []]
+localModPath = ["Ad Astra Technology", ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"]]
 localModPath = ["UAP_dev", ["german", "spanish", "braz_por", "french", "polish", "simp_chinese", "korean"]]
+localModPath = ["ADeadlyTempest", ["english", "french", "polish", "japanese", "korean"]]
+localModPath = ["Realistic_Pirates", ["english", "polish", "japanese", "korean"]]
 localModPath = ["TheGreatKhanExpanded", []]
 
-# localModPath = ["c:\\Games\\steamapps\\workshop\\content\\281990\\2268189539\\", ["braz_por"]]
-# local_OVERHAUL = ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
 
+# localModPath = ["c:\\Games\\steamapps\\workshop\\content\\281990\\2268189539\\", ["braz_por"]]
+# local_OVERHAUL = ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"]
 
 localModPath, local_OVERHAUL = localModPath
 print(localModPath, local_OVERHAUL)
@@ -165,7 +165,7 @@ if loadVanillaLoc and len(local_OVERHAUL) > 0:
     tmpFile = "vanillaLoc.json"
     ### fst chck th xsts a temp file
     loadVanillaLoc = os.path.join(tempfile.gettempdir(), tmpFile) 
-
+    print("Load vanilla files")
     if os.path.isfile(loadVanillaLoc):
         try:
             with io.open(loadVanillaLoc, 'r', encoding='utf-8', errors='replace') as file:

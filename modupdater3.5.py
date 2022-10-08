@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.5.2
-# @revision: 2022/09/30
+# @revision: 2022/10/08
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -26,16 +26,17 @@ only_actual = False   # True speedup search (from previous relevant) to actual v
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False    # for dev print
 mergerofrules = False # Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
+keep_default_country_trigger = False # on playable effect "is_country_type = default"
+
+
 
 stellaris_version = '3.5.2'
-mod_outpath = ''
-
-# Single versions
-v3_4 = False
-
+mod_outpath = '' # if you don't want to overwrite the original
 # mod_path = os.path.dirname(os.getcwd())
 mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
 
+# Single versions
+v3_4 = False
 # if not sys.version_info.major == 3 and sys.version_info.minor >= 6:
 #     print("Python 3.6 or higher is required.")
 #     print("You are using Python {}.{}.".format(sys.version_info.major, sys.version_info.minor))
@@ -212,7 +213,7 @@ else:
         r"is_country_type = default\s+has_monthly_income = \{\s*resource = (\w+) value <=? \d": r"no_resource_for_component = { RESOURCE = \1",
         r"([^\._])owner = \{\s*is_same_(?:empire|value) = ([\w\._:]+)\s*\}": r"\1is_owned_by = \2",
         r"(\s+)is_(?:country|same_value) = ([\w\._:]+\.(?:controller|(?:space_)?owner)(?:[\s}]|$))": r"\1is_same_empire = \2",
-        r"exists = (solar_system|planet)\.(?:space_)?owner": "has_owner = yes",
+        # r"exists = (?:solar_system|planet)\.(?:space_)?owner( |$)": r"has_owner = yes\1", TODO not sure
         # code opts/cosmetic only
         r"\bNOT = \{\s*([^\s]+) = yes\s*\}": r"\1 = no",
         r"\bany_system_planet = \{\s*is_capital = (yes|no)\s*\}": r"is_capital_system = \1",
@@ -402,7 +403,6 @@ else:
         ### End boolean operator merge
         r"\bany_country = \{[^{}#]*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_policy_flag|merg_is_default_empire = yes)": [r"any_country = (\{[^{}#]*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_policy_flag|merg_is_default_empire = yes))", r"any_playable_country = \1"],
         r"\s(?:every|random|count)_country = \{[^{}#]*limit = \{\s*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_special_project|merg_is_default_empire = yes)": [r"(\s(?:every|random|count))_country = (\{[^{}#]*limit = \{\s*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_special_project|merg_is_default_empire = yes))", r"\1_playable_country = \2"],
-        r"\s(?:every|random|count|any)_playable_country = \{[^{}#]*(?:limit = \{\s*)?(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes|merg_is_default_empire = yes)\s*": [r"((?:every|random|count|any)_playable_country = \{[^{}#]*?(?:limit = \{\s*)?)(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes|merg_is_default_empire = yes)\s*", r"\1"],
 
         r"\{\s+owner = \{\s*is_same_(?:empire|value) = [\w\._:]+\s*\}\s*\}": [r"\{\s+owner = \{\s*is_same_(?:empire|value) = ([\w\._:]+)\s*\}\s*\}", r"{ is_owned_by = \1 }"],
         r"NO[RT] = \{\s*is_country_type = (?:fallen_empire|awakened_fallen_empire)\s+is_country_type = (?:fallen_empire|awakened_fallen_empire)\s*\}": "is_fallen_empire = no",
@@ -422,8 +422,8 @@ else:
         # Near cosmetic
         r"\bcount_starbase_modules = \{\s+type = \w+\s+count\s*>\s*0\s+\}": [r"count_starbase_modules = \{\s+type = (\w+)\s+count\s*>\s*0\s+\}", r'has_starbase_module = \1'],
         r'\b(?:add_modifier = \{\s*modifier|set_timed_\w+ = \{\s*flag) = "?\w+"?\s+days\s*=\s*\d{2,}\s*\}': [
-            r'\s+days\s*=\s*(\d{2,})\s*',
-            lambda p: " years = " + str(int(p.group(1))//360) + ' ' if int(p.group(1)) > 320 and int(p.group(1))%360 < 41 else (" months = " + str(int(p.group(1))//30) if int(p.group(1)) > 28 and int(p.group(1))%30 < 3 else " days = " + p.group(1)) + ' '
+            r'\s+days\s*=\s*(\d{2,})\b',
+            lambda p: " years = " + str(int(p.group(1))//360) + ' ' if int(p.group(1)) > 320 and int(p.group(1))%360 < 41 else (" months = " + str(int(p.group(1))//30) if int(p.group(1)) > 28 and int(p.group(1))%30 < 3 else " days = " + p.group(1))
         ],
         r"\brandom_list = \{\s+\d+ = \{\s*(?:(?:[\w:]+ = \{\s+\w+ = \{\n?[^{}#\n]+\}\s*\}|\w+ = \{\n?[^{}#\n]+\}|[^{}#\n]+)\s*\}\s+\d+ = \{\s*\}|\s*\}\s+\d+ = \{\s*(?:[\w:]+\s*=\s*\{\s+\w+\s*=\s*\{\n?[^{}#\n]+\}\s*\}|\w+ = \{\n?[^{}#\n]+\}|[^{}#\n]+)\s*\}\s*)\s*\}": [
             r"\brandom_list = \{\s+(?:(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+(\d+) = \{\s*\}|(\d+) = \{\s*\}\s+(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\})\s*", # r"random = { chance = \1\5 \2\6 "
@@ -504,6 +504,8 @@ if also_old:
     # tmp fix
     # targets3[r"\bhas_resource = \{ type = (energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research))) amount( = (?:\d+|@\w+)) \}"] = (["common/scripted_triggers", "common/scripted_effects", "events"], r"\1\2 ")
 
+if not keep_default_country_trigger:
+    targets4[r"\s(?:every|random|count|any)_playable_country = \{[^{}#]*(?:limit = \{\s*)?(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes|merg_is_default_empire = yes)\s*"] = [r"((?:every|random|count|any)_playable_country = \{[^{}#]*?(?:limit = \{\s*)?)(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes|merg_is_default_empire = yes)\s*", r"\1"]
 
 if code_cosmetic and not only_warning:
     triggerScopes = r"limit|trigger|any_\w+|leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+"
