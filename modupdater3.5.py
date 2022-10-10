@@ -55,6 +55,8 @@ v3_4 = False
 # +country_unity_produces_mult = 0.05
 # 3.0 removed ai_weight for buildings except branch_office_building = yes
 
+resource_items = r"energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research))"
+
 if only_actual: 
     removedTargets = [
         # v3.5
@@ -63,7 +65,7 @@ if only_actual:
     ]
     targets3 = {
         r"\b(any|every|random|count|ordered)_bordering_country\b": r'\1_country_neighbor_to_system',
-        r"\bcountry_(?!base_)(\w+)_produces_add\b": r'country_base_\1_produces_add',
+        r"\bcountry_(?!base_)(%s)_produces_add\b" % resource_items: r'country_base_\1_produces_add',
         r"\bhair(\s*)=": ("prescripted_countries", r"attachment\1="),
         r"\bship_archeaological_site_clues_add\s*=": r"ship_archaeological_site_clues_add =",
         r"\bfraction(\s*)=\s*\{": ("common/ai_budget", r"weight\1=\1{"),
@@ -226,7 +228,7 @@ else:
         r"(\s+)ship_upkeep_mult\s*=": r"\1ships_upkeep_mult =",
         r"\b(contact_rule = )script_only": ("common/country_types", r"\1on_action_only"),
         r"\b(any|every|random)_(research|mining)_station\b": r"\2_station",
-        r"(\s+)add_(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research))) = (-?@\w+|-?\d+)": r"\1add_resource = { \2 = \3 }",
+        r"(\s+)add_(%s) = (-?@\w+|-?\d+)" % resource_items: r"\1add_resource = { \2 = \3 }",
         ### > 3.1.* beta
         r"(\s+set_)(primitive) = yes": r"\1country_type = \2",
         # r"(\s+)count_armies": r"\1count_owned_army", # count_planet_army (scope split: depending on planet/country)
@@ -368,7 +370,7 @@ else:
         r"\bhas_species_flag = racket_species_flag":  r"exists = event_target:racket_species is_same_species = event_target:racket_species",
         ### >= 3.5 ###
         r"\b(any|every|random|count|ordered)_bordering_country\b": r'\1_country_neighbor_to_system',
-        r"\bcountry_(?!base_)(\w+)_produces_add\b": r'country_base_\1_produces_add',
+        r"\bcountry_(?!base_)(%s)_produces_add\b" % resource_items: r'country_base_\1_produces_add',
         r"\bhair(\s*)=": ("prescripted_countries", r"attachment\1="),
         r"\bship_archeaological_site_clues_add\s*=": r"ship_archaeological_site_clues_add =",
         r"\bfraction(\s*)=\s*\{": ("common/ai_budget", r"weight\1=\1{"),
@@ -499,11 +501,11 @@ if also_old:
     targets3[r"\bbuilding_power_plant_[345]\b"] = r"building_energy_nexus"
     targets3[r"\bbuilding_mining_network_[12]\b"] = "building_mineral_purification_plant"
     targets3[r"\bbuilding_mining_network_[345]\b"] = "building_mineral_purification_hub"
-    targets3[r"(?<!add_resource = \{)(\s+)(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research)))\s*([<=>]+\s*-?\s*(?:@\w+|\d+))\1(?!(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research))))"] = (["common/scripted_triggers", "common/scripted_effects", "events"], r"\1has_resource = { type = \2 amount \3 }")
+    targets3[r"(?<!add_resource = \{)(\s+)(%s)\s*([<=>]+\s*-?\s*(?:@\w+|\d+))\1(?!(%s))" % (resource_items, resource_items)] = (["common/scripted_triggers", "common/scripted_effects", "events"], r"\1has_resource = { type = \2 amount \3 }")
     # not sure because multiline
-    # targets3[r"(?<!add_resource = \{)(\s+)(energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research)))\s*([<=>]+\s*-?\s*(?:@\w+|\d+))"] = (["common/scripted_triggers", "common/scripted_effects", "events"], r"\1has_resource = { type = \2 amount \3 }")
+    # targets3[r"(?<!add_resource = \{)(\s+)(%s)\s*([<=>]+\s*-?\s*(?:@\w+|\d+))" % resource_items] = (["common/scripted_triggers", "common/scripted_effects", "events"], r"\1has_resource = { type = \2 amount \3 }")
     # tmp fix
-    # targets3[r"\bhas_resource = \{ type = (energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research))) amount( = (?:\d+|@\w+)) \}"] = (["common/scripted_triggers", "common/scripted_effects", "events"], r"\1\2 ")
+    # targets3[r"\bhas_resource = \{ type = (%s) amount( = (?:\d+|@\w+)) \}" % resource_items] = (["common/scripted_triggers", "common/scripted_effects", "events"], r"\1\2 ")
 
 if not keep_default_country_trigger:
     targets4[r"\s(?:every|random|count|any)_playable_country = \{[^{}#]*(?:limit = \{\s*)?(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes|merg_is_default_empire = yes)\s*"] = [r"((?:every|random|count|any)_playable_country = \{[^{}#]*?(?:limit = \{\s*)?)(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes|merg_is_default_empire = yes)\s*", r"\1"]
