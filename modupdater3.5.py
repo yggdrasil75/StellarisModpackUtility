@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.5.2
-# @revision: 2022/10/08
+# @revision: 2022/10/10
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -18,7 +18,7 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
 
-# ============== Initialize global parameter/variables ===============
+# ============== Initialize global parameter/option variables ===============
 # True/False optional 
 only_warning = False  # True implies code_cosmetic = False
 code_cosmetic = False # True/False optional (only if only_warning = False)
@@ -27,7 +27,6 @@ also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False    # for dev print
 mergerofrules = False # Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
 keep_default_country_trigger = False # on playable effect "is_country_type = default"
-
 
 
 stellaris_version = '3.5.2'
@@ -64,6 +63,7 @@ if only_actual:
     ]
     targets3 = {
         r"\b(any|every|random|count|ordered)_bordering_country\b": r'\1_country_neighbor_to_system',
+        r"\bcountry_(?!base_)(\w+)_produces_add\b": r'country_base_\1_produces_add',
         r"\bhair(\s*)=": ("prescripted_countries", r"attachment\1="),
         r"\bship_archeaological_site_clues_add\s*=": r"ship_archaeological_site_clues_add =",
         r"\bfraction(\s*)=\s*\{": ("common/ai_budget", r"weight\1=\1{"),
@@ -368,6 +368,7 @@ else:
         r"\bhas_species_flag = racket_species_flag":  r"exists = event_target:racket_species is_same_species = event_target:racket_species",
         ### >= 3.5 ###
         r"\b(any|every|random|count|ordered)_bordering_country\b": r'\1_country_neighbor_to_system',
+        r"\bcountry_(?!base_)(\w+)_produces_add\b": r'country_base_\1_produces_add',
         r"\bhair(\s*)=": ("prescripted_countries", r"attachment\1="),
         r"\bship_archeaological_site_clues_add\s*=": r"ship_archaeological_site_clues_add =",
         r"\bfraction(\s*)=\s*\{": ("common/ai_budget", r"weight\1=\1{"),
