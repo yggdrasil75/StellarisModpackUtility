@@ -1,5 +1,5 @@
 # @author: FirePrince
-# @version: 3.5.2
+# @version: 3.6.0b
 # @revision: 2022/10/16
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
@@ -16,7 +16,7 @@ import re
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
-stellaris_version = '3.5.2'
+stellaris_version = '3.6.0b'
 
 # ============== Initialize global parameter/option variables ===============
 # True/False optional 
@@ -28,6 +28,7 @@ debug_mode = False    # for dev print
 mergerofrules = False # Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
 keep_default_country_trigger = False # on playable effect "is_country_type = default"
 
+only_v3_5 = False # Single version
 only_v3_4 = False # Single version
 
 mod_outpath = '' # if you don't want to overwrite the original
@@ -55,11 +56,14 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 # 3.0 removed ai_weight for buildings except branch_office_building = yes
 
 resource_items = r"energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research))"
-# removedTargets = []
-# targets3 = {}
-# targets4 = {}
 
-if only_actual: 
+if only_actual:
+    removedTargets = []
+    targets3 = {}
+    targets4 = {
+        r"\bis_triggered_only = yes\s+trigger = \{\s+always = no": [r"(\s+)(trigger = \{\s+always = no)", ('events', r'\1is_test_event = yes\1\2')]
+    }
+elif only_v3_5: 
     removedTargets = [
         # v3.5
         # [r"\b(any|every|random|count|ordered)_bordering_country = \{", 'just use xyz_country_neighbor_to_system instead'],
