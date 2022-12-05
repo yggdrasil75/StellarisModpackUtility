@@ -1,6 +1,6 @@
 # @author: FirePrince
-# @version: 3.6.0b
-# @revision: 2022/10/16
+# @version: 3.6.0
+# @revision: 2022/12/05
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -16,7 +16,7 @@ import re
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
-stellaris_version = '3.6.0b'
+stellaris_version = '3.6.0'
 
 # ============== Initialize global parameter/option variables ===============
 # True/False optional 
@@ -25,7 +25,7 @@ code_cosmetic = False # True/False optional (only if only_warning = False)
 only_actual = False   # True speedup search (from previous relevant) to actual version
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False    # for dev print
-mergerofrules = True # Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
+mergerofrules = False # Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
 keep_default_country_trigger = False # on playable effect "is_country_type = default"
 
 only_v3_5 = False # Single version
@@ -59,7 +59,9 @@ resource_items = r"energy|unity|food|minerals|influence|alloys|consumer_goods|ex
 
 if only_actual:
     removedTargets = []
-    targets3 = {}
+    targets3 = {
+        r"\bpop_assembly_speed": "planet_pop_assembly_mult",
+    }
     targets4 = {
         r"\bis_triggered_only = yes\s+trigger = \{\s+always = no": [r"(\s+)(trigger = \{\s+always = no)", ('events', r'\1is_test_event = yes\1\2')],
         r'slot\s*=\s*\"?(?:SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*\"?AUTOCANNON_\d\"?': [r'(=\s*\"?(SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*)\"?(AUTOCANNON_\d)\"?', ('common/global_ship_designs', r'\1"\2_\3"')],                 
