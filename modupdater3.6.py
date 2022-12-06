@@ -651,8 +651,9 @@ def parse_dir():
     else:
         mod_outpath = os.path.normpath(mod_outpath)
 
-    print("\tLoading folder", mod_path)
-    if debug_mode: start_time = datetime.datetime.now()
+    if debug_mode:
+        print("\tLoading folder", mod_path)
+        start_time = datetime.datetime.now()
 
     # if os.path.isfile(mod_path + os.sep + 'descriptor.mod'):
     if os.path.exists(os.path.join(mod_path, 'descriptor.mod')):
@@ -665,6 +666,7 @@ def parse_dir():
         for _f in folders:
             if os.path.exists(os.path.join(_f, 'descriptor.mod')):
                 mod_path = _f
+                mod_outpath = os.path.join(mod_outpath, _f)
                 print(mod_path)
                 files = glob.iglob(mod_path + '/**', recursive=True)  # '\\*.txt'
                 modfix(files)
@@ -673,7 +675,7 @@ def parse_dir():
 def modfix(file_list):
     # global mod_path, mod_outpath
     # print(targets3)
-    # print("mod_outpath", mod_outpath)
+    if debug_mode: print("mod_outpath", mod_outpath)
     subfolder = ''
     for _file in file_list:
         if os.path.isfile(_file) and _file.endswith('.txt'):
@@ -743,8 +745,7 @@ def modfix(file_list):
                                     print(pattern, repl, file)
 
                                 if file in basename:
-                                    if debug_mode:
-                                        print("\tFILE match:", file, basename)
+                                    if debug_mode: print("\tFILE match:", file, basename)
                                     folder, repl, rt = repl
                                 else:
                                     folder, rt, repl = repl
@@ -777,9 +778,7 @@ def modfix(file_list):
                                     # line = line.replace(t, r)
                                     changed = True
                                     print("\tUpdated file: %s at line %i with %s\n" % (basename, i, line.strip().encode(errors='replace')))
-                                elif debug_mode:
-                                    # print("targets3", line.strip().encode(errors='replace'))
-                                    print("DEBUG Match:", pattern, repl, type(repl), line)
+                                # elif debug_mode: print("DEBUG Match targets3:", pattern, repl, type(repl), line.strip().encode(errors='replace'))
 
                     out += line
 
@@ -814,7 +813,6 @@ def modfix(file_list):
                             else: rt = True
                             if rt:
                                 # print(type(repl), tar, type(tar), subfolder)
-                                
                                 if isinstance(repl, list):
                                     if isinstance(tar, tuple):
                                         tar = tar[0] # Take only first group
@@ -822,15 +820,13 @@ def modfix(file_list):
                                     replace = re.sub(replace[0], replace[1], tar, flags=re.I|re.M|re.A)
                                 if isinstance(repl, str) or (not isinstance(tar, tuple) and tar in out and tar != replace):
                                     print("Match:\n", tar)
-                                    if debug_mode: print("\tFROM:\n", pattern)
+                                    if isinstance(tar, tuple):
+                                        tar = tar[0] # Take only first group
+                                        if debug_mode: print("\tFROM GROUP1:\n", pattern)
+                                    elif debug_mode: print("\tFROM:\n", pattern)
                                     print("Multiline replace:\n", replace) # repr(
                                     out = out.replace(tar, replace)
                                     changed = True
-                                elif isinstance(repl, str) and isinstance(tar, tuple):
-                                    print("\tMultiline GROUP1 replace:\n", pattern)
-                                    out = out.replace(tar[0], replace)
-                                    changed = True
-
                                 elif debug_mode:
                                     print("DEBUG Blind Match:", tar, repl, type(repl), replace)
 
