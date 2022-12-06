@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.6.0
-# @revision: 2022/12/05
+# @revision: 2022/12/06
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -42,6 +42,8 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 #     print("You are using Python {}.{}.".format(sys.version_info.major, sys.version_info.minor))
 #     sys.exit(1)
 
+# v.3.6
+# - .lua replaced by .shader
 # v3.4
 # - new country_limits - replaced empire_limit
 # - new agreement_presets - replaced subjects
@@ -60,9 +62,10 @@ resource_items = r"energy|unity|food|minerals|influence|alloys|consumer_goods|ex
 if only_actual:
     removedTargets = []
     targets3 = {
-        r"\bpop_assembly_speed": "planet_pop_assembly_mult",
+        r"\bpop_assembly_speed": "planet_pop_assembly_mult"
     }
     targets4 = {
+        r"\bhas_(?:population|colonization|migration)_control = \{\s+value =": ["value", 'type'],
         r"\bis_triggered_only = yes\s+trigger = \{\s+always = no": [r"(\s+)(trigger = \{\s+always = no)", ('events', r'\1is_test_event = yes\1\2')],
         r'slot\s*=\s*\"?(?:SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*\"?AUTOCANNON_\d\"?': [r'(=\s*\"?(SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*)\"?(AUTOCANNON_\d)\"?', ('common/global_ship_designs', r'\1"\2_\3"')],                 
     }
@@ -226,7 +229,7 @@ else:
         # code opts/cosmetic only
         r"\bNOT = \{\s*([^\s]+) = yes\s*\}": r"\1 = no",
         r"\bany_system_planet = \{\s*is_capital = (yes|no)\s*\}": r"is_capital_system = \1",
-        r"(\s+has_(?:population|migration)_control) = (yes|no)": r"\1 = { value = \2 country = prev.owner }", # NOT SURE
+        r"(\s+has_(?:population|migration)_control) = (yes|no)": r"\1 = { type = \2 country = prev.owner }", # NOT SURE
         re.compile(r"\bNOT = \{\s*((?:leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+) = \{)\s*([^\s]+) = yes\s*\}\s*\}", re.I): r"\1 \2 = no }",
 
         ## Since Megacorp removed: change_species_characteristics was false documented until 3.2
@@ -384,6 +387,8 @@ else:
         r"\bstatic_m([ai])x(\s*)=\s*\{": ("common/ai_budget", r"desired_m\1x\2=\2{"),
         r"^(\s+)([^#]*?\bbuildings_(?:simple_allow|no_\w+) = yes.*)": ("common/buildings", r"\1# \2"), # removed scripted triggers
         # r"(\"NAME_[^-\s\"]+)-([^-\s\"]+)\"": r'\1_\2"', mostly but not generally done
+        ### 3.6
+        r"\bpop_assembly_speed": "planet_pop_assembly_mult",
     }
 
     # re flags=re.I|re.M|re.A
@@ -492,7 +497,8 @@ else:
         r"_pop = \{\s+unemploy_pop = yes\s+kill_pop = yes": [r"(_pop = \{\s+)unemploy_pop = yes\s+(kill_pop = yes)", r"\1\2"], # ghost pop bug fixed
         ### >= 3.6
         r"\bis_triggered_only = yes\s+trigger = \{\s+always = no": [r"(\s+)(trigger = \{\s+always = no)", ('events', r'\1is_test_event = yes\1\2')],
-        r'slot\s*=\s*\"?(?:SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*\"?AUTOCANNON_\d\"?': [r'(=\s*\"?(SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*)\"?(AUTOCANNON_\d)\"?', ('common/global_ship_designs', r'\1"\2_\3"')],  
+        r'slot\s*=\s*\"?(?:SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*\"?AUTOCANNON_\d\"?': [r'(=\s*\"?(SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*)\"?(AUTOCANNON_\d)\"?', ('common/global_ship_designs', r'\1"\2_\3"')],
+        r"\bhas_(?:population|colonization|migration)_control = \{\s+value =": ["value", 'type'],
     }
 
 if also_old:
