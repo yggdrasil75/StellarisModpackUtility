@@ -1,6 +1,6 @@
 # @author: FirePrince
-# @version: 3.6.0
-# @revision: 2022/12/06
+# @version: 3.6.1
+# @revision: 2022/12/07
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -16,7 +16,7 @@ import re
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
-stellaris_version = '3.6.0'
+stellaris_version = '3.6.1'
 
 # ============== Initialize global parameter/option variables ===============
 # True/False optional 
@@ -58,16 +58,20 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 # 3.0 removed ai_weight for buildings except branch_office_building = yes
 
 resource_items = r"energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research))"
+# exlude_trigger_folder = r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$"
+
 
 if only_actual:
     removedTargets = []
     targets3 = {
-        r"\bpop_assembly_speed": "planet_pop_assembly_mult"
+        r"\bpop_assembly_speed": "planet_pop_assembly_mult",
+        r"\bis_ringworld =": (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "has_ringworld_output_boost ="),
     }
     targets4 = {
-        r"\bhas_(?:population|colonization|migration)_control = \{\s+value =": ["value", 'type'],
         r"\bis_triggered_only = yes\s+trigger = \{\s+always = no": [r"(\s+)(trigger = \{\s+always = no)", ('events', r'\1is_test_event = yes\1\2')],
-        r'slot\s*=\s*\"?(?:SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*\"?AUTOCANNON_\d\"?': [r'(=\s*\"?(SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*)\"?(AUTOCANNON_\d)\"?', ('common/global_ship_designs', r'\1"\2_\3"')],                 
+        r'slot\s*=\s*\"?(?:SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*\"?AUTOCANNON_\d\"?': [r'(=\s*\"?(SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*)\"?(AUTOCANNON_\d)\"?', ('common/global_ship_designs', r'\1"\2_\3"')],
+        r"\bhas_(?:population|colonization|migration)_control = \{\s+value =": ["value", 'type'],
+        r"\b(OR = \{\s*(has_trait = trait_(?:latent_)?psionic\s+){2}\})": "has_psionic_species_trait = yes",
     }
 elif only_v3_5: 
     removedTargets = [
@@ -88,7 +92,7 @@ elif only_v3_5:
     targets4 = {
         r"\bany_system_planet = \{[^{}#]*(?:has_owner = yes|is_colony = yes|exists = owner)\s+": [r"any_system_planet = (\{[^{}#]*)(?:has_owner = yes|is_colony = yes|exists = owner)\s+", r"any_system_colony = \1"],
         r"\s(?:every|random|count|ordered)_system_planet = \{[^{}#]*limit = \{\s*(?:has_owner = yes|is_colony = yes|exists = owner)\s+": [r"(every|random|count)_system_planet = (\{[^{}#]*limit = \{\s*)(?:has_owner = yes|is_colony = yes|exists = owner)\s+", r"\1_system_colony = \2"],
-        r"\bOR = \{\s+has_trait = (?:trait_plantoid_budding|trait_lithoid_budding)\s+has_trait = (?:trait_plantoid_budding|trait_lithoid_budding)\s+\}": "has_budding_trait = yes",
+        r"\b(OR = \{\s+(has_trait = trait_(?:plantoid|lithoid)_budding\s+){2}\})": "has_budding_trait = yes",
         r"_pop = \{\s+unemploy_pop = yes\s+kill_pop = yes": [r"(_pop = \{\s+)unemploy_pop = yes\s+(kill_pop = yes)", r"\1\2"], # ghost pop bug fixed
     }
 elif only_v3_4:
@@ -122,11 +126,11 @@ elif only_v3_4:
         # r"\s+every_owned_fleet = \{\s+limit\b": [r"owned_fleet", r"controlled_fleet"], # only playable empire and not with is_ship_size!?
         # r"\s+(?:any|every|random)_owned_ship = \{": [r"(any|every|random)_owned_ship =", r"\1_controlled_fleet ="], # only playable empire!?
         r"\s+(?:any|every|random)_(?:system|planet) = \{(?:\s+limit = \{)?\s+has_owner = yes\s+is_owned_by": [r"(any|every|random)_(system|planet) =", r"\1_\2_within_border ="],
-        r"\bNO[RT] = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+(?:has_trait = trait_(?:zombie|nerve_stapled)\s+|NOT = \{\s*has_trait = trait_(?:zombie|nerve_stapled))\}": "can_think = no",
-        r"\bOR = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+has_trait = trait_(?:zombie|nerve_stapled)\s+\}": "can_think = yes",
+        r"\b(NO[RT] = \{\s*(has_trait = trait_(?:zombie|nerve_stapled)\s+){2}\}|(NOT = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+\}){2})": "can_think = no",
+        r"\b(OR = \{\s*(has_trait = trait_(?:zombie|nerve_stapled)\s+){2}\})": "can_think = yes",
+        r"\b(OR = \{\s*(species_portrait = human(?:_legacy)?\s+){2}\})": "is_human_species = yes",
         r"\bNO[RT] = \{\s*has_modifier = doomsday_\d[\w\s=]+\}": [r"NO[RT] = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = no"],
         r"\bOR = \{\s*has_modifier = doomsday_\d[\w\s=]+\}": [r"OR = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = yes"],
-        r"\bOR = \{\s*(?:species_portrait = human(?:_legacy)?\s+){2}\}": "is_human_species = yes",
         r"\b(?:species_portrait = human(?:_legacy)?\s+){1,2}": [r"species_portrait = human(?:_legacy)?(\s+)(?:species_portrait = human(?:_legacy)?)?", r"is_human_species = yes\1"],
         r"\bvalue = subject_loyalty_effects\s+\}\s+\}": [r"(subject_loyalty_effects\s+\})(\s+)\}", ('common/agreement_presets', r"\1\2\t{ key = protectorate value = subject_is_not_protectorate }\2}")],
     }
@@ -392,13 +396,13 @@ else:
     }
 
     # re flags=re.I|re.M|re.A
+    # key (pre match without group or one group): arr (search, replace) or str (if no group or one group)
     targets4 = {
         ### < 3.0
         r"\s+every_planet_army = \{\s*remove_army = yes\s*\}": [r"every_planet_army = \{\s*remove_army = yes\s*\}", r"remove_all_armies = yes"],
         r"\s(?:any|every|random)_neighbor_system = \{[^{}]+?\s+ignore_hyperlanes = (?:yes|no)\n?": [r"(_neighbor_system)( = \{[^{}]+?)\s+ignore_hyperlanes = (yes|no)\n?",
             lambda p: p.group(1) + p.group(2) if p.group(3) == "no" else p.group(1) + "_euclidean" + p.group(2)],
         ### 3.0.* (multiline)
-        # key (pre match without group): arr (search, replace) or str (if no group)
         # r"\s+random_system_planet = \{\s*limit = \{\s*is_star = yes\s*\}": [r"(\s+)random_system_planet = \{\s*limit = \{\s*is_star = yes\s*\}", r"\1star = {"], # TODO works only on single star systems
         r"\s+random_system_planet = \{\s*limit = \{\s*is_primary_star = yes\s*\}": [r"(\s+)random_system_planet = \{\s*limit = \{\s*is_primary_star = yes\s*\}", r"\1star = {"], # TODO works only on single star systems
         r"\bcreate_leader = \{[^{}]+?\s+type = \w+": [r"(create_leader = \{[^{}]+?\s+)type = (\w+)", r"\1class = \2"],
@@ -485,20 +489,21 @@ else:
         # r"construction_blocked_by_others = no": ("common/megastructures", 'construction_blocks_and_blocked_by = self_type'),
         r"(?:contact|any_playable)_country\s*=\s*{\s+(?:NOT = \{\s+)?(?:any|count)_owned_(?:fleet|ship) = \{": [r"(any|count)_owned_(fleet|ship) =", r"\1_controlled_\2 ="], # only playable empire!?
         r"\s+(?:any|every|random)_(?:system|planet) = \{(?:\s+limit = \{)?\s+has_owner = yes\s+is_owned_by": [r"(any|every|random)_(system|planet) =", r"\1_\2_within_border ="],
-        r"NO[RT] = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+(?:has_trait = trait_(?:zombie|nerve_stapled)\s+|NOT = \{\s*has_trait = trait_(?:zombie|nerve_stapled))\}": "can_think = no",
-        r"OR = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+has_trait = trait_(?:zombie|nerve_stapled)\s+\}": "can_think = yes",
-        r"\bOR = \{\s*(?:species_portrait = human(?:_legacy)?\s+){2}\}": "is_human_species = yes",
+        r"\b(NO[RT] = \{\s*(has_trait = trait_(?:zombie|nerve_stapled)\s+){2}\}|(NOT = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+\}){2})": "can_think = no",
+        r"\b(OR = \{\s*(has_trait = trait_(?:zombie|nerve_stapled)\s+){2}\})": "can_think = yes",
+        r"\b(OR = \{\s*(species_portrait = human(?:_legacy)?\s+){2}\})": "is_human_species = yes",
         r"\b(?:species_portrait = human(?:_legacy)?\s+){1,2}": [r"species_portrait = human(?:_legacy)?(\s+)(?:species_portrait = human(?:_legacy)?)?", r"is_human_species = yes\1"],
         r"\bvalue = subject_loyalty_effects\s+\}\s+\}": [r"(subject_loyalty_effects\s+\})(\s+)\}", ('common/agreement_presets', r"\1\2\t{ key = protectorate value = subject_is_not_protectorate }\2}")],
         ### >= 3.5
         r"\bany_system_planet = \{[^{}#]*(?:has_owner = yes|is_colony = yes|exists = owner)\s+": [r"any_system_planet = (\{[^{}#]*)(?:has_owner = yes|is_colony = yes|exists = owner)\s+", r"any_system_colony = \1"],
         r"\s(?:every|random|count|ordered)_system_planet = \{[^{}#]*limit = \{\s*(?:has_owner = yes|is_colony = yes|exists = owner)\s+": [r"(every|random|count)_system_planet = (\{[^{}#]*limit = \{\s*)(?:has_owner = yes|is_colony = yes|exists = owner)\s+", r"\1_system_colony = \2"],
-        r"\bOR = \{\s+has_trait = (?:trait_plantoid_budding|trait_lithoid_budding)\s+has_trait = (?:trait_plantoid_budding|trait_lithoid_budding)\s+\}": "has_budding_trait = yes",
+        r"\b(OR = \{\s+(has_trait = trait_(?:plantoid|lithoid)_budding\s+){2}\})": "has_budding_trait = yes",
         r"_pop = \{\s+unemploy_pop = yes\s+kill_pop = yes": [r"(_pop = \{\s+)unemploy_pop = yes\s+(kill_pop = yes)", r"\1\2"], # ghost pop bug fixed
         ### >= 3.6
         r"\bis_triggered_only = yes\s+trigger = \{\s+always = no": [r"(\s+)(trigger = \{\s+always = no)", ('events', r'\1is_test_event = yes\1\2')],
         r'slot\s*=\s*\"?(?:SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*\"?AUTOCANNON_\d\"?': [r'(=\s*\"?(SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*)\"?(AUTOCANNON_\d)\"?', ('common/global_ship_designs', r'\1"\2_\3"')],
         r"\bhas_(?:population|colonization|migration)_control = \{\s+value =": ["value", 'type'],
+        r"\b(OR = \{\s*(has_trait = trait_(?:latent_)?psionic\s+){2}\})": "has_psionic_species_trait = yes",
     }
 
 if also_old:
@@ -809,19 +814,23 @@ def modfix(file_list):
                             else: rt = True
                             if rt:
                                 # print(type(repl), tar, type(tar), subfolder)
+                                
                                 if isinstance(repl, list):
-                                    # Take only first group
                                     if isinstance(tar, tuple):
-                                        tar = tar[0]
+                                        tar = tar[0] # Take only first group
+                                        # print("ONLY GRP1:", type(replace), replace)
                                     replace = re.sub(replace[0], replace[1], tar, flags=re.I|re.M|re.A)
-
-                                    # print("ONLY 1:", type(replace), replace)
                                 if isinstance(repl, str) or (not isinstance(tar, tuple) and tar in out and tar != replace):
                                     print("Match:\n", tar)
                                     if debug_mode: print("\tFROM:\n", pattern)
                                     print("Multiline replace:\n", replace) # repr(
                                     out = out.replace(tar, replace)
                                     changed = True
+                                elif isinstance(repl, str) and isinstance(tar, tuple):
+                                    print("\tMultiline GROUP1 replace:\n", pattern)
+                                    out = out.replace(tar[0], replace)
+                                    changed = True
+
                                 elif debug_mode:
                                     print("DEBUG Blind Match:", tar, repl, type(repl), replace)
 
