@@ -71,7 +71,7 @@ if only_actual:
         r"\bis_triggered_only = yes\s+trigger = \{\s+always = no": [r"(\s+)(trigger = \{\s+always = no)", ('events', r'\1is_test_event = yes\1\2')],
         r'slot\s*=\s*\"?(?:SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*\"?AUTOCANNON_\d\"?': [r'(=\s*\"?(SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*)\"?(AUTOCANNON_\d)\"?', ('common/global_ship_designs', r'\1"\2_\3"')],
         r"\bhas_(?:population|colonization|migration)_control = \{\s+value =": ["value", 'type'],
-        r"\b(OR = \{\s*(has_trait = trait_(?:latent_)?psionic\s+){2}\})": "has_psionic_species_trait = yes",
+        r"(\bOR = \{\s*(has_trait = trait_(?:latent_)?psionic\s+){2}\})": "has_psionic_species_trait = yes",
     }
 elif only_v3_5: 
     removedTargets = [
@@ -92,7 +92,7 @@ elif only_v3_5:
     targets4 = {
         r"\bany_system_planet = \{[^{}#]*(?:has_owner = yes|is_colony = yes|exists = owner)\s+": [r"any_system_planet = (\{[^{}#]*)(?:has_owner = yes|is_colony = yes|exists = owner)\s+", r"any_system_colony = \1"],
         r"\s(?:every|random|count|ordered)_system_planet = \{[^{}#]*limit = \{\s*(?:has_owner = yes|is_colony = yes|exists = owner)\s+": [r"(every|random|count)_system_planet = (\{[^{}#]*limit = \{\s*)(?:has_owner = yes|is_colony = yes|exists = owner)\s+", r"\1_system_colony = \2"],
-        r"\b(OR = \{\s+(has_trait = trait_(?:plantoid|lithoid)_budding\s+){2}\})": "has_budding_trait = yes",
+        r"(\bOR = \{\s+(has_trait = trait_(?:plantoid|lithoid)_budding\s+){2}\})": "has_budding_trait = yes",
         r"_pop = \{\s+unemploy_pop = yes\s+kill_pop = yes": [r"(_pop = \{\s+)unemploy_pop = yes\s+(kill_pop = yes)", r"\1\2"], # ghost pop bug fixed
     }
 elif only_v3_4:
@@ -127,8 +127,8 @@ elif only_v3_4:
         # r"\s+(?:any|every|random)_owned_ship = \{": [r"(any|every|random)_owned_ship =", r"\1_controlled_fleet ="], # only playable empire!?
         r"\s+(?:any|every|random)_(?:system|planet) = \{(?:\s+limit = \{)?\s+has_owner = yes\s+is_owned_by": [r"(any|every|random)_(system|planet) =", r"\1_\2_within_border ="],
         r"\b(NO[RT] = \{\s*(has_trait = trait_(?:zombie|nerve_stapled)\s+){2}\}|(NOT = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+\}){2})": "can_think = no",
-        r"\b(OR = \{\s*(has_trait = trait_(?:zombie|nerve_stapled)\s+){2}\})": "can_think = yes",
-        r"\b(OR = \{\s*(species_portrait = human(?:_legacy)?\s+){2}\})": "is_human_species = yes",
+        r"(\bOR = \{\s*(has_trait = trait_(?:zombie|nerve_stapled)\s+){2}\})": "can_think = yes",
+        r"(\bOR = \{\s*(species_portrait = human(?:_legacy)?\s+){2}\})": "is_human_species = yes",
         r"\bNO[RT] = \{\s*has_modifier = doomsday_\d[\w\s=]+\}": [r"NO[RT] = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = no"],
         r"\bOR = \{\s*has_modifier = doomsday_\d[\w\s=]+\}": [r"OR = \{\s*(has_modifier = doomsday_\d\s+){5}\}", "is_doomsday_planet = yes"],
         r"\b(?:species_portrait = human(?:_legacy)?\s+){1,2}": [r"species_portrait = human(?:_legacy)?(\s+)(?:species_portrait = human(?:_legacy)?)?", r"is_human_species = yes\1"],
@@ -490,20 +490,20 @@ else:
         r"(?:contact|any_playable)_country\s*=\s*{\s+(?:NOT = \{\s+)?(?:any|count)_owned_(?:fleet|ship) = \{": [r"(any|count)_owned_(fleet|ship) =", r"\1_controlled_\2 ="], # only playable empire!?
         r"\s+(?:any|every|random)_(?:system|planet) = \{(?:\s+limit = \{)?\s+has_owner = yes\s+is_owned_by": [r"(any|every|random)_(system|planet) =", r"\1_\2_within_border ="],
         r"\b(NO[RT] = \{\s*(has_trait = trait_(?:zombie|nerve_stapled)\s+){2}\}|(NOT = \{\s*has_trait = trait_(?:zombie|nerve_stapled)\s+\}){2})": "can_think = no",
-        r"\b(OR = \{\s*(has_trait = trait_(?:zombie|nerve_stapled)\s+){2}\})": "can_think = yes",
-        r"\b(OR = \{\s*(species_portrait = human(?:_legacy)?\s+){2}\})": "is_human_species = yes",
+        r"(\bOR = \{\s*(has_trait = trait_(?:zombie|nerve_stapled)\s+){2}\})": "can_think = yes",
+        r"(\bOR = \{\s*(species_portrait = human(?:_legacy)?\s+){2}\})": "is_human_species = yes",
         r"\b(?:species_portrait = human(?:_legacy)?\s+){1,2}": [r"species_portrait = human(?:_legacy)?(\s+)(?:species_portrait = human(?:_legacy)?)?", r"is_human_species = yes\1"],
         r"\bvalue = subject_loyalty_effects\s+\}\s+\}": [r"(subject_loyalty_effects\s+\})(\s+)\}", ('common/agreement_presets', r"\1\2\t{ key = protectorate value = subject_is_not_protectorate }\2}")],
         ### >= 3.5
         r"\bany_system_planet = \{[^{}#]*(?:has_owner = yes|is_colony = yes|exists = owner)\s+": [r"any_system_planet = (\{[^{}#]*)(?:has_owner = yes|is_colony = yes|exists = owner)\s+", r"any_system_colony = \1"],
         r"\s(?:every|random|count|ordered)_system_planet = \{[^{}#]*limit = \{\s*(?:has_owner = yes|is_colony = yes|exists = owner)\s+": [r"(every|random|count)_system_planet = (\{[^{}#]*limit = \{\s*)(?:has_owner = yes|is_colony = yes|exists = owner)\s+", r"\1_system_colony = \2"],
-        r"\b(OR = \{\s+(has_trait = trait_(?:plantoid|lithoid)_budding\s+){2}\})": "has_budding_trait = yes",
+        r"(\bOR = \{\s+(has_trait = trait_(?:plantoid|lithoid)_budding\s+){2}\})": "has_budding_trait = yes",
         r"_pop = \{\s+unemploy_pop = yes\s+kill_pop = yes": [r"(_pop = \{\s+)unemploy_pop = yes\s+(kill_pop = yes)", r"\1\2"], # ghost pop bug fixed
         ### >= 3.6
         r"\bis_triggered_only = yes\s+trigger = \{\s+always = no": [r"(\s+)(trigger = \{\s+always = no)", ('events', r'\1is_test_event = yes\1\2')],
         r'slot\s*=\s*\"?(?:SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*\"?AUTOCANNON_\d\"?': [r'(=\s*\"?(SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*)\"?(AUTOCANNON_\d)\"?', ('common/global_ship_designs', r'\1"\2_\3"')],
         r"\bhas_(?:population|colonization|migration)_control = \{\s+value =": ["value", 'type'],
-        r"\b(OR = \{\s*(has_trait = trait_(?:latent_)?psionic\s+){2}\})": "has_psionic_species_trait = yes",
+        r"(\bOR = \{\s*(has_trait = trait_(?:latent_)?psionic\s+){2}\})": "has_psionic_species_trait = yes",
     }
 
 if also_old:
