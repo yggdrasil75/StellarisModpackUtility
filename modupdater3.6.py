@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.6.1
-# @revision: 2022/12/07
+# @revision: 2022/12/12
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -25,7 +25,7 @@ code_cosmetic = False # True/False optional (only if only_warning = False)
 only_actual = False   # True speedup search (from previous relevant) to actual version
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False    # for dev print
-mergerofrules = False # Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
+mergerofrules = False # True Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
 keep_default_country_trigger = False # on playable effect "is_country_type = default"
 
 only_v3_5 = False # Single version
@@ -58,14 +58,13 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 # 3.0 removed ai_weight for buildings except branch_office_building = yes
 
 resource_items = r"energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research))"
-# exlude_trigger_folder = r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$"
-
+exlude_trigger_folder = re.compile(r"^([^_]+)(_(?!trigger)[^/_]+|[^_]*)(?(2)/([^_]+)_[^/_]+)?$") # 2lvl, only 1lvl folder: ^([^_]+)(_(?!trigger)[^_]+|[^_]*)$ only 
 
 if only_actual:
     removedTargets = []
     targets3 = {
         r"\bpop_assembly_speed": "planet_pop_assembly_mult",
-        r"\bis_ringworld =": (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "has_ringworld_output_boost ="),
+        r"\bis_ringworld =": (exlude_trigger_folder, "has_ringworld_output_boost ="),
     }
     targets4 = {
         r"\bis_triggered_only = yes\s+trigger = \{\s+always = no": [r"(\s+)(trigger = \{\s+always = no)", ('events', r'\1is_test_event = yes\1\2')],
@@ -228,7 +227,7 @@ else:
         r"(\s+)any_system_within_border = \{\s*any_system_planet = (.*?\s*\})\s*\}": r"\1any_planet_within_border = \2", # very rare, maybe put to cosmetic
         r"is_country_type = default\s+has_monthly_income = \{\s*resource = (\w+) value <=? \d": r"no_resource_for_component = { RESOURCE = \1",
         r"([^\._])owner = \{\s*is_same_(?:empire|value) = ([\w\._:]+)\s*\}": r"\1is_owned_by = \2",
-        r"(\s+)is_(?:country|same_value) = ([\w\._:]+\.(?:controller|(?:space_)?owner)(?:[\s}]|$))": r"\1is_same_empire = \2",
+        r"(\s+)is_(?:country|same_value) = ([\w\._:]+\.(?:controller|(?:space_)?owner)(?:\.overlord)?(?:[\s}]|$))": r"\1is_same_empire = \2",
         # r"exists = (?:solar_system|planet)\.(?:space_)?owner( |$)": r"has_owner = yes\1", TODO not sure
         # code opts/cosmetic only
         r"\bNOT = \{\s*([^\s]+) = yes\s*\}": r"\1 = no",
@@ -424,8 +423,8 @@ else:
         r"\s(?:every|random|count)_country = \{[^{}#]*limit = \{\s*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_special_project|merg_is_default_empire = yes)": [r"(\s(?:every|random|count))_country = (\{[^{}#]*limit = \{\s*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_special_project|merg_is_default_empire = yes))", r"\1_playable_country = \2"],
 
         r"\{\s+owner = \{\s*is_same_(?:empire|value) = [\w\._:]+\s*\}\s*\}": [r"\{\s+owner = \{\s*is_same_(?:empire|value) = ([\w\._:]+)\s*\}\s*\}", r"{ is_owned_by = \1 }"],
-        r"NO[RT] = \{\s*is_country_type = (?:fallen_empire|awakened_fallen_empire)\s+is_country_type = (?:fallen_empire|awakened_fallen_empire)\s*\}": "is_fallen_empire = no",
-        r"\n\s+(?:OR = \{)?\s{4,}is_country_type = (?:fallen_empire|awakened_fallen_empire)\s+is_country_type = (?:fallen_empire|awakened_fallen_empire)\s+\}?": [r"(\s+)(OR = \{)?(?(2)\s{4,}|(\s{4,}))is_country_type = (?:fallen_empire|awakened_fallen_empire)\s+is_country_type = (?:fallen_empire|awakened_fallen_empire)(?(2)\1\})", r"\1is_fallen_empire = yes"],
+        r"NO[RT] = \{\s*(?:is_country_type = (?:awakened_)?fallen_empire\s+){2}\}": "is_fallen_empire = no",
+        r"\n\s+(?:OR = \{)?\s{4,}(?:is_country_type = (?:awakened_)?fallen_empire\s+){2}\}?": [r"(\s+)(OR = \{)?(?(2)\s{4,}|(\s{4,}))is_country_type = (?:awakened_)?fallen_empire\s+is_country_type = (?:awakened_)?fallen_empire(?(2)\1\})", r"\1\3is_fallen_empire = yes"], 
         r"\bNO[RT] = \{\s*is_country_type = (?:default|awakened_fallen_empire)\s+is_country_type = (?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = no",
         r"\bOR = \{\s*is_country_type = (?:default|awakened_fallen_empire)\s+is_country_type = (?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = yes",
         r"\s+(?:OR = \{)?\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+\}?": [r"(\s+)(OR = \{)?(?(2)\s+|(\s+))(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)(?(2)\1\})", r"\1\3is_synthetic_empire = yes"], # \s{4,}
@@ -549,6 +548,7 @@ if code_cosmetic and not only_warning:
             "Overlord": "overlord_dlc",
             "Plantoids Species Pack": "plantoids",
             "Synthetic Dawn Story Pack": "synthethic_dawn",
+            "Toxoids Species Pack": "toxoids",
          }[p.group(1)] + " = yes" 
     # targets3[r"\s*days\s*=\s*-1\s*"] = ' ' # still needed to execute immediately
     # targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
@@ -578,20 +578,24 @@ if code_cosmetic and not only_warning:
 # like targets3 but later
 if mergerofrules:
     # without is_country_type_with_subjects & without is_fallen_empire = yes
-    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes))|(?:(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = default|merg_is_default_empire = yes))|(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_country_type = fallen_empire|merg_is_fallen_empire = yes|is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)(\s+)){2,}", (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", r"merg_is_standard_empire = yes\2")]
+    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes))|(?:(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = default|merg_is_default_empire = yes))|(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_country_type = fallen_empire|merg_is_fallen_empire = yes|is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)(\s+)){2,}", (exlude_trigger_folder, r"merg_is_standard_empire = yes\2")]
     # with is_country_type_with_subjects & without AFE but with is_fallen_empire 
-    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)\s+is_fallen_empire = yes)|(?:is_fallen_empire = yes\s+(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_fallen_empire = yes|is_country_type_with_subjects = yes)(\s+)){2,}", (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", r"merg_is_standard_empire = yes\2")]
-    targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)(?(2)\1\})", (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", r"\1\3is_mechanical_empire = yes")]
-    targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))(?(2)\1\})", (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", r"\1\3is_robot_empire = yes")]
-    targets3[r"\bis_country_type = default\b"] = (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "merg_is_default_empire = yes")
-    targets3[r"\bis_country_type = fallen_empire\b"] = (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "merg_is_fallen_empire = yes")
-    targets3[r"\bis_country_type = awakened_fallen_empire\b"] = (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "merg_is_awakened_fe = yes")
-    targets3[r"\bis_planet_class = pc_habitat\b"] = (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "merg_is_habitat = yes")
-    targets3[r"\bhas_ethic = ethic_gestalt_consciousness\b"] = (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "is_gestalt = yes")
-    targets3[r"\bhas_authority = auth_machine_intelligence\b"] = (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "is_machine_empire = yes")
-    targets3[r"\bhas_authority = auth_hive_mind\b"] = (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "is_hive_empire = yes")
-    targets3[r"\bhas_authority = auth_corporate\b"] = (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "is_megacorp = yes")
-    targets3[r"\bowner_species = \{ has_trait = trait_cybernetic \}\b"] = (r"^([^_]+)(_(?!trigger)[^_]+|[^_]*)$", "is_cyborg_empire = yes")
+    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)\s+is_fallen_empire = yes)|(?:is_fallen_empire = yes\s+(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_fallen_empire = yes|is_country_type_with_subjects = yes)(\s+)){2,}", (exlude_trigger_folder, r"merg_is_standard_empire = yes\2")]
+    targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)(?(2)\1\})", (exlude_trigger_folder, r"\1\3is_mechanical_empire = yes")]
+    targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))(?(2)\1\})", (exlude_trigger_folder, r"\1\3is_robot_empire = yes")]
+    targets4[r"NO[RT] = \{\s*(?:merg_is_(?:fallen_empire|awakened_fe) = yes\s+){2}\}"] = "is_fallen_empire = no"
+    targets4[r"\n\s+(?:OR = \{)?\s+(?:merg_is_(?:fallen_empire|awakened_fe) = yes\s+){2}\}?"] = [r"(\s+)(OR = \{)?(?(2)\s+|(\s+))merg_is_(?:fallen_empire|awakened_fe) = yes\s+merg_is_(?:fallen_empire|awakened_fe) = yes(?(2)\1\})", r"\1\3is_fallen_empire = yes"]
+    targets4[r"\bNO[RT] = \{\s*merg_is_(?:default_empire|awakened_fe) = yes\s+merg_is_(?:default_empire|awakened_fe) = yes\s+\}"] = "is_country_type_with_subjects = no"
+    targets4[r"\bOR = \{\s*merg_is_(?:default_empire|awakened_fe) = yes\s+merg_is_(?:default_empire|awakened_fe) = yes\s+\}"] = "is_country_type_with_subjects = yes"
+    targets3[r"\bis_country_type = default\b"] = (exlude_trigger_folder, "merg_is_default_empire = yes")
+    targets3[r"\bis_country_type = fallen_empire\b"] = (exlude_trigger_folder, "merg_is_fallen_empire = yes")
+    targets3[r"\bis_country_type = awakened_fallen_empire\b"] = (exlude_trigger_folder, "merg_is_awakened_fe = yes")
+    targets3[r"\bis_planet_class = pc_habitat\b"] = (exlude_trigger_folder, "merg_is_habitat = yes")
+    targets3[r"\bhas_ethic = ethic_gestalt_consciousness\b"] = (exlude_trigger_folder, "is_gestalt = yes")
+    targets3[r"\bhas_authority = auth_machine_intelligence\b"] = (exlude_trigger_folder, "is_machine_empire = yes")
+    targets3[r"\bhas_authority = auth_hive_mind\b"] = (exlude_trigger_folder, "is_hive_empire = yes")
+    targets3[r"\bhas_authority = auth_corporate\b"] = (exlude_trigger_folder, "is_megacorp = yes")
+    targets3[r"\bowner_species = \{ has_trait = trait_cybernetic \}\b"] = (exlude_trigger_folder, "is_cyborg_empire = yes")
     # targets31 = [(re.compile(k, flags=0), targets31[k]) for k in targets31]
 
 
@@ -732,7 +736,7 @@ def modfix(file_list):
                         for pattern in targets3: # new list way
                             repl = pattern[1]
                             pattern = pattern[0]
-
+                            folder = None
                             # check valid folder
                             rt = False
                             # File name check
@@ -765,11 +769,16 @@ def modfix(file_list):
                                         if subfolder in fo:
                                             rt = True
                                 # elif subfolder in folder:
-                                elif re.search(folder, subfolder):
-                                    # ^([^_]+)(_(?!trigger)[^_]+|[^_]*)$
-                                    rt = True
+                                elif isinstance(folder, str):
+                                    if subfolder in folder:
+                                        rt = True
+                                        if debug_mode: print(folder)
+                                elif isinstance(folder, re.Pattern):
+                                    if folder.search(subfolder):
+                                        # print("Check folder (regexp) True", subfolder, repl)
+                                        rt = True
+                                    elif debug_mode: print("Folder EXCLUDED:", subfolder, repl)
                                 else: rt = False
-
                             else: rt = True
                             if rt: # , flags=re.I # , count=0, flags=0
                                 rt = pattern.search(line) # , flags=re.I
@@ -778,7 +787,7 @@ def modfix(file_list):
                                     # line = line.replace(t, r)
                                     changed = True
                                     print("\tUpdated file: %s at line %i with %s\n" % (basename, i, line.strip().encode(errors='replace')))
-                                # elif debug_mode: print("DEBUG Match targets3:", pattern, repl, type(repl), line.strip().encode(errors='replace'))
+                                #elif debug_mode and isinstance(folder, re.Pattern): print("DEBUG Match targets3:", pattern, repl, type(repl), line.strip().encode(errors='replace'))
 
                     out += line
 
@@ -798,7 +807,8 @@ def modfix(file_list):
                                 replace = repl.copy()
                                 # folder = repl[1][0]
                                 # replace[1] = repl[1][1]
-                                folder, replace[1] = repl[1] 
+                                folder, replace[1] = repl[1]
+                                rt = False
                                 if debug_mode: print(type(replace), replace, replace[1])
                                 if isinstance(folder, list):
                                     for fo in folder:
@@ -806,9 +816,13 @@ def modfix(file_list):
                                             rt = True
                                             if debug_mode: print(folder)
                                             break
-                                elif subfolder in folder:
+                                elif isinstance(folder, str):
+                                    if subfolder in folder:
+                                        rt = True
+                                        if debug_mode: print(folder)
+                                elif isinstance(folder, re.Pattern) and folder.search(subfolder):
+                                    # print("Check folder (regexp)", subfolder)
                                     rt = True
-                                    if debug_mode: print(folder)
                                 else: rt = False
                             else: rt = True
                             if rt:
