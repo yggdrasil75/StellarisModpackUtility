@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.6.1
-# @revision: 2022/12/12
+# @revision: 2022/12/13
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -58,13 +58,21 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 # 3.0 removed ai_weight for buildings except branch_office_building = yes
 
 resource_items = r"energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research))"
-exlude_trigger_folder = re.compile(r"^([^_]+)(_(?!trigger)[^/_]+|[^_]*)(?(2)/([^_]+)_[^/_]+)?$") # 2lvl, only 1lvl folder: ^([^_]+)(_(?!trigger)[^_]+|[^_]*)$ only 
+no_trigger_folder = re.compile(r"^([^_]+)(_(?!trigger)[^/_]+|[^_]*$)(?(2)/([^_]+)_[^/_]+$)?") # 2lvl, only 1lvl folder: ^([^_]+)(_(?!trigger)[^_]+|[^_]*)$ only 
 
 if only_actual:
-    removedTargets = []
+    removedTargets = [
+        r"\bhas_ascension_perk = ap_transcendence\b"
+    ]
     targets3 = {
         r"\bpop_assembly_speed": "planet_pop_assembly_mult",
-        r"\bis_ringworld =": (exlude_trigger_folder, "has_ringworld_output_boost ="),
+        r"\bis_ringworld =": (no_trigger_folder, "has_ringworld_output_boost ="),
+        r"\btoken = citizenship_assimilation\b": ("common/species_rights", "is_assimilation = yes"),
+        r"\btoken = citizenship_full(?:_machine)?\b": ("common/species_rights", "is_full_citizenship = yes"),
+        r"\btoken = citizenship_slavery\b": ("common/species_rights", "is_slavery = yes"),
+        r"\btoken = citizenship_purge(?:_machine)?\b": ("common/species_rights", "is_purge = yes"),
+        r"\bhas_ascension_perk = ap_transcendence\b": "has_tradition = tr_psionics_psionic_assimilation",
+
     }
     targets4 = {
         r"\bis_triggered_only = yes\s+trigger = \{\s+always = no": [r"(\s+)(trigger = \{\s+always = no)", ('events', r'\1is_test_event = yes\1\2')],
@@ -578,24 +586,24 @@ if code_cosmetic and not only_warning:
 # like targets3 but later
 if mergerofrules:
     # without is_country_type_with_subjects & without is_fallen_empire = yes
-    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes))|(?:(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = default|merg_is_default_empire = yes))|(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_country_type = fallen_empire|merg_is_fallen_empire = yes|is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)(\s+)){2,}", (exlude_trigger_folder, r"merg_is_standard_empire = yes\2")]
+    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes))|(?:(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = default|merg_is_default_empire = yes))|(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_country_type = fallen_empire|merg_is_fallen_empire = yes|is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)(\s+)){2,}", (no_trigger_folder, r"merg_is_standard_empire = yes\2")]
     # with is_country_type_with_subjects & without AFE but with is_fallen_empire 
-    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)\s+is_fallen_empire = yes)|(?:is_fallen_empire = yes\s+(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_fallen_empire = yes|is_country_type_with_subjects = yes)(\s+)){2,}", (exlude_trigger_folder, r"merg_is_standard_empire = yes\2")]
-    targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)(?(2)\1\})", (exlude_trigger_folder, r"\1\3is_mechanical_empire = yes")]
-    targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))(?(2)\1\})", (exlude_trigger_folder, r"\1\3is_robot_empire = yes")]
+    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)\s+is_fallen_empire = yes)|(?:is_fallen_empire = yes\s+(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_fallen_empire = yes|is_country_type_with_subjects = yes)(\s+)){2,}", (no_trigger_folder, r"merg_is_standard_empire = yes\2")]
+    targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)(?(2)\1\})", (no_trigger_folder, r"\1\3is_mechanical_empire = yes")]
+    targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))(?(2)\1\})", (no_trigger_folder, r"\1\3is_robot_empire = yes")]
     targets4[r"NO[RT] = \{\s*(?:merg_is_(?:fallen_empire|awakened_fe) = yes\s+){2}\}"] = "is_fallen_empire = no"
     targets4[r"\n\s+(?:OR = \{)?\s+(?:merg_is_(?:fallen_empire|awakened_fe) = yes\s+){2}\}?"] = [r"(\s+)(OR = \{)?(?(2)\s+|(\s+))merg_is_(?:fallen_empire|awakened_fe) = yes\s+merg_is_(?:fallen_empire|awakened_fe) = yes(?(2)\1\})", r"\1\3is_fallen_empire = yes"]
-    targets4[r"\bNO[RT] = \{\s*merg_is_(?:default_empire|awakened_fe) = yes\s+merg_is_(?:default_empire|awakened_fe) = yes\s+\}"] = "is_country_type_with_subjects = no"
-    targets4[r"\bOR = \{\s*merg_is_(?:default_empire|awakened_fe) = yes\s+merg_is_(?:default_empire|awakened_fe) = yes\s+\}"] = "is_country_type_with_subjects = yes"
-    targets3[r"\bis_country_type = default\b"] = (exlude_trigger_folder, "merg_is_default_empire = yes")
-    targets3[r"\bis_country_type = fallen_empire\b"] = (exlude_trigger_folder, "merg_is_fallen_empire = yes")
-    targets3[r"\bis_country_type = awakened_fallen_empire\b"] = (exlude_trigger_folder, "merg_is_awakened_fe = yes")
-    targets3[r"\bis_planet_class = pc_habitat\b"] = (exlude_trigger_folder, "merg_is_habitat = yes")
-    targets3[r"\bhas_ethic = ethic_gestalt_consciousness\b"] = (exlude_trigger_folder, "is_gestalt = yes")
-    targets3[r"\bhas_authority = auth_machine_intelligence\b"] = (exlude_trigger_folder, "is_machine_empire = yes")
-    targets3[r"\bhas_authority = auth_hive_mind\b"] = (exlude_trigger_folder, "is_hive_empire = yes")
-    targets3[r"\bhas_authority = auth_corporate\b"] = (exlude_trigger_folder, "is_megacorp = yes")
-    targets3[r"\bowner_species = \{ has_trait = trait_cybernetic \}\b"] = (exlude_trigger_folder, "is_cyborg_empire = yes")
+    targets4[r"\bNO[RT] = \{\s*(merg_is_(?:default_empire|awakened_fe) = yes\s+){2}\}"] = "is_country_type_with_subjects = no"
+    targets4[r"\bOR = \{\s*(merg_is_(?:default_empire|awakened_fe) = yes\s+){2}\}"] = "is_country_type_with_subjects = yes"
+    targets3[r"\bis_country_type = default\b"] = (no_trigger_folder, "merg_is_default_empire = yes")
+    targets3[r"\bis_country_type = fallen_empire\b"] = (no_trigger_folder, "merg_is_fallen_empire = yes")
+    targets3[r"\bis_country_type = awakened_fallen_empire\b"] = (no_trigger_folder, "merg_is_awakened_fe = yes")
+    targets3[r"\bis_planet_class = pc_habitat\b"] = (no_trigger_folder, "merg_is_habitat = yes")
+    targets3[r"\bhas_ethic = ethic_gestalt_consciousness\b"] = (no_trigger_folder, "is_gestalt = yes")
+    targets3[r"\bhas_authority = auth_machine_intelligence\b"] = (no_trigger_folder, "is_machine_empire = yes")
+    targets3[r"\bhas_authority = auth_hive_mind\b"] = (no_trigger_folder, "is_hive_empire = yes")
+    targets3[r"\bhas_authority = auth_corporate\b"] = (no_trigger_folder, "is_megacorp = yes")
+    targets3[r"\bowner_species = \{ has_trait = trait_cybernetic \}\b"] = (no_trigger_folder, "is_cyborg_empire = yes")
     # targets31 = [(re.compile(k, flags=0), targets31[k]) for k in targets31]
 
 
@@ -783,10 +791,12 @@ def modfix(file_list):
                             if rt: # , flags=re.I # , count=0, flags=0
                                 rt = pattern.search(line) # , flags=re.I
                                 if rt:
-                                    line = pattern.sub(repl, line) # , flags=re.I                                  
+                                    rt = line
+                                    line = pattern.sub(repl, rt) # , flags=re.I                                  
                                     # line = line.replace(t, r)
-                                    changed = True
-                                    print("\tUpdated file: %s at line %i with %s\n" % (basename, i, line.strip().encode(errors='replace')))
+                                    if line != rt:
+                                        changed = True
+                                        print("\tUpdated file: %s at line %i with %s\n" % (basename, i, line.strip().encode(errors='replace')))
                                 #elif debug_mode and isinstance(folder, re.Pattern): print("DEBUG Match targets3:", pattern, repl, type(repl), line.strip().encode(errors='replace'))
 
                     out += line
