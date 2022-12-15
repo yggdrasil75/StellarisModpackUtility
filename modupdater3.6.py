@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.6.1
-# @revision: 2022/12/13
+# @revision: 2022/12/14
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -24,8 +24,8 @@ only_warning = False  # True implies code_cosmetic = False
 code_cosmetic = False # True/False optional (only if only_warning = False)
 only_actual = False   # True speedup search (from previous relevant) to actual version
 also_old = False      # Beta: only some pre 2.3 stuff
-debug_mode = False    # for dev print
-mergerofrules = False # True Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
+debug_mode = False    # True for dev print
+mergerofrules = False  # True Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
 keep_default_country_trigger = False # on playable effect "is_country_type = default"
 
 only_v3_5 = False # Single version
@@ -202,6 +202,8 @@ else:
         ("common/country_types", [r"^\s+(?:ship_data|army_data) = { = \{", '"ship_data & army_data" has been replaces by "ai_ship_data" and "country_limits"']),
         r"\b(fire_warning_sign|add_unity_times_empire_size) = yes",
         r"\boverlord_has_(num_constructors|more_than_num_constructors|num_science_ships|more_than_num_science_ships)_in_orbit\b",
+        # 3.6
+        r"\bhas_ascension_perk = ap_transcendence\b"
     ]
 
     # targets2 = {
@@ -400,6 +402,12 @@ else:
         # r"(\"NAME_[^-\s\"]+)-([^-\s\"]+)\"": r'\1_\2"', mostly but not generally done
         ### 3.6
         r"\bpop_assembly_speed": "planet_pop_assembly_mult",
+        r"\bis_ringworld =": (no_trigger_folder, "has_ringworld_output_boost ="),
+        r"\btoken = citizenship_assimilation\b": ("common/species_rights", "is_assimilation = yes"),
+        r"\btoken = citizenship_full(?:_machine)?\b": ("common/species_rights", "is_full_citizenship = yes"),
+        r"\btoken = citizenship_slavery\b": ("common/species_rights", "is_slavery = yes"),
+        r"\btoken = citizenship_purge(?:_machine)?\b": ("common/species_rights", "is_purge = yes"),
+        r"\bhas_ascension_perk = ap_transcendence\b": "has_tradition = tr_psionics_psionic_assimilation",
     }
 
     # re flags=re.I|re.M|re.A
