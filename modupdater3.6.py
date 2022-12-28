@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.6.1
-# @revision: 2022/12/14
+# @revision: 2022/12/28
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -155,8 +155,23 @@ else:
     removedTargets = [
         # This are only warnings, commands which cannot be easily replaced.
         # Format: tuple is with folder (folder, regexp/list); list is with a specific message [regexp, msg]
+        # 3.6
+        r"\bhas_ascension_perk = ap_transcendence\b",
+        # 3.4
+        ("common/ship_sizes", [r"^\s+empire_limit = \{\s+", '"empire_limit" has been replaces by "ai_ship_data" and "country_limit"']),
+        ("common/country_types", [r"^\s+(?:ship_data|army_data) = { = \{", '"ship_data & army_data" has been replaces by "ai_ship_data" and "country_limits"']),
+        r"\b(fire_warning_sign|add_unity_times_empire_size) = yes",
+        r"\boverlord_has_(num_constructors|more_than_num_constructors|num_science_ships|more_than_num_science_ships)_in_orbit\b",
+        # 3.3
+        "tech_repeatable_improved_edict_length",
+        r"(^\s+|[^#] )country_admin_cap_(add|mult)",
+        ("common/buildings", r"\sbuilding(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*="), # replaced buildings ai
+        [r"\bnum_\w+\s*[<=>]+\s*[a-z]+[\s}]", 'no scope alone'], #  [^\d{$@] too rare (could also be auto fixed)
+        [r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}", 'can be merged to NOR if not in an OR'], #  [^\d{$@] too rare (could also be auto fixed)
+        ("common/traits", [r"^\s+modification = (?:no|yes)\s*", '"modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.']),
         # 3.2
-        r"\sslot = 0", # \sset_starbase_module = \{ now starts with 1
+        [r"\bslot = 0", "set_starbase_module = now starts with 1"],
+        [r"\bany_pop\b", 'use any_owned_pop/any_species_pop'],
         [r"[^# \t]\s+is_planet_class = pc_ringworld_habitable", 'could possibly be replaced with "is_ringworld = yes"'],
         # r"\sadd_tech_progress_effect = ", # replaced with add_tech_progress
         # r"\sgive_scaled_tech_bonus_effect = ", # replaced with add_monthly_resource_mult
@@ -169,7 +184,6 @@ else:
         r"\spop_can_live_on_planet\b", # r"\1can_live_on_planet", needs planet target
         r"\scount_armies\b", # (scope split: depending on planet/country)
         (["common/bombardment_stances", "common/ship_sizes"], [r"^\s+icon_frame = \d+", '"icon_frame" now only used for starbases']), # [6-9]  # Value of 2 or more means it shows up on the galaxy map, 1-5 denote which icon it uses on starbase sprite sheets (e.g. gfx/interface/icons/starbase_ship_sizes.dds)
-
         # PRE TEST
         # r"\sspaceport\W", # scope replace?
         # r"\shas_any_tradition_unlocked\W", # replace?
@@ -190,20 +204,6 @@ else:
         ("common/buildings", [r"^\s+ai_weight\s*=", 'ai_weight for buildings removed except for branch office']), # replaced buildings ai
         # < 2.0
         r"\scan_support_spaceport = (yes|no)",
-        # 3.3
-        "tech_repeatable_improved_edict_length",
-        r"(^\s+|[^#] )country_admin_cap_(add|mult)",
-        ("common/buildings", r"\sbuilding(_basic_income_check|_relaxed_basic_income_check|s_upgrade_allow)\s*="), # replaced buildings ai
-        [r"\bnum_\w+\s*[<=>]+\s*[a-z]+[\s}]", 'no scope alone'], #  [^\d{$@] too rare (could also be auto fixed)
-        [r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}", 'can be merged to NOR if not in an OR'], #  [^\d{$@] too rare (could also be auto fixed)
-        ("common/traits", [r"^\s+modification = (?:no|yes)\s*", '"modification" flag which has been deprecated. Use "species_potential_add", "species_possible_add" and "species_possible_remove" triggers instead.']),
-        # 3.4
-        ("common/ship_sizes", [r"^\s+empire_limit = \{\s+", '"empire_limit" has been replaces by "ai_ship_data" and "country_limit"']),
-        ("common/country_types", [r"^\s+(?:ship_data|army_data) = { = \{", '"ship_data & army_data" has been replaces by "ai_ship_data" and "country_limits"']),
-        r"\b(fire_warning_sign|add_unity_times_empire_size) = yes",
-        r"\boverlord_has_(num_constructors|more_than_num_constructors|num_science_ships|more_than_num_science_ships)_in_orbit\b",
-        # 3.6
-        r"\bhas_ascension_perk = ap_transcendence\b"
     ]
 
     # targets2 = {
@@ -240,7 +240,7 @@ else:
         r"(\s+)is_(?:country|same_value) = ([\w\._:]+\.(?:controller|(?:space_)?owner)(?:\.overlord)?(?:[\s}]|$))": r"\1is_same_empire = \2",
         # r"exists = (?:solar_system|planet)\.(?:space_)?owner( |$)": r"has_owner = yes\1", TODO not sure
         # code opts/cosmetic only
-        r"\bNOT = \{\s*([^\s]+) = yes\s*\}": r"\1 = no",
+        r"\bNO[RT] = \{\s*([^\s]+) = yes\s*\}": r"\1 = no",
         r"\bany_system_planet = \{\s*is_capital = (yes|no)\s*\}": r"is_capital_system = \1",
         r"(\s+has_(?:population|migration)_control) = (yes|no)": r"\1 = { type = \2 country = prev.owner }", # NOT SURE
         re.compile(r"\bNOT = \{\s*((?:leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+) = \{)\s*([^\s]+) = yes\s*\}\s*\}", re.I): r"\1 \2 = no }",
@@ -422,7 +422,7 @@ else:
         r"\s+random_system_planet = \{\s*limit = \{\s*is_primary_star = yes\s*\}": [r"(\s+)random_system_planet = \{\s*limit = \{\s*is_primary_star = yes\s*\}", r"\1star = {"], # TODO works only on single star systems
         r"\bcreate_leader = \{[^{}]+?\s+type = \w+": [r"(create_leader = \{[^{}]+?\s+)type = (\w+)", r"\1class = \2"],
         r"\bNO[RT] = \{\s*has_ethic = \"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic = \"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+\}": [r"NO[RT] = \{\s*has_ethic = \"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic = \"?ethic_(?:(?:\1|\2)|fanatic_(?:\1|\2))\"?\s+\}", r"is_\1\2 = no"],
-        r"\s*?(?:OR = \{)?\s+?has_ethic = \"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic = \"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*\}?": [r"(\bOR = \{)?(\s*?\n*?\s*?)?(?(1)\t?)has_ethic = \"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*?has_ethic = \"?ethic_(?:(?:\4|\3)|fanatic_(?:\4|\3))\"?\s*?(?(1)\})", r"\2is_\3\4 = yes"], # r"\4is_ethics_aligned = { ARG1 = \2\3 }",
+        r"\b(?:OR = \{)?\s+?has_ethic = \"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic = \"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*\}?": [r"(\bOR = \{)?(\s*?\n*?\s*?)?(?(1)\t?)has_ethic = \"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*?has_ethic = \"?ethic_(?:(?:\4|\3)|fanatic_(?:\4|\3))\"?\s*?(?(1)\})", r"\2is_\3\4 = yes"], # r"\4is_ethics_aligned = { ARG1 = \2\3 }",
         ### Boolean operator merge
         # NAND <=> OR = { NOT
         r"\s+OR = \{(?:\s*NOT = \{[^{}#]*?\})+\s*\}[ \t]*\n": [r"^(\s+)OR = \{\s*?\n(?:(\s+)NOT = \{\s*)?([^{}#]*?)\s*\}(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?", r"\1NAND = {\n\2\3\4\5\6\7\8\9\10\11\12\13\14\15"], # up to 7 items (sub-trigger)
@@ -432,7 +432,7 @@ else:
         r"(?<![ \t]OR)\s+=\s*\{\s(?:[^{}#\n]+\n)*(?:\s+NO[RT] = \{\s*[^{}#]+?\s*\}){2,}": [r"(\n\s+)NO[RT] = \{\1(\s+)([^{}#]+?)\s+\}\s+NO[RT] = \{\s*([^{}#]+?)\s+\}", r"\1NOR = {\1\2\3\1\2\4\1}"], # only 2 items (sub-trigger) (?<!\sOR) Negative Lookbehind
         # NAND <=> NOT = { AND
         r"\n\s+NO[RT] = \{\s*AND = \{[^{}#]*?\}\s*\}": [r"(\t*)NO[RT] = \{\s*AND = \{[ \t]*\n(?:\t([^{}#\n]+\n))?(?:\t([^{}#\n]+\n))?(?:\t([^{}#\n]+\n))?(?:\t([^{}#\n]+\n))?\s*\}[ \t]*\n", r"\1NAND = {\n\2\3\4\5"], # only 4 items (sub-trigger)
-        # NOR <=> NOT = { OR
+        # NOR <=> NOT = { OR (only sure if base is AND)
         r"\n\s+NO[RT] = \{\s*?OR = \{\s*(?:\w+ = (?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s+?){2,}\}\s*\}": [r"(\t*)NO[RT] = \{\s*?OR = \{(\s+)(\w+ = (?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s+)(\s*\w+ = (?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s)?(\s*\w+ = (?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s)?(\s*\w+ = (?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s)?(\s*\w+ = (?:[^{}#\s=]+|\{[^{}#\s=]+\s*\})\s)?\s*\}\s+", r"\1NOR = {\2\3\4\5\6\7"], # only right indent for 5 items (sub-trigger)
         ### End boolean operator merge
         r"\bany_country = \{[^{}#]*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_policy_flag|merg_is_default_empire = yes)": [r"any_country = (\{[^{}#]*(?:has_event_chain|is_ai = no|is_zofe_compatible = yes|is_country_type = default|has_policy_flag|merg_is_default_empire = yes))", r"any_playable_country = \1"],
@@ -456,8 +456,8 @@ else:
         # Near cosmetic
         r"\bcount_starbase_modules = \{\s+type = \w+\s+count\s*>\s*0\s+\}": [r"count_starbase_modules = \{\s+type = (\w+)\s+count\s*>\s*0\s+\}", r'has_starbase_module = \1'],
         r'\b(?:add_modifier = \{\s*modifier|set_timed_\w+ = \{\s*flag) = "?\w+"?\s+days\s*=\s*\d{2,}\s*\}': [
-            r'\s+days\s*=\s*(\d{2,})\b',
-            lambda p: " years = " + str(int(p.group(1))//360) + ' ' if int(p.group(1)) > 320 and int(p.group(1))%360 < 41 else (" months = " + str(int(p.group(1))//30) if int(p.group(1)) > 28 and int(p.group(1))%30 < 3 else " days = " + p.group(1))
+            r'days\s*=\s*(\d{2,})\b',
+            lambda p: "years = " + str(int(p.group(1))//360) if int(p.group(1)) > 320 and int(p.group(1))%360 < 41 else ("months = " + str(int(p.group(1))//30) if int(p.group(1)) > 28 and int(p.group(1))%30 < 3 else "days = " + p.group(1))
         ],
         r"\brandom_list = \{\s+\d+ = \{\s*(?:(?:[\w:]+ = \{\s+\w+ = \{\n?[^{}#\n]+\}\s*\}|\w+ = \{\n?[^{}#\n]+\}|[^{}#\n]+)\s*\}\s+\d+ = \{\s*\}|\s*\}\s+\d+ = \{\s*(?:[\w:]+\s*=\s*\{\s+\w+\s*=\s*\{\n?[^{}#\n]+\}\s*\}|\w+ = \{\n?[^{}#\n]+\}|[^{}#\n]+)\s*\}\s*)\s*\}": [
             r"\brandom_list = \{\s+(?:(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\}\s+(\d+) = \{\s*\}|(\d+) = \{\s*\}\s+(\d+) = \{\s+(\w+ = \{[^{}#\n]+\}|[^{}#\n]+)\s+\})\s*", # r"random = { chance = \1\5 \2\6 "
@@ -579,7 +579,7 @@ if code_cosmetic and not only_warning:
     # targets4[r"(?:_system|_planet)? = \{\s+(?:limit = \{})?\bexists = (?:space_)?owner\s+is_owned_by\b"] = [r"exists = (?:space_)?owner(\s+)is_owned_by", r"has_owner = yes\1is_owned_by"] # only for planet galactic_object
     targets4[r'_event = \{\s+id = \"[\w.]+\"'] = [r'\bid = \"([\w.]+)\"', ("events", r"id = \1")] # trim id quote marks
 
-    targets4[r"\n\s+\}\n\s+else"] = [r"\}\s*else", "} else"] # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
+    # targets4[r"\n\s+\}\n\s+else"] = [r"\}\s*else", "} else"] # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
     # WARNING not valid if in OR: NOR <=> AND = { NOT NOT } , # only 2 items (sub-trigger)
     targets4[r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}"] = [r"([\t ]+)NO[TR] = \{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR] = \{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"]
     targets4[r"\brandom_country = \{\s*limit = \{\s*is_country_type = global_event\s*\}"] = "event_target:global_event_country = {"
@@ -680,7 +680,7 @@ def parse_dir():
         files = glob.iglob(mod_path + '/**', recursive=True)  # '\\*.txt'
         modfix(files)
     else:
-        "We have a main folder"
+        "We have a main or a sub folder"
         # folders = [f for f in os.listdir(mod_path) if os.path.isdir(os.path.join(mod_path, f))]
         folders = glob.iglob(mod_path + "/*/", recursive=True)
         for _f in folders:
@@ -690,6 +690,13 @@ def parse_dir():
                 print(mod_path)
                 files = glob.iglob(mod_path + '/**', recursive=True)  # '\\*.txt'
                 modfix(files)
+
+        if len(files) == 0:
+            print("We have a sub folder")
+            files = glob.iglob(mod_path + '/**', recursive=True)  # '\\*.txt'
+            modfix(files)
+        elif debug_mode:
+            print("We have a main folder", files)
 
 
 def modfix(file_list):
