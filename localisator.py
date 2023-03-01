@@ -30,10 +30,10 @@ except: print("Not running Windows")
 #============== Initialize global variables ===============
 
 optimizeLoc = False   # True/False BETA! Best results if event keys have "event" in they name or they are in a file with event in the name.
-optimizeLocString = "event" # only used if optimizeLoc is True
+optimizeLocString = "Event" # only used if optimizeLoc is True
 
 loadVanillaLoc = False # True BETA: replaces exact matching strings with vanilla ones
-loadVanillaLocUpdateDefault = False # only true if loadVanillaLoc
+loadVanillaLocUpdateDefault = False # only usable if loadVanillaLoc
 
 
 # loadDependingMods = False # replaces exact matching strings with ones from the depending mod(s)
@@ -43,25 +43,29 @@ ymlfiles = '*.yml' # you can also use single names
 key_IGNORE = "" # stops copying over localisations keys with this starting pattern eg. "dmm_mod."
 
 # Write here your mod folder name and languages to replace/update
-# localModPath = ["CrisisManager_Sleeper", ["french", "polish"]]
 # localModPath = ["more_midgame_crisis", ["russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
 # localModPath = ["SEoOC", ["german", "russian", "spanish", "braz_por", "french", "polish"]]
 # localModPath = ["Starbase_Strong", ["russian", "simp_chinese", "french", "polish"]] # "braz_por",
 # localModPath = ["SEoOC", ["german", "russian", "spanish", "braz_por", "french", "polish"]]
 # localModPath = ["Nomads The wondering Void Farers", []] # "english"
 # localModPath = ["UAP", ["english", "german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
-# localModPath = ["distant_stars_overhaul", []] #["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]
-# localModPath = ["CrisisManager_EndGame", ["french", "polish"]]
 # localModPath = ["Decentralized Empires", []] # ["spanish", "braz_por", "french", "polish", "simp_chinese"]
 # localModPath = ["CrisisManager_MidGame", ["french", "polish"]]
+# localModPath = ["CrisisManager_Sleeper", ["french", "polish"]]
 localModPath = ["FATALF", ["english", "japanese", "korean"]]
-localModPath = ["honored_leader", ["english", "korean"]] 
 localModPath = ["prob", []]
-localModPath = ["Ad Astra Technology", ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"]]
-localModPath = ["TheGreatKhanExpanded", []]
+localModPath = ["Ad Astra Technology", ["german", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"]]
+localModPath = ["E&CC", []]
+localModPath = ["CrisisManager_EndGame", ["french", "polish"]]
+localModPath = ["c:/Games/steamapps/workshop/content/281990/2915166985", ["german", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"]]
+localModPath = ["TheGreatKhanExpanded", ["english"]]
 localModPath = ["Realistic_Pirates", ["english", "polish", "japanese", "korean"]]
 localModPath = ["ADeadlyTempest", ["english", "french", "polish", "japanese", "korean"]]
-localModPath = ["UAP_dev", ["german", "spanish", "braz_por", "french", "polish", "simp_chinese", "korean"]]
+localModPath = ["Gray Tempest Shipset", ["german", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"]]
+localModPath = ["distant_stars_overhaul", ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"]]
+localModPath = ["New Job Manager", ["german", "spanish", "braz_por", "french", "polish", "korean"]]
+localModPath = ["UAP_dev", ["german", "spanish", "braz_por", "french", "polish"]]
+localModPath = ["honor_leaders", ["english", "japanese", "korean"]] 
 
 # localModPath = ["c:\\Games\\steamapps\\workshop\\content\\281990\\2268189539\\", ["braz_por"]]
 # local_OVERHAUL = ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"]
@@ -71,7 +75,7 @@ print(localModPath, local_OVERHAUL)
 
 # mods_registry = "mods_registry.json" # old launcher (changed in 2.7.2)
 mods_registry = "settings.txt"
-localizations = ["english", "german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"]
+localizations = ["english", "german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"] # , "italian"
 # localizations = ["english", "russian"]
 
 # old, new = string
@@ -117,7 +121,8 @@ def replaceLoc(old, new, doc):
 
     if changed and optimizeLocString in old.lower() and old in doc:
         for k, v in doc.items():
-            if oldRe in v:
+            # if oldRe in v:
+            if oldRe.search(v):
                 changed = False
                 break
         if changed:      
@@ -471,11 +476,11 @@ for filename in ymlfiles:
                     if vt.startswith("$") and vt.endswith("$") and len(vt) < 64 and vt.count("$", 1, -3) == 0:
                         replaceLoc(kt, vt, docCopy)
                         if optimizeLocString in kt.lower(): del docCopy[kt]
-                        if kt in doc: del doc[kt]
+                        # if kt in doc: del doc[kt]
                         replaceLoc(k, v, docCopy)
                         if k in doc:
-                            del doc[k]
-                            if k in docCopy and optimizeLocString in filename.lower() or optimizeLocString in k.lower():
+                            # del doc[k]
+                            if k in docCopy and docCopy[k] and optimizeLocString in filename.lower() or optimizeLocString in k.lower():
                                 del docCopy[k]
                             else:
                                 docCopy[k] = vt
@@ -487,10 +492,10 @@ for filename in ymlfiles:
                     replaceLoc(k, v, docCopy)
                     if optimizeLocString in k.lower() and k in docCopy:
                         del docCopy[k]
-                    if k in doc: del doc[k]
+                    # if k in doc: del doc[k]
             # normal dupe
             elif not (v.startswith("$") or v.endswith("$")):
-                for vkey, vvalue in docCopy.items():
+                for vkey, vvalue in doc.items():
                     if k.lower() != vkey.lower() and v == vvalue:
                         srt = [vkey, k] # sort
                         if len(vkey) < len(k):
