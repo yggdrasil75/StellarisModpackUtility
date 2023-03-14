@@ -22,7 +22,7 @@ stellaris_version = '3.7.2b'
 # True/False optional 
 only_warning = False  # True implies code_cosmetic = False
 code_cosmetic = False # True/False optional (only if only_warning = False)
-only_actual = False   # True speedup search (from previous relevant) to actual version
+only_actual = True   # True speedup search (from previous relevant) to actual version
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False    # True for dev print
 mergerofrules = False  # True Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
@@ -72,17 +72,18 @@ if only_actual:
         [r"^\s+[^#]*?\bcreate_primitive_armies =", "Removed in 3.7: done via pop job now"],
     ]
     targets3 = {
+        r'\bvariable_string = "([\w.:]+)"': r'variable_string = "[\1]"', # set square brackets
         r"\bset_mia = yes": "set_mia = mia_return_home",
         r"\bset_primitive_age( =|_effect =)": r"set_pre_ftl_age\1",
         r"\bcreate_primitive_(species|blockers) = yes": r"create_pre_ftl_\1 = yes",
         r"\bsetup_primitive_planet = yes": "setup_pre_ftl_planet = yes",
         r"\bremove_primitive_flags = yes": "remove_pre_ftl_flags = yes",
         r"\bnuke_primitives_(\w*?)effect =": r"nuke_pre_ftls_\1effect =",
-        r"\bgenerate_primitives_(\w*?)on_planet =": r"generate_\1pre_ftls_on_planet =",
+        r"\bgenerate(\w*?)_primitives_on_planet =": r"generate\1_pre_ftls_on_planet =",
         r"\bcreate_(\w*?)primitive_empire =": r"create_\1pre_ftl_empire =",
         r"\bcreate_(hegemon|common_ground)_member_(\d) = yes": r"create_\1_member = { NUM = \2 }",
         r"_planet_flag = primitives_nuked_themselves": "_planet_flag = pre_ftls_nuked_themselves",
-        r"\bevent_primitive_civilization": ("events", "event_pre_ftl_civilization"),
+        r"sound = event_primitive_civilization": "sound = event_pre_ftl_civilization",
     }
     targets4 = {
         r"\bset_pre_ftl_age_effect = \{\s+primitive_age =": ["primitive_age =", "PRE_FTL_AGE ="],
@@ -450,17 +451,18 @@ else:
         r"\bhas_ascension_perk = ap_transcendence\b": "has_tradition = tr_psionics_finish",
         r"\bhas_ascension_perk = ap_evolutionary_mastery\b": "has_tradition = tr_genetics_resequencing",
         ### 3.7
+        r'\bvariable_string = "([\w.:]+)"': r'variable_string = "[\1]"', # set square brackets
         r"\bset_mia = yes": "set_mia = mia_return_home",
         r"\bset_primitive_age( =|_effect =)": r"set_pre_ftl_age\1",
         r"\bcreate_primitive_(species|blockers) = yes": r"create_pre_ftl_\1 = yes",
         r"\bsetup_primitive_planet = yes": "setup_pre_ftl_planet = yes",
         r"\bremove_primitive_flags = yes": "remove_pre_ftl_flags = yes",
         r"\bnuke_primitives_(\w*?)effect =": r"nuke_pre_ftls_\1effect =",
-        r"\bgenerate_primitives_(\w*?)on_planet =": r"generate_\1pre_ftls_on_planet =",
+        r"\bgenerate(\w*?)_primitives_on_planet =": r"generate\1_pre_ftls_on_planet =",
         r"\bcreate_(\w*?)primitive_empire =": r"create_\1pre_ftl_empire =",
         r"\bcreate_(hegemon|common_ground)_member_(\d) = yes": r"create_\1_member = { NUM = \2 }",
         r"_planet_flag = primitives_nuked_themselves": "_planet_flag = pre_ftls_nuked_themselves",
-        r"\bevent_primitive_civilization": ("events", "event_pre_ftl_civilization"),
+        r"sound = event_primitive_civilization": "sound = event_pre_ftl_civilization",
     }
 
     # re flags=re.I|re.M|re.A
@@ -636,8 +638,6 @@ if code_cosmetic and not only_warning:
     # NOT NUM triggers. TODO <> ?
     targets3[r"\bNOT = \{\s*(num_\w+|\w+?(?:_passed)) = (\d+)\s*\}"] = r"\1 != \2"
     targets3[r"\bfleet = \{\s*(?:destroy|delete)_fleet = this\s*\}"] = "destroy_fleet = fleet" # TODO may extend
-    targets3[r'\bvariable_string = "([\w.:]+)"'] = r'variable_string = "[\1]"' # set square brackets
-    # targets3[r'\bvariable_string = "\[([\w.:]+)\]"'] = r'variable_string = "\1"' # stripe square brackets
 
     ## targets3[r"# *([A-Z][\w ={}]+?)\.$"] = r"# \1" # remove comment punctuation mark
     targets4[r"\n{3,}"] = "\n\n" # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
