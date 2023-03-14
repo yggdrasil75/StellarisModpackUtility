@@ -82,6 +82,7 @@ if only_actual:
         r"\bcreate_(\w*?)primitive_empire =": r"create_\1pre_ftl_empire =",
         r"\bcreate_(hegemon|common_ground)_member_(\d) = yes": r"create_\1_member = { NUM = \2 }",
         r"_planet_flag = primitives_nuked_themselves": "_planet_flag = pre_ftls_nuked_themselves",
+        r"\bevent_primitive_civilization": ("events", "event_pre_ftl_civilization"),
     }
     targets4 = {
         r"\bset_pre_ftl_age_effect = \{\s+primitive_age =": ["primitive_age =", "PRE_FTL_AGE ="],
@@ -459,6 +460,7 @@ else:
         r"\bcreate_(\w*?)primitive_empire =": r"create_\1pre_ftl_empire =",
         r"\bcreate_(hegemon|common_ground)_member_(\d) = yes": r"create_\1_member = { NUM = \2 }",
         r"_planet_flag = primitives_nuked_themselves": "_planet_flag = pre_ftls_nuked_themselves",
+        r"\bevent_primitive_civilization": ("events", "event_pre_ftl_civilization"),
     }
 
     # re flags=re.I|re.M|re.A
