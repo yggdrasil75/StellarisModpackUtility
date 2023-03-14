@@ -51,6 +51,7 @@ key_IGNORE = "" # stops copying over localisations keys with this starting patte
 # localModPath = ["UAP", ["english", "german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese"]]
 # localModPath = ["Decentralized Empires", []] # ["spanish", "braz_por", "french", "polish", "simp_chinese"]
 # localModPath = ["CrisisManager_MidGame", ["french", "polish"]]
+# localModPath = ["CrisisManager_Sleeper", ["french", "polish"]]
 localModPath = ["FATALF", ["english", "japanese", "korean"]]
 localModPath = ["prob", []]
 localModPath = ["Ad Astra Technology", ["german", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"]]
@@ -63,9 +64,8 @@ localModPath = ["ADeadlyTempest", ["english", "french", "polish", "japanese", "k
 localModPath = ["Gray Tempest Shipset", ["german", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"]]
 localModPath = ["distant_stars_overhaul", ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"]]
 localModPath = ["New Job Manager", ["german", "spanish", "braz_por", "french", "polish", "korean"]]
+localModPath = ["UAP_dev", ["german", "spanish", "braz_por", "french", "polish"]]
 localModPath = ["honor_leaders", ["english", "japanese", "korean"]] 
-localModPath = ["CrisisManager_Sleeper", ["french", "polish", "korean"]]
-localModPath = ["UAP_dev", ["german", "spanish", "braz_por", "french", "polish", "korean"]]
 
 # localModPath = ["c:\\Games\\steamapps\\workshop\\content\\281990\\2268189539\\", ["braz_por"]]
 # local_OVERHAUL = ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"]
@@ -330,7 +330,7 @@ regRev2 = re.compile(r'(?:\'|([^:"]{2}))\'?$', re.MULTILINE)
 no_subfolder = False
 if os.path.exists(defaultLang):
     print("default language exists:", defaultLang)
-    ymlfiles = glob.iglob(os.path.join(defaultLang, "**/", ymlfiles), recursive=True)
+    ymlfiles = glob.iglob(os.path.join(defaultLang, ymlfiles), recursive=False)
 else:
     ymlfiles = glob.iglob('*l_'+defaultLang+'.yml', recursive=False)
     no_subfolder = True
@@ -355,18 +355,17 @@ def trReverse(s):
 
 def writeStream(lang, stream, filename):
     "Write YAML file"
+
     filename = filename.replace(defaultLang, lang)
-    lang = os.path.dirname(filename)
-    if lang and not os.path.isdir(lang) or not os.path.exists(lang) or (not no_subfolder and not os.path.isdir(lang) or not os.path.exists(lang)):
+    if not no_subfolder and not os.path.isdir(lang):
         try:
             os.mkdir(lang)
         except OSError:
             print("Creation of the directory %s failed" % lang)
         else:
             print("Successfully created the directory %s " % lang)
-
     lang = os.path.join(os.getcwd(), filename)
-    print("Write in folder", lang, os.path.isfile(lang))
+    print(lang, os.path.isfile(lang))
     # if not os.path.isfile(lang):
     if isinstance(stream, bytes):
         stream = stream.decode('utf-8-sig')
@@ -406,7 +405,7 @@ else: loadVanillaLoc = False
 trimDupe = re.compile(r"^\$?([^$]+)\$?$")
 trimEnd = re.compile(r"[.!?]\s*$")
 for filename in ymlfiles:
-    print("Open file:", filename)
+    print(filename)
     streamEn = getYAMLstream(localizations[0], filename)
     streamEn = streamEn.read()
     # print(streamEn)
@@ -562,7 +561,7 @@ for filename in ymlfiles:
             # reDupe = re.compile(r"^\$[^$]+?\$$") # don't use re in a loop
             for key, value in doc.items():
                 # print(key, value)
-                if len(value) > 0 and (key not in langDict or langDict[key] in ("", "REPLACE_ME") or (lang in local_OVERHAUL and langDict[key] != value)) and not (key_IGNORE != "" and key.startswith(key_IGNORE)): # or reDupe.search(value)
+                if key not in langDict or value == "" or langDict[key] in ("", "REPLACE_ME") or (lang in local_OVERHAUL and langDict[key] != value) and not (key_IGNORE != "" and key.startswith(key_IGNORE)): # or reDupe.search(value)
                     langDict[key] = value
                     changed = True
                     print("Fixed document ", filename.replace(defaultLang, lang), key, value.encode(errors='replace'))

@@ -22,7 +22,7 @@ stellaris_version = '3.7.2b'
 # True/False optional 
 only_warning = False  # True implies code_cosmetic = False
 code_cosmetic = False # True/False optional (only if only_warning = False)
-only_actual = True   # True speedup search (from previous relevant) to actual version
+only_actual = False   # True speedup search (from previous relevant) to actual version
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False    # True for dev print
 mergerofrules = False  # True Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
@@ -84,11 +84,12 @@ if only_actual:
         r"_planet_flag = primitives_nuked_themselves": "_planet_flag = pre_ftls_nuked_themselves",
     }
     targets4 = {
+        r"\bset_pre_ftl_age_effect = \{\s+primitive_age =": ["primitive_age =", "PRE_FTL_AGE ="],
     }
 elif only_v3_6: 
     removedTargets = [
         [r"\bhas_ascension_perk = ap_transcendence\b", "Removed in 3.6: can be replaced with 'has_tradition = tr_psionics_finish'"],
-        [r"\bhas_ascension_perk = ap_evolutionary_mastery\b", "Removed in 3.6: can be replaced with 'has_tradition = tr_genetics_resequencing'"]
+        [r"\bhas_ascension_perk = ap_evolutionary_mastery\b", "Removed in 3.6: can be replaced with 'has_tradition = tr_genetics_resequencing'"],
     ]
     targets3 = {
         r"\bpop_assembly_speed": "planet_pop_assembly_mult",
@@ -194,7 +195,7 @@ else:
         [r"^\s+[^#]*?\bcreate_primitive_armies =", "Removed in 3.7: done via pop job now"],
         # 3.6
         [r"\bhas_ascension_perk = ap_transcendence\b", "Removed in 3.6: can be replaced with 'has_tradition = tr_psionics_finish'"],
-        [r"\bhas_ascension_perk = ap_evolutionary_mastery\b", "Removed in 3.6: can be replaced with 'has_tradition = tr_genetics_resequencing'"]
+        [r"\bhas_ascension_perk = ap_evolutionary_mastery\b", "Removed in 3.6: can be replaced with 'has_tradition = tr_genetics_resequencing'"],
         # 3.4
         ("common/ship_sizes", [r"^\s+empire_limit = \{\s+", '"empire_limit" has been replaces by "ai_ship_data" and "country_limit"']),
         ("common/country_types", [r"^\s+(?:ship_data|army_data) = { = \{", '"ship_data & army_data" has been replaces by "ai_ship_data" and "country_limits"']),
@@ -569,6 +570,8 @@ else:
         r'slot\s*=\s*\"?(?:SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*\"?AUTOCANNON_\d\"?': [r'(=\s*\"?(SMALL|MEDIUM|LARGE)\w+\d+\"?\s+template\s*=\s*)\"?(AUTOCANNON_\d)\"?', ('common/global_ship_designs', r'\1"\2_\3"')],
         r"\bhas_(?:population|colonization|migration)_control = \{\s+value =": ["value", 'type'],
         r"\bOR = \{\s*(has_trait = trait_(?:latent_)?psionic\s+){2}\}": "has_psionic_species_trait = yes",
+        ## >= 3.7
+        r"\bset_pre_ftl_age_effect = \{\s+primitive_age =": ["primitive_age =", "PRE_FTL_AGE ="],
     }
 
 if also_old:
