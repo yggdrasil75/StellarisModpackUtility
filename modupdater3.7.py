@@ -1,6 +1,6 @@
 # @author: FirePrince
-# @version: 3.6.1
-# @revision: 2023/03/01
+# @version: 3.7.2b
+# @revision: 2023/03/14
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -16,18 +16,19 @@ import re
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
-stellaris_version = '3.6.1'
+stellaris_version = '3.7.2b'
 
 # ============== Initialize global parameter/option variables ===============
 # True/False optional 
 only_warning = False  # True implies code_cosmetic = False
 code_cosmetic = False # True/False optional (only if only_warning = False)
-only_actual = False   # True speedup search (from previous relevant) to actual version
+only_actual = True   # True speedup search (from previous relevant) to actual version
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False    # True for dev print
 mergerofrules = False  # True Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
 keep_default_country_trigger = False # on playable effect "is_country_type = default"
 
+only_v3_6 = False # Single version
 only_v3_5 = False # Single version
 only_v3_4 = False # Single version
 
@@ -61,9 +62,33 @@ resource_items = r"energy|unity|food|minerals|influence|alloys|consumer_goods|ex
 no_trigger_folder = re.compile(r"^([^_]+)(_(?!trigger)[^/_]+|[^_]*$)(?(2)/([^_]+)_[^/_]+$)?") # 2lvl, only 1lvl folder: ^([^_]+)(_(?!trigger)[^_]+|[^_]*)$ only 
 
 if only_actual:
+    """== 3.7 Quick stats ==
+    All primitive effects/triggers/events renamed/removed.
+    """
     removedTargets = [
-        [r"\bhas_ascension_perk = ap_transcendence\b", "can be replaced with 'has_tradition = tr_psionics_finish'"],
-        [r"\bhas_ascension_perk = ap_evolutionary_mastery\b", "can be replaced with 'has_tradition = tr_genetics_resequencing'"]
+        [r"^\s+[^#]*?\bid = primitive\.\d", "Removed in 3.7: replaceable with 'preftl.xx' event"],
+        [r"^\s+[^#]*?\bsremove_all_primitive_buildings =", "Removed in 3.7:"],
+        [r"^\s+[^#]*?\buplift_planet_mod_clear =", "Removed in 3.7:"],
+        [r"^\s+[^#]*?\bcreate_primitive_armies =", "Removed in 3.7: done via pop job now"],
+    ]
+    targets3 = {
+        r"\bset_mia = yes": "set_mia = mia_return_home",
+        r"\bset_primitive_age( =|_effect =)": r"set_pre_ftl_age\1",
+        r"\bcreate_primitive_(species|blockers) = yes": r"create_pre_ftl_\1 = yes",
+        r"\bsetup_primitive_planet = yes": "setup_pre_ftl_planet = yes",
+        r"\bremove_primitive_flags = yes": "remove_pre_ftl_flags = yes",
+        r"\bnuke_primitives_(\w*?)effect =": r"nuke_pre_ftls_\1effect =",
+        r"\bgenerate_primitives_(\w*?)on_planet =": r"generate_\1pre_ftls_on_planet =",
+        r"\bcreate_(\w*?)primitive_empire =": r"create_\1pre_ftl_empire =",
+        r"\bcreate_(hegemon|common_ground)_member_(\d) = yes": r"create_\1_member = { NUM = \2 }",
+        r"_planet_flag = primitives_nuked_themselves": "_planet_flag = pre_ftls_nuked_themselves",
+    }
+    targets4 = {
+    }
+elif only_v3_6: 
+    removedTargets = [
+        [r"\bhas_ascension_perk = ap_transcendence\b", "Removed in 3.6: can be replaced with 'has_tradition = tr_psionics_finish'"],
+        [r"\bhas_ascension_perk = ap_evolutionary_mastery\b", "Removed in 3.6: can be replaced with 'has_tradition = tr_genetics_resequencing'"]
     ]
     targets3 = {
         r"\bpop_assembly_speed": "planet_pop_assembly_mult",
@@ -162,9 +187,14 @@ else:
         # Format: tuple is with folder (folder, regexp/list); list is with a specific message [regexp, msg]
         # < 2.0
         r"\scan_support_spaceport = (yes|no)",
+        # 3.7
+        [r"^\s+[^#]*?\bid = primitive\.\d", "Removed in 3.7: replaceable with 'preftl.xx' event"],
+        [r"^\s+[^#]*?\bsremove_all_primitive_buildings =", "Removed in 3.7:"],
+        [r"^\s+[^#]*?\buplift_planet_mod_clear =", "Removed in 3.7:"],
+        [r"^\s+[^#]*?\bcreate_primitive_armies =", "Removed in 3.7: done via pop job now"],
         # 3.6
-        [r"\bhas_ascension_perk = ap_transcendence\b", 'can be replaced with has_tradition = tr_psionics_finish'],
-        [r"\bhas_ascension_perk = ap_evolutionary_mastery\b", 'can be replaced with has_tradition = tr_genetics_resequencing'],
+        [r"\bhas_ascension_perk = ap_transcendence\b", "Removed in 3.6: can be replaced with 'has_tradition = tr_psionics_finish'"],
+        [r"\bhas_ascension_perk = ap_evolutionary_mastery\b", "Removed in 3.6: can be replaced with 'has_tradition = tr_genetics_resequencing'"]
         # 3.4
         ("common/ship_sizes", [r"^\s+empire_limit = \{\s+", '"empire_limit" has been replaces by "ai_ship_data" and "country_limit"']),
         ("common/country_types", [r"^\s+(?:ship_data|army_data) = { = \{", '"ship_data & army_data" has been replaces by "ai_ship_data" and "country_limits"']),
@@ -417,6 +447,17 @@ else:
         r"\btoken = citizenship_purge(?:_machine)?\b": ("common/species_rights", "is_purge = yes"),
         r"\bhas_ascension_perk = ap_transcendence\b": "has_tradition = tr_psionics_finish",
         r"\bhas_ascension_perk = ap_evolutionary_mastery\b": "has_tradition = tr_genetics_resequencing",
+        ### 3.7
+        r"\bset_mia = yes": "set_mia = mia_return_home",
+        r"\bset_primitive_age( =|_effect =)": r"set_pre_ftl_age\1",
+        r"\bcreate_primitive_(species|blockers) = yes": r"create_pre_ftl_\1 = yes",
+        r"\bsetup_primitive_planet = yes": "setup_pre_ftl_planet = yes",
+        r"\bremove_primitive_flags = yes": "remove_pre_ftl_flags = yes",
+        r"\bnuke_primitives_(\w*?)effect =": r"nuke_pre_ftls_\1effect =",
+        r"\bgenerate_primitives_(\w*?)on_planet =": r"generate_\1pre_ftls_on_planet =",
+        r"\bcreate_(\w*?)primitive_empire =": r"create_\1pre_ftl_empire =",
+        r"\bcreate_(hegemon|common_ground)_member_(\d) = yes": r"create_\1_member = { NUM = \2 }",
+        r"_planet_flag = primitives_nuked_themselves": "_planet_flag = pre_ftls_nuked_themselves",
     }
 
     # re flags=re.I|re.M|re.A
@@ -580,6 +621,7 @@ if code_cosmetic and not only_warning:
             "Plantoids Species Pack": "plantoids",
             "Synthetic Dawn Story Pack": "synthethic_dawn",
             "Toxoids Species Pack": "toxoids",
+            "First Contact Story Pack": "first_contact_dlc",
          }[p.group(1)] + " = yes" 
     # targets3[r"\s*days\s*=\s*-1\s*"] = ' ' # still needed to execute immediately
     # targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
