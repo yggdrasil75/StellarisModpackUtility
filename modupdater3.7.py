@@ -1,6 +1,6 @@
 # @author: FirePrince
-# @version: 3.7.2b
-# @revision: 2023/03/14
+# @version: 3.7.3b
+# @revision: 2023/03/21
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -16,7 +16,7 @@ import re
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
-stellaris_version = '3.7.2b'
+stellaris_version = '3.7.3b'
 
 # ============== Initialize global parameter/option variables ===============
 # True/False optional 
@@ -661,7 +661,7 @@ if mergerofrules:
     # without is_country_type_with_subjects & without is_fallen_empire = yes
     targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes))|(?:(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = default|merg_is_default_empire = yes))|(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_country_type = fallen_empire|merg_is_fallen_empire = yes|is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)(\s+)){2,}", (no_trigger_folder, r"merg_is_standard_empire = yes\2")]
     # with is_country_type_with_subjects & without AFE but with is_fallen_empire 
-    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)\s+is_fallen_empire = yes)|(?:is_fallen_empire = yes\s+(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_fallen_empire = yes|is_country_type_with_subjects = yes)(\s+)){2,}", (no_trigger_folder, r"merg_is_standard_empire = yes\2")]
+    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)\s+is_fallen_empire = yes)|(?:is_fallen_empire = yes\s+(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)))\s+"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_fallen_empire = yes|is_country_type_with_subjects = yes)(\s+)){2,}", (no_trigger_folder, r"merg_is_standard_empire = yes\2")]
     targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)\s+\}?"] = [r"(\s+)(\bOR = \{)?(\s+)(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)(?(2)\1\})", (no_trigger_folder, r"\1\3is_mechanical_empire = yes")]
     targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))(?(2)\1\})", (no_trigger_folder, r"\1\3is_robot_empire = yes")]
     targets4[r"NO[RT] = \{\s*(?:merg_is_(?:fallen_empire|awakened_fe) = yes\s+){2}\}"] = "is_fallen_empire = no"
@@ -673,6 +673,7 @@ if mergerofrules:
     targets3[r"\bis_country_type = awakened_fallen_empire\b"] = (no_trigger_folder, "merg_is_awakened_fe = yes")
     targets3[r"\b(is_planet_class = pc_habitat\b|is_pd_habitat = yes)"] = (no_trigger_folder, "merg_is_habitat = yes")
     targets3[r"\b(is_planet_class = pc_machine\b|is_pd_machine = yes)"] = (no_trigger_folder, "merg_is_machine_world = yes")
+    targets3[r"\b(is_planet_class = pc_city\b|is_pd_arcology = yes|is_city_planet = yes)"] = (no_trigger_folder, "merg_is_arcology = yes")
     targets3[r"\bhas_ethic = ethic_gestalt_consciousness\b"] = (no_trigger_folder, "is_gestalt = yes")
     targets3[r"\bhas_authority = auth_machine_intelligence\b"] = (no_trigger_folder, "is_machine_empire = yes")
     targets3[r"\bhas_authority = auth_hive_mind\b"] = (no_trigger_folder, "is_hive_empire = yes")
@@ -756,7 +757,7 @@ def parse_dir():
                 print(mod_path)
                 files = glob.iglob(mod_path + '/**', recursive=True)  # '\\*.txt'
                 modfix(files)
-
+        # FIXME: 'generator' has no len()
         if len(files) == 0:
             print("We have a sub folder")
             files = glob.iglob(mod_path + '/**', recursive=True)  # '\\*.txt'
