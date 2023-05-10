@@ -1,5 +1,5 @@
 # @author: FirePrince
-# @version: 3.8.0b
+# @version: 3.8.1b
 # @revision: 2023/05/10
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
@@ -17,7 +17,7 @@ import ctypes.wintypes
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
-stellaris_version = '3.8.0b'
+stellaris_version = '3.8.1b'
 
 # ============== Initialize global parameter/option variables ===============
 # True/False optional 
@@ -29,6 +29,7 @@ debug_mode = False    # True for dev print
 mergerofrules = False  # True Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
 keep_default_country_trigger = False # on playable effect "is_country_type = default"
 
+# only_v3_8 = False # Single version
 only_v3_7 = False # Single version
 only_v3_6 = False # Single version
 only_v3_5 = False # Single version
@@ -92,7 +93,6 @@ if only_actual:
         [r"[^#]*?\bpre_ruler_leader_class =", "Removed in 3.8: replaceable with ?"],
         [r"[^#]*?\bhas_chosen_trait_ruler =", "Removed in 3.8"],
         [r"[^#]*?\bis_specialist_researcher =", "Replaced trigger 3.8: is_specialist_researcher_(society|engineering|physics)"],
-        (["common/edicts"], [r"[^#]*?\blength = 0", "Possible CTD in 3.8?"]),
     ]
     targets3 = {
         r'\bset_is_female = yes': 'set_gender = female',
@@ -108,7 +108,7 @@ if only_actual:
         r'\bleader_trait_newboot\b': 'leader_trait_eager',
         r'\bleader_trait_flexible_programming\b': 'leader_trait_adaptable',
         r'\bleader_trait_rigid_programming\b': 'leader_trait_stubborn',
-
+        r"([^#]*?)\blength = 0": ("common/edicts", r"\1length = -1"),
     }
     targets4 = {
         # r"\btraits = { trait = \w+ trait = \w+ }": ["traits = { <level> = <key> <level> = <key> }"],
@@ -254,7 +254,6 @@ else:
         [r"[^#]*?\bpre_ruler_leader_class =", "Removed in 3.8: replaceable with ?"],
         [r"[^#]*?\bhas_chosen_trait_ruler =", "Removed in 3.8"],
         [r"[^#]*?\bis_specialist_researcher =", "Replaced trigger 3.8: is_specialist_researcher_(society|engineering|physics)"],
-        (["common/edicts"], [r"[^#]*?\blength = 0", "Possible CTD in 3.8?"]),
         # 3.7
         [r"^\s+[^#]*?\bid = primitive\.\d", "Removed in 3.7: replaceable with 'preftl.xx' event"],
         [r"^\s+[^#]*?\bremove_all_primitive_buildings =", "Removed in 3.7:"],
