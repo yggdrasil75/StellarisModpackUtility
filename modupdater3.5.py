@@ -10,6 +10,7 @@
 import os  # io for high level usage
 import glob
 import re
+import ctypes.wintypes
 
 # from pathlib import Path
 # import sys
@@ -32,7 +33,14 @@ only_v3_4 = False # Single version
 
 mod_outpath = '' # if you don't want to overwrite the original
 # mod_path = os.path.dirname(os.getcwd())
-mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
+if os.path.exists(os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'):
+    mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
+else:
+    CSIDL_PERSONAL = 5
+    SHGFP_TYPE_CURRENT = 0
+    temp = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
+    ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_PERSONAL, None, SHGFP_TYPE_CURRENT, temp)
+    mod_path = temp.value + '/Paradox Interactive/Stellaris/mod'
 
 
 
