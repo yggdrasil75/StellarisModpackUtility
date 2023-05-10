@@ -22,11 +22,11 @@ stellaris_version = '3.8.1b'
 # ============== Initialize global parameter/option variables ===============
 # True/False optional 
 only_warning = False  # True implies code_cosmetic = False
-code_cosmetic = False # True/False optional (only if only_warning = False)
 only_actual = True   # True speedup search (from previous relevant) to actual version
+code_cosmetic = False # True/False optional (only if only_warning = False)
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False    # True for dev print
-mergerofrules = False  # True Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
+mergerofrules = True  # True Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
 keep_default_country_trigger = False # on playable effect "is_country_type = default"
 
 # only_v3_8 = False # Single version
@@ -68,7 +68,6 @@ else:
 
 resource_items = r"energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research))"
 no_trigger_folder = re.compile(r"^([^_]+)(_(?!trigger)[^/_]+|[^_]*$)(?(2)/([^_]+)_[^/_]+$)?") # 2lvl, only 1lvl folder: ^([^_]+)(_(?!trigger)[^_]+|[^_]*)$ only 
-leader = r"admiral|general|governor|ruler|scientist"
 
 # TODO # name="~~Scripted Trigger Undercoat" !?
 # remote_file_id="2868680633"
@@ -104,7 +103,7 @@ if only_actual:
         r'\b(add|has|remove)_ruler_trait\b': r'\1_trait',
         r'\bclass = ruler\b': 'class = random_ruler',
         r'\bleader_trait_charismatic\b': 'leader_trait_inspiring',
-        r'\bleader_trait_(?:%s_)(\w*(?:chosen|psionic|brainslug))\b' % leader: r'leader_trait_\1',
+        r'\bleader_trait_(?:admiral|general|governor|ruler|scientist)_(\w*(?:chosen|psionic|brainslug))\b': r'leader_trait_\1',
         r'\bleader_trait_newboot\b': 'leader_trait_eager',
         r'\bleader_trait_flexible_programming\b': 'leader_trait_adaptable',
         r'\bleader_trait_rigid_programming\b': 'leader_trait_stubborn',
@@ -538,7 +537,7 @@ else:
         r'\b(add|has|remove)_ruler_trait\b': r'\1_trait',
         r'\bclass = ruler\b': 'class = random_ruler',
         r'\bleader_trait_charismatic\b': 'leader_trait_inspiring',
-        r'\bleader_trait_(?:%s_)(\w*(?:chosen|psionic|brainslug))\b' % leader: r'leader_trait_\1',
+        r'\bleader_trait_(?:admiral|general|governor|ruler|scientist)_(\w*(?:chosen|psionic|brainslug))\b': r'leader_trait_\1',
         r'\bleader_trait_newboot\b': 'leader_trait_eager',
         r'\bleader_trait_flexible_programming\b': 'leader_trait_adaptable',
         r'\bleader_trait_rigid_programming\b': 'leader_trait_stubborn',
