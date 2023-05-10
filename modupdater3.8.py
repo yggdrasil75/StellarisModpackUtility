@@ -1,6 +1,6 @@
 # @author: FirePrince
-# @version: 3.7.3b
-# @revision: 2023/03/21
+# @version: 3.8.0b
+# @revision: 2023/05/10
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -16,18 +16,19 @@ import re
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
-stellaris_version = '3.7.3b'
+stellaris_version = '3.8.0b'
 
 # ============== Initialize global parameter/option variables ===============
 # True/False optional 
 only_warning = False  # True implies code_cosmetic = False
-code_cosmetic = True # True/False optional (only if only_warning = False)
-only_actual = False   # True speedup search (from previous relevant) to actual version
+code_cosmetic = False # True/False optional (only if only_warning = False)
+only_actual = True   # True speedup search (from previous relevant) to actual version
 also_old = False      # Beta: only some pre 2.3 stuff
 debug_mode = False    # True for dev print
-mergerofrules = True  # True Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
+mergerofrules = False  # True Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
 keep_default_country_trigger = False # on playable effect "is_country_type = default"
 
+only_v3_7 = False # Single version
 only_v3_6 = False # Single version
 only_v3_5 = False # Single version
 only_v3_4 = False # Single version
@@ -60,6 +61,7 @@ mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/m
 
 resource_items = r"energy|unity|food|minerals|influence|alloys|consumer_goods|exotic_gases|volatile_motes|rare_crystals|sr_living_metal|sr_dark_matter|sr_zro|(?:physics|society|engineering(?:_research))"
 no_trigger_folder = re.compile(r"^([^_]+)(_(?!trigger)[^/_]+|[^_]*$)(?(2)/([^_]+)_[^/_]+$)?") # 2lvl, only 1lvl folder: ^([^_]+)(_(?!trigger)[^_]+|[^_]*)$ only 
+leader = r"admiral|general|governor|ruler|scientist"
 
 # TODO # name="~~Scripted Trigger Undercoat" !?
 # remote_file_id="2868680633"
@@ -71,14 +73,52 @@ no_trigger_folder = re.compile(r"^([^_]+)(_(?!trigger)[^/_]+|[^_]*$)(?(2)/([^_]+
 #     r"\bhas_valid_civic = civic_byzantine_bureaucracy": "has_byzantine_bureaucracy = yes",
 #     r"\bhas_civic = civic_exalted_priesthood": "has_exalted_priesthood = { allow_invalid = yes }",
 # }
+removedTargets = []
+targets3 = {}
+targets4 = {}
 
 if only_actual:
+    removedTargets = [
+        [r"[^#]*?\bsector(?:\.| = \{ )leader\b", "Removed in 3.8: replaceable with planet?"],
+        [r"[^#]*?\bclass = ruler\b", "Removed in 3.8: replaceable with ?"],
+        [r"[^#]*?\bleader_of_faction = [^\s]+", "Removed in 3.8: replaceable with ?"],
+        [r"[^#]*?\bhas_mandate = [^\s]+", "Removed in 3.8: replaceable with ?"],
+        [r"[^#]*?\bpre_ruler_leader_class =", "Removed in 3.8: replaceable with ?"],
+        [r"[^#]*?\bhas_chosen_trait_ruler =", "Removed in 3.8"],
+        [r"[^#]*?\bis_specialist_researcher =", "Replaced trigger 3.8: is_specialist_researcher_(society|engineering|physics)"],
+        (["common/edicts"], [r"[^#]*?\blength = 0", "Possible CTD in 3.8?"]),
+    ]
+    targets3 = {
+        r'\bset_is_female = yes': 'set_gender = female',
+        r'\s+trait = random_trait\b\n?': '',
+        r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1',
+        # r'\strait = random(_traits)?': '',
+        r'\bleader_class = ruler\b': 'is_ruler = yes',
+        r'\btype = ruler\b': 'ruler = yes',
+        r'\b(add|has|remove)_ruler_trait\b': r'\1_trait',
+        r'\bclass = ruler\b': 'class = random_ruler',
+        r'\bleader_trait_charismatic\b': 'leader_trait_inspiring',
+        r'\bleader_trait_(?:%s_)(\w*(?:chosen|psionic|brainslug))\b' % leader: r'leader_trait_\1',
+        r'\bleader_trait_newboot\b': 'leader_trait_eager',
+        r'\bleader_trait_flexible_programming\b': 'leader_trait_adaptable',
+        r'\bleader_trait_rigid_programming\b': 'leader_trait_stubborn',
+
+
+    }
+    targets4 = {
+        # r"\btraits = { trait = \w+ trait = \w+ }": ["traits = { <level> = <key> <level> = <key> }"],
+        # r"\bcreate_leader = \{[^}]+class = ruler\b": ["class = ruler", "class = admiral"], 
+        r"(exists = sector\s+)?\s?sector = \{\s+exists = leader\s+\}": "", 
+        r"\s+traits = \{\s*\}": "", 
+    }
+        
+elif only_v3_7: 
     """== 3.7 Quick stats ==
     All primitive effects/triggers/events renamed/removed.
     """
     removedTargets = [
         [r"^\s+[^#]*?\bid = primitive\.\d", "Removed in 3.7: replaceable with 'preftl.xx' event"],
-        [r"^\s+[^#]*?\bsremove_all_primitive_buildings =", "Removed in 3.7:"],
+        [r"^\s+[^#]*?\bremove_all_primitive_buildings =", "Removed in 3.7:"],
         [r"^\s+[^#]*?\buplift_planet_mod_clear =", "Removed in 3.7:"],
         [r"^\s+[^#]*?\bcreate_primitive_armies =", "Removed in 3.7: done via pop job now"],
     ]
@@ -201,9 +241,15 @@ else:
         # Format: tuple is with folder (folder, regexp/list); list is with a specific message [regexp, msg]
         # < 2.0
         r"\scan_support_spaceport = (yes|no)",
+        # 3.8
+        [r"[^#]*?\badd_ruler_trait =", "Removed in 3.8: replaceable with ?"],
+        [r"[^#]*?\bremove_ruler_trait =", "Removed in 3.8: replaceable with ?"],
+        [r"[^#]*?\bleader_of_faction = [^\s]+", "Removed in 3.8: replaceable with ?"],
+        [r"[^#]*?\bhas_mandate = [^\s]+", "Removed in 3.8: replaceable with ?"],
+        [r"[^#]*?\bpre_ruler_leader_class = [^\s]+", "Removed in 3.8: replaceable with ?"],
         # 3.7
         [r"^\s+[^#]*?\bid = primitive\.\d", "Removed in 3.7: replaceable with 'preftl.xx' event"],
-        [r"^\s+[^#]*?\bsremove_all_primitive_buildings =", "Removed in 3.7:"],
+        [r"^\s+[^#]*?\bremove_all_primitive_buildings =", "Removed in 3.7:"],
         [r"^\s+[^#]*?\buplift_planet_mod_clear =", "Removed in 3.7:"],
         [r"^\s+[^#]*?\bcreate_primitive_armies =", "Removed in 3.7: done via pop job now"],
         # 3.6
@@ -262,6 +308,7 @@ else:
     # }
 
     targets3 = {
+        ### > 3.6.*
         r"\bstatic_rotation = yes\s": ("common/component_templates", ""),
         r"\bowner\.species\b": "owner_species",
         ### >= 3.0.* (only one-liner)
@@ -474,6 +521,8 @@ else:
         r"\bcreate_(hegemon|common_ground)_member_(\d) = yes": r"create_\1_member = { NUM = \2 }",
         r"_planet_flag = primitives_nuked_themselves": "_planet_flag = pre_ftls_nuked_themselves",
         r"sound = event_primitive_civilization": "sound = event_pre_ftl_civilization",
+        ### 3.8
+        r'\bset_is_female = yes': 'set_gender = female',
     }
 
     # re flags=re.I|re.M|re.A
