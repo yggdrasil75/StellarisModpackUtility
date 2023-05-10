@@ -10,6 +10,7 @@
 import os  # io for high level usage
 import glob
 import re
+import ctypes.wintypes
 
 # from pathlib import Path
 # import sys
@@ -35,9 +36,14 @@ only_v3_4 = False # Single version
 
 mod_outpath = '' # if you don't want to overwrite the original
 # mod_path = os.path.dirname(os.getcwd())
-mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
-
-
+if os.path.exists(os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'):
+    mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
+else:
+    CSIDL_PERSONAL = 5
+    SHGFP_TYPE_CURRENT = 0
+    temp = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
+    ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_PERSONAL, None, SHGFP_TYPE_CURRENT, temp)
+    mod_path = temp.value + '/Paradox Interactive/Stellaris/mod'
 
 # if not sys.version_info.major == 3 and sys.version_info.minor >= 6:
 #     print("Python 3.6 or higher is required.")
@@ -102,7 +108,6 @@ if only_actual:
         r'\bleader_trait_newboot\b': 'leader_trait_eager',
         r'\bleader_trait_flexible_programming\b': 'leader_trait_adaptable',
         r'\bleader_trait_rigid_programming\b': 'leader_trait_stubborn',
-
 
     }
     targets4 = {
@@ -242,11 +247,14 @@ else:
         # < 2.0
         r"\scan_support_spaceport = (yes|no)",
         # 3.8
-        [r"[^#]*?\badd_ruler_trait =", "Removed in 3.8: replaceable with ?"],
-        [r"[^#]*?\bremove_ruler_trait =", "Removed in 3.8: replaceable with ?"],
+        [r"[^#]*?\bsector(?:\.| = \{ )leader\b", "Removed in 3.8: replaceable with planet?"],
+        [r"[^#]*?\bclass = ruler\b", "Removed in 3.8: replaceable with ?"],
         [r"[^#]*?\bleader_of_faction = [^\s]+", "Removed in 3.8: replaceable with ?"],
         [r"[^#]*?\bhas_mandate = [^\s]+", "Removed in 3.8: replaceable with ?"],
-        [r"[^#]*?\bpre_ruler_leader_class = [^\s]+", "Removed in 3.8: replaceable with ?"],
+        [r"[^#]*?\bpre_ruler_leader_class =", "Removed in 3.8: replaceable with ?"],
+        [r"[^#]*?\bhas_chosen_trait_ruler =", "Removed in 3.8"],
+        [r"[^#]*?\bis_specialist_researcher =", "Replaced trigger 3.8: is_specialist_researcher_(society|engineering|physics)"],
+        (["common/edicts"], [r"[^#]*?\blength = 0", "Possible CTD in 3.8?"]),
         # 3.7
         [r"^\s+[^#]*?\bid = primitive\.\d", "Removed in 3.7: replaceable with 'preftl.xx' event"],
         [r"^\s+[^#]*?\bremove_all_primitive_buildings =", "Removed in 3.7:"],
@@ -523,6 +531,18 @@ else:
         r"sound = event_primitive_civilization": "sound = event_pre_ftl_civilization",
         ### 3.8
         r'\bset_is_female = yes': 'set_gender = female',
+        r'\s+trait = random_trait\b\n?': '',
+        r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1',
+        # r'\strait = random(_traits)?': '',
+        r'\bleader_class = ruler\b': 'is_ruler = yes',
+        r'\btype = ruler\b': 'ruler = yes',
+        r'\b(add|has|remove)_ruler_trait\b': r'\1_trait',
+        r'\bclass = ruler\b': 'class = random_ruler',
+        r'\bleader_trait_charismatic\b': 'leader_trait_inspiring',
+        r'\bleader_trait_(?:%s_)(\w*(?:chosen|psionic|brainslug))\b' % leader: r'leader_trait_\1',
+        r'\bleader_trait_newboot\b': 'leader_trait_eager',
+        r'\bleader_trait_flexible_programming\b': 'leader_trait_adaptable',
+        r'\bleader_trait_rigid_programming\b': 'leader_trait_stubborn',
     }
 
     # re flags=re.I|re.M|re.A
@@ -636,6 +656,9 @@ else:
         r"\bOR = \{\s*(has_trait = trait_(?:latent_)?psionic\s+){2}\}": "has_psionic_species_trait = yes",
         ## >= 3.7
         r"\bset_pre_ftl_age_effect = \{\s+primitive_age =": ["primitive_age =", "PRE_FTL_AGE ="],
+        ## >= 3.8
+        r"(exists = sector\s+)?\s?sector = \{\s+exists = leader\s+\}": "", 
+        r"\s+traits = \{\s*\}": "", 
     }
 
 if also_old:
