@@ -1,6 +1,6 @@
 # @author: FirePrince
-# @version: 3.8.1b
-# @revision: 2023/05/10
+# @version: 3.8.2b
+# @revision: 2023/05/11
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -17,7 +17,7 @@ import ctypes.wintypes
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
-stellaris_version = '3.8.1b'
+stellaris_version = '3.8.2b'
 
 # ============== Initialize global parameter/option variables ===============
 # True/False optional 
@@ -95,7 +95,7 @@ if only_actual:
     ]
     targets3 = {
         r'\bset_is_female = yes': 'set_gender = female',
-        r'\s+trait = random_trait\b\n?': '',
+        r'\n?\s+trait = random_trait\b\n?': '',
         r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1',
         # r'\strait = random(_traits)?': '',
         r'\bleader_class = ruler\b': 'is_ruler = yes',
@@ -108,6 +108,7 @@ if only_actual:
         r'\bleader_trait_flexible_programming\b': 'leader_trait_adaptable',
         r'\bleader_trait_rigid_programming\b': 'leader_trait_stubborn',
         r"([^#]*?)\blength = 0": ("common/edicts", r"\1length = -1"),
+        r"([^#]*?)\badd_random_leader_trait = yes": (["common/scripted_effects", "events"], r"\1add_trait = random_common"),
     }
     targets4 = {
         # r"\btraits = { trait = \w+ trait = \w+ }": ["traits = { <level> = <key> <level> = <key> }"],
@@ -529,7 +530,7 @@ else:
         r"sound = event_primitive_civilization": "sound = event_pre_ftl_civilization",
         ### 3.8
         r'\bset_is_female = yes': 'set_gender = female',
-        r'\s+trait = random_trait\b\n?': '',
+        r'\n?\s+trait = random_trait\b\n?': '',
         r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1',
         # r'\strait = random(_traits)?': '',
         r'\bleader_class = ruler\b': 'is_ruler = yes',
@@ -541,6 +542,8 @@ else:
         r'\bleader_trait_newboot\b': 'leader_trait_eager',
         r'\bleader_trait_flexible_programming\b': 'leader_trait_adaptable',
         r'\bleader_trait_rigid_programming\b': 'leader_trait_stubborn',
+        r"([^#]*?)\blength = 0": ("common/edicts", r"\1length = -1"),
+        r"([^#]*?)\badd_random_leader_trait = yes": (["common/scripted_effects", "events"], r"\1add_trait = random_common"),
     }
 
     # re flags=re.I|re.M|re.A
@@ -711,6 +714,7 @@ if code_cosmetic and not only_warning:
             "Synthetic Dawn Story Pack": "synthethic_dawn",
             "Toxoids Species Pack": "toxoids",
             "First Contact Story Pack": "first_contact_dlc",
+            "Galactic Paragons": "paragon_dlc",
          }[p.group(1)] + " = yes" 
     # targets3[r"\s*days\s*=\s*-1\s*"] = ' ' # still needed to execute immediately
     # targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
