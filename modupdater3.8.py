@@ -107,6 +107,7 @@ if only_actual:
         r'\bleader_trait_newboot\b': 'leader_trait_eager',
         r'\bleader_trait_flexible_programming\b': 'leader_trait_adaptable',
         r'\bleader_trait_rigid_programming\b': 'leader_trait_stubborn',
+        r'\bleader_trait_general_mercenary_warrior\b': 'leader_trait_mercenary_warrior',
         r"([^#]*?)\blength = 0": ("common/edicts", r"\1length = -1"),
         r"([^#]*?)\badd_random_leader_trait = yes": (["common/scripted_effects", "events"], r"\1add_trait = random_common"),
     }
@@ -542,6 +543,7 @@ else:
         r'\bleader_trait_newboot\b': 'leader_trait_eager',
         r'\bleader_trait_flexible_programming\b': 'leader_trait_adaptable',
         r'\bleader_trait_rigid_programming\b': 'leader_trait_stubborn',
+        r'\bleader_trait_general_mercenary_warrior\b': 'leader_trait_mercenary_warrior',
         r"([^#]*?)\blength = 0": ("common/edicts", r"\1length = -1"),
         r"([^#]*?)\badd_random_leader_trait = yes": (["common/scripted_effects", "events"], r"\1add_trait = random_common"),
     }
