@@ -116,6 +116,7 @@ if only_actual or only_v3_8:
         # r"\bcreate_leader = \{[^}]+class = ruler\b": ["class = ruler", "class = admiral"], 
         r"(exists = sector\s+)?\s?sector = \{\s+exists = leader\s+\}": "", 
         r"\s+traits = \{\s*\}": "", 
+        r"\bkill_leader = \{\s*(?:type = ruler|ruler = yes)\s+(show_notification = (?:yes|no))?\s*\}": r"ruler = { kill_leader = { \1 } }", 
     }
         
 elif only_v3_7: 
@@ -661,7 +662,8 @@ else:
         r"\bset_pre_ftl_age_effect = \{\s+primitive_age =": ["primitive_age =", "PRE_FTL_AGE ="],
         ## >= 3.8
         r"(exists = sector\s+)?\s?sector = \{\s+exists = leader\s+\}": "", 
-        r"\s+traits = \{\s*\}": "", 
+        r"\s+traits = \{\s*\}": "",
+        r"\bkill_leader = \{\s*(?:type = ruler|ruler = yes)\s+(show_notification = (?:yes|no))?\s*\}": r"ruler = { kill_leader = { \1 } }", 
     }
 
 if also_old:
@@ -742,7 +744,7 @@ if code_cosmetic and not only_warning:
     # targets4[r"\n\s+\}\n\s+else"] = [r"\}\s*else", "} else"] # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
     # WARNING not valid if in OR: NOR <=> AND = { NOT NOT } , # only 2 items (sub-trigger)
     targets4[r"\n\s+NO[TR] = \{\s*[^{}#\n]+\s*\}\s*?\n\s*NO[TR] = \{\s*[^{}#\n]+\s*\}"] = [r"([\t ]+)NO[TR] = \{\s*([^{}#\r\n]+)\s*\}\s*?\n\s*NO[TR] = \{\s*([^{}#\r\n]+)\s*\}", r"\1NOR = {\n\1\t\2\n\1\t\3\n\1}"]
-    targets4[r"\brandom_country = \{\s*limit = \{\s*is_country_type = global_event\s*\}"] = "event_target:global_event_country = {"
+    # targets4[r"\brandom_country = \{\s*limit = \{\s*is_country_type = global_event\s*\}"] = "event_target:global_event_country = {"
      # unnecessary AND
     targets4[r"\b((?:%s) = \{(\s+)(?:AND|this) = \{(?:\2\t[^\n]+)+\2\}\n)" % triggerScopes] = [r"(%s) = \{\n(\s+)(?:AND|this) = \{\n\t(\2[^\n]+\n)(?(3)\t)(\2[^\n]+\n)?(?(4)\t)(\2[^\n]+\n)?(?(5)\t)(\2[^\n]+\n)?(?(6)\t)(\2[^\n]+\n)?(?(7)\t)(\2[^\n]+\n)?(?(8)\t)(\2[^\n]+\n)?(?(9)\t)(\2[^\n]+\n)?(?(10)\t)(\2[^\n]+\n)?(?(11)\t)(\2[^\n]+\n)?(?(12)\t)(\2[^\n]+\n)?(?(13)\t)(\2[^\n]+\n)?(?(14)\t)(\2[^\n]+\n)?(?(15)\t)(\2[^\n]+\n)?(?(16)\t)(\2[^\n]+\n)?(?(17)\t)(\2[^\n]+\n)?(?(18)\t)(\2[^\n]+\n)?(?(19)\t)(\2[^\n]+\n)?(?(20)\t)(\2[^\n]+\n)?\2\}\n" % triggerScopes, r"\1 = {\n\3\4\5\6\7\8\9\10\11\12\13\14\15\16\17\18\19\20\21"]
     targets4[r"(?:\s+add_resource = \{\s*\w+ = [^{}#]+\s*\})+"] = [r"(\s+add_resource = \{)(\s*\w+ = [^\s{}#]+)\s*\}\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\}(?(3)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?(?(4)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?(?(5)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?(?(6)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?(?(7)\s+add_resource = \{(\s*\w+ = [^\s{}#]+)\s*\})?", r"\1\2\3\4\5\6\7 }"] # 6 items
