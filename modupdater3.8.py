@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.8.2b
-# @revision: 2023/05/11
+# @revision: 2023/05/12
 # @thanks: OldEnt for detailed rundowns
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
 # @TODO: full path mod folder
@@ -29,7 +29,7 @@ debug_mode = False    # True for dev print
 mergerofrules = True  # True Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
 keep_default_country_trigger = False # on playable effect "is_country_type = default"
 
-# only_v3_8 = False # Single version
+only_v3_8 = False # Single version
 only_v3_7 = False # Single version
 only_v3_6 = False # Single version
 only_v3_5 = False # Single version
@@ -83,7 +83,7 @@ removedTargets = []
 targets3 = {}
 targets4 = {}
 
-if only_actual:
+if only_actual or only_v3_8:
     removedTargets = [
         [r"[^#]*?\bsector(?:\.| = \{ )leader\b", "Removed in 3.8: replaceable with planet?"],
         [r"[^#]*?\bclass = ruler\b", "Removed in 3.8: replaceable with ?"],
@@ -97,7 +97,7 @@ if only_actual:
         r'\bset_is_female = yes': 'set_gender = female',
         r'\n?\s+trait = random_trait\b\n?': '',
         r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1',
-        # r'\strait = random(_traits)?': '',
+        [r"\bhas_chosen_trait_ruler = yes", "has_trait = leader_trait_chosen"],
         r'\bleader_class = ruler\b': 'is_ruler = yes',
         r'\btype = ruler\b': 'ruler = yes',
         r'\b(add|has|remove)_ruler_trait\b': r'\1_trait',
@@ -533,7 +533,7 @@ else:
         r'\bset_is_female = yes': 'set_gender = female',
         r'\n?\s+trait = random_trait\b\n?': '',
         r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1',
-        # r'\strait = random(_traits)?': '',
+        [r"\bhas_chosen_trait_ruler = yes", "has_trait = leader_trait_chosen"],
         r'\bleader_class = ruler\b': 'is_ruler = yes',
         r'\btype = ruler\b': 'ruler = yes',
         r'\b(add|has|remove)_ruler_trait\b': r'\1_trait',
@@ -694,6 +694,13 @@ if also_old:
 
 if not keep_default_country_trigger:
     targets4[r"\s(?:every|random|count|any)_playable_country = \{[^{}#]*(?:limit = \{\s*)?(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes|merg_is_default_empire = yes)\s*"] = [r"((?:every|random|count|any)_playable_country = \{[^{}#]*?(?:limit = \{\s*)?)(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes|merg_is_default_empire = yes)\s*", r"\1"]
+    # v3.8 former merg_is_standard_empire Merger Rule now vanilla   
+    targets3[r"\bmerg_is_standard_empire = (yes|no)"] = r"is_default_or_fallen = \1"
+    # without is_country_type_with_subjects & without is_fallen_empire = yes
+    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes))|(?:(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = default|merg_is_default_empire = yes))|(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_country_type = fallen_empire|merg_is_fallen_empire = yes|is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)(\s+)){2,}", (no_trigger_folder, r"is_default_or_fallen = yes\2")]
+    # with is_country_type_with_subjects & without AFE but with is_fallen_empire 
+    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)\s+is_fallen_empire = yes)|(?:is_fallen_empire = yes\s+(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)))\s+"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_fallen_empire = yes|is_country_type_with_subjects = yes)(\s+)){2,}", (no_trigger_folder, r"is_default_or_fallen = yes\2")]
+
 
 if code_cosmetic and not only_warning:
     triggerScopes = r"limit|trigger|any_\w+|leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+"
@@ -746,10 +753,6 @@ if code_cosmetic and not only_warning:
 # BETA WIP still only event folder
 # like targets3 but later
 if mergerofrules:
-    # without is_country_type_with_subjects & without is_fallen_empire = yes
-    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes))|(?:(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = default|merg_is_default_empire = yes))|(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_country_type = fallen_empire|merg_is_fallen_empire = yes|is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)(\s+)){2,}", (no_trigger_folder, r"merg_is_standard_empire = yes\2")]
-    # with is_country_type_with_subjects & without AFE but with is_fallen_empire 
-    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)\s+is_fallen_empire = yes)|(?:is_fallen_empire = yes\s+(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)))\s+"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_fallen_empire = yes|is_country_type_with_subjects = yes)(\s+)){2,}", (no_trigger_folder, r"merg_is_standard_empire = yes\2")]
     targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)\s+\}?"] = [r"(\s+)(\bOR = \{)?(\s+)(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)(?(2)\1\})", (no_trigger_folder, r"\1\3is_mechanical_empire = yes")]
     targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))(?(2)\1\})", (no_trigger_folder, r"\1\3is_robot_empire = yes")]
     targets4[r"NO[RT] = \{\s*(?:merg_is_(?:fallen_empire|awakened_fe) = yes\s+){2}\}"] = "is_fallen_empire = no"
