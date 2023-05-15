@@ -1,24 +1,23 @@
 # @author: FirePrince
-# @version: 3.8.2b
-# @revision: 2023/05/12
+# @version: 3.8.2
+# @revision: 2023/05/16
 # @thanks: OldEnt for detailed rundowns
+# @thanks: yggdrasil75 for cmd params
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
-# @TODO: full path mod folder
-#        replace in *.YML
-# @TODO: extended support The Merger of Rules
+# @TODO: replace in *.YML ?
+# @TODO: extended support The Merger of Rules ?
 # ============== Import libs ===============
 import os  # io for high level usage
 import glob
 import re
 import ctypes.wintypes
+import sys
 
 # from pathlib import Path
-# import sys
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
-stellaris_version = '3.8.2b'
-import sys
+stellaris_version = '3.8.2'
 
 # Default values
 mod_path = ''
@@ -232,13 +231,13 @@ targets4 = {}
 
 if only_actual or only_v3_8:
     removedTargets = [
-        [r"[^#]*?\bsector(?:\.| = \{ )leader\b", "Removed in 3.8: replaceable with planet?"],
-        [r"[^#]*?\bclass = ruler\b", "Removed in 3.8: replaceable with ?"],
-        [r"[^#]*?\bleader_of_faction = [^\s]+", "Removed in 3.8: replaceable with ?"],
-        [r"[^#]*?\bhas_mandate = [^\s]+", "Removed in 3.8: replaceable with ?"],
-        [r"[^#]*?\bpre_ruler_leader_class =", "Removed in 3.8: replaceable with ?"],
-        [r"[^#]*?\bhas_chosen_trait_ruler =", "Removed in 3.8"],
-        [r"[^#]*?\bis_specialist_researcher =", "Replaced trigger 3.8: is_specialist_researcher_(society|engineering|physics)"],
+        [r"^[^#]+?\ssector(?:\.| = \{ )leader\b", "Removed in 3.8: replaceable with planet?"],
+        [r"^[^#]+?\sclass = ruler\b", "Removed in 3.8: replaceable with ?"],
+        [r"^[^#]+?\sleader_of_faction = [^\s]+", "Removed in 3.8: replaceable with ?"],
+        [r"^[^#]+?\shas_mandate = [^\s]+", "Removed in 3.8: replaceable with ?"],
+        [r"^[^#]+?\spre_ruler_leader_class =", "Removed in 3.8: replaceable with ?"],
+        [r"^[^#]+?\shas_chosen_trait_ruler =", "Removed in 3.8"],
+        [r"^[^#]+?\sis_specialist_researcher =", "Replaced trigger 3.8: is_specialist_researcher_(society|engineering|physics)"],
     ]
     targets3 = {
         r'\bset_is_female = yes': 'set_gender = female',
@@ -1008,8 +1007,11 @@ def parse_dir():
 
 def modfix(file_list):
     # global mod_path, mod_outpath
-    # print(targets3)
-    if debug_mode: print("mod_outpath", mod_outpath)
+    if debug_mode:
+        print("mod_path:", mod_path)
+        print("mod_outpath:", mod_outpath)
+        print("file_list:", file_list)
+
     subfolder = ''
     for _file in file_list:
         if os.path.isfile(_file) and _file.endswith('.txt'):
@@ -1199,8 +1201,27 @@ def modfix(file_list):
         #     if not os.path.isdir(structure):
         #         os.mkdir(structure)
         # else: print("NO TXT?", _file)
-    print("\nDone!")
     if debug_mode: print(datetime.datetime.now() - start_time)
+    ## Update mod descriptor
+    _file = os.path.join(mod_path, 'descriptor.mod')
+    if not only_warning and os.path.exists(_file):
+        with open(_file, 'r', encoding='utf-8', errors='ignore') as descriptor_mod:
+            # out = descriptor_mod.readlines()
+            out = descriptor_mod.read()
+            pattern = re.compile(r'supported_version=\"(.*?)\"')
+            m = re.search(pattern, out)
+            # print(out)
+            if m and m != stellaris_version:
+                m = m.group(1)
+                out = re.sub(pattern, r'supported_version="%s"' % stellaris_version, out)
+                out = re.sub(m[0:3], stellaris_version[0:3], out)
+                pattern = re.compile(r'name=\"(.*?)\"\n')
+                pattern = re.search(pattern, out)
+                if pattern: pattern = pattern.group(1)
+                print(pattern, "version %s on 'descriptor.mod' updated to %s!" % (m, stellaris_version))
+                open(_file, 'w', encoding='utf-8', errors='ignore').write(out)
+
+    print("\nDone!", mod_outpath)
 
 parse_dir() # mod_path, mod_outpath
 # input("\nPRESS ANY KEY TO EXIT!")
