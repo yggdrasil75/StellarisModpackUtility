@@ -36,7 +36,7 @@ only_v3_5 = False
 only_v3_4 = False
 
 # Print available options and descriptions if /? or --help is provided
-if '/?' in sys.argv or '--help' in sys.argv:
+if '/?' in sys.argv or '--help' in sys.argv or '-h' in sys.argv:
     print("# ============== Initialize global parameter/option variables ===============")
     print("# True/False optional")
     print("-w, --only_warning\tTrue implies code_cosmetic = False")
