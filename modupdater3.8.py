@@ -1000,7 +1000,7 @@ def parse_dir():
         # FIXME: 'generator' has no len()
         if len(files) == 0:
             print("We have a sub folder")
-            files = glob.iglob(mod_path + '/**', recursive=True)  # '\\*.txt'
+            files = glob.glob(mod_path + '/**', recursive=True)  # '\\*.txt'
             modfix(files)
         elif debug_mode:
             print("We have a main folder", files)
