@@ -18,33 +18,180 @@ import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
 stellaris_version = '3.8.2b'
+import sys
 
-# ============== Initialize global parameter/option variables ===============
-# True/False optional 
-only_warning = False  # True implies code_cosmetic = False
-only_actual = True   # True speedup search (from previous relevant) to actual version
-code_cosmetic = False # True/False optional (only if only_warning = False)
-also_old = False      # Beta: only some pre 2.3 stuff
-debug_mode = False    # True for dev print
-mergerofrules = True  # True Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod
-keep_default_country_trigger = False # on playable effect "is_country_type = default"
+# Default values
+mod_path = ''
+only_warning = False
+only_actual = True
+code_cosmetic = False
+also_old = False
+debug_mode = False
+mergerofrules = True
+keep_default_country_trigger = False
+only_v3_8 = False
+only_v3_7 = False
+only_v3_6 = False
+only_v3_5 = False
+only_v3_4 = False
 
-only_v3_8 = False # Single version
-only_v3_7 = False # Single version
-only_v3_6 = False # Single version
-only_v3_5 = False # Single version
-only_v3_4 = False # Single version
+# Print available options and descriptions if /? or --help is provided
+if '/?' in sys.argv or '--help' in sys.argv or '-h' in sys.argv:
+    print("# ============== Initialize global parameter/option variables ===============")
+    print("# True/False optional")
+    print("-w, --only_warning\tTrue implies code_cosmetic = False")
+    print("-a, --only_actual\tTrue speedup search (from previous relevant) to actual version")
+    print("-c, --code_cosmetic\tTrue/False optional (only if only_warning = False)")
+    print("-o, --also_old\t\tBeta: only some pre 2.3 stuff")
+    print("-d, --debug_mode\t\tTrue for dev print")
+    print("-m, --mergerofrules\tTrue Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod")
+    print("-k, --keep_default_country_trigger\ton playable effect \"is_country_type = default\"")
+    print("-v3.8, --only_v3_8\tSingle version")
+    print("-v3.7, --only_v3_7\tSingle version")
+    print("-v3.6, --only_v3_6\tSingle version")
+    print("-v3.5, --only_v3_5\tSingle version")
+    print("-v3.4, --only_v3_4\tSingle version")
+    exit()
+
+# Process command-line arguments
+i = 1
+while i < len(sys.argv):
+    arg = sys.argv[i]
+    if arg == '-w' or arg == '--only_warning':
+        if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false':
+            only_warning = False
+            i += 1
+        elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true':
+            i += 1
+            only_warning = True
+        else:
+            only_warning = True
+    elif arg == '-a' or arg == '--only_actual':
+        if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false':
+            only_actual = False
+            i += 1
+        elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true':
+            i += 1
+            only_actual = True
+        else:
+            only_actual = True
+    elif arg == '-c' or arg == '--code_cosmetic':
+        if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false':
+            code_cosmetic = False
+            i += 1
+        elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true':
+            i += 1
+            code_cosmetic = True
+        else:
+            code_cosmetic = True
+    elif arg == '-o' or arg == '--also_old':
+        if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false':
+            also_old = False
+            i += 1
+        elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true':
+            i += 1
+            also_old = True
+        else:
+            also_old = True
+    elif arg == '-d' or arg == '--debug_mode':
+        if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false':
+            debug_mode = False
+            i += 1
+        elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true':
+            i += 1
+            debug_mode = True
+        else:
+            debug_mode = True
+    elif arg == '-m' or arg == '--mergerofrules':
+        if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false':
+            mergerofrules = False
+            i += 1
+        elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true':
+            i += 1
+            mergerofrules = True
+        else:
+            mergerofrules = True
+    elif arg == '-k' or arg == '--keep_default_country_trigger':
+        if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false':
+            keep_default_country_trigger = False
+            i += 1
+        elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true':
+            i += 1
+            keep_default_country_trigger = True
+        else:
+            keep_default_country_trigger = True
+    elif arg == '-v3.8' or arg == '--only_v3_8':
+        if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false':
+            only_v3_8 = False
+            i += 1
+        elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true':
+            i += 1
+            only_v3_8 = True
+        else:
+            only_v3_8 = True
+    elif arg == '-v3.7' or arg == '--only_v3_7':
+        if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false':
+            only_v3_7 = False
+            i += 1
+        elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true':
+            i += 1
+        else:
+            only_v3_7 = True
+    elif arg == '-v3.6' or arg == '--only_v3_6':
+        if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false':
+            only_v3_6 = False
+            i += 1
+        elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true':
+            i += 1
+            only_v3_6 = True
+        else:
+            only_v3_6 = True
+    elif arg == '-v3.5' or arg == '--only_v3_5':
+        if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false':
+            only_v3_5 = False
+            i += 1
+        elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true':
+            i += 1
+            only_v3_5 = True
+        else:
+            only_v3_5 = True
+    elif arg == '-v3.4' or arg == '--only_v3_4':
+        if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false':
+            only_v3_4 = False
+            i += 1
+        elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true':
+            i += 1
+            only_v3_4 = True
+        else:
+            only_v3_4 = True
+    elif arg == '-only' or arg == '--onlyVersion':
+        arg2 = sys.argv[i+1]
+        if arg2 == '3.4':
+            only_v3_4 = True
+        elif arg2 == '3.5':
+            only_v3_5 = True
+        elif arg2 == '3.6':
+            only_v3_6 = True
+        elif arg2 == '3.7':
+            only_v3_7 = True
+        elif arg2 == '3.8':
+            only_v3_8 = True
+    elif arg == '-input' and i+1 < len(sys.argv):
+        mod_path = sys.argv[i+1]
+        i += 1
+    i += 1
 
 mod_outpath = '' # if you don't want to overwrite the original
 # mod_path = os.path.dirname(os.getcwd())
-if os.path.exists(os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'):
-    mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
-else:
-    CSIDL_PERSONAL = 5
-    SHGFP_TYPE_CURRENT = 0
-    temp = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
-    ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_PERSONAL, None, SHGFP_TYPE_CURRENT, temp)
-    mod_path = temp.value + '/Paradox Interactive/Stellaris/mod'
+if mod_path is None or mod_path == '':
+    if os.path.exists(os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'):
+        mod_path = os.path.expanduser('~') + '/Documents/Paradox Interactive/Stellaris/mod'
+    else:
+        CSIDL_PERSONAL = 5
+        SHGFP_TYPE_CURRENT = 0
+        temp = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
+        ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_PERSONAL, None, SHGFP_TYPE_CURRENT, temp)
+        mod_path = temp.value + '/Paradox Interactive/Stellaris/mod'
 
 # if not sys.version_info.major == 3 and sys.version_info.minor >= 6:
 #     print("Python 3.6 or higher is required.")
@@ -837,7 +984,7 @@ def parse_dir():
 
     # if os.path.isfile(mod_path + os.sep + 'descriptor.mod'):
     if os.path.exists(os.path.join(mod_path, 'descriptor.mod')):
-        files = glob.iglob(mod_path + '/**', recursive=True)  # '\\*.txt'
+        files = glob.glob(mod_path + '/**', recursive=True)  # '\\*.txt'
         modfix(files)
     else:
         "We have a main or a sub folder"
@@ -853,7 +1000,7 @@ def parse_dir():
         # FIXME: 'generator' has no len()
         if len(files) == 0:
             print("We have a sub folder")
-            files = glob.iglob(mod_path + '/**', recursive=True)  # '\\*.txt'
+            files = glob.glob(mod_path + '/**', recursive=True)  # '\\*.txt'
             modfix(files)
         elif debug_mode:
             print("We have a main folder", files)
