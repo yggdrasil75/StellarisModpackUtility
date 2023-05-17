@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.8.2
-# @revision: 2023/05/16
+# @revision: 2023/05/17
 # @thanks: OldEnt for detailed rundowns
 # @thanks: yggdrasil75 for cmd params
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
@@ -26,7 +26,7 @@ only_actual = True
 code_cosmetic = False
 also_old = False
 debug_mode = False
-mergerofrules = True
+mergerofrules = False
 keep_default_country_trigger = False
 only_v3_8 = False
 only_v3_7 = False
@@ -242,7 +242,7 @@ if only_actual or only_v3_8:
     targets3 = {
         r'\bset_is_female = yes': 'set_gender = female',
         r'\n?\s+trait = random_trait\b\n?': '',
-        r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1',
+        # r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1', # not necessarily
         r"\bhas_chosen_trait_ruler = yes": "has_trait = leader_trait_chosen",
         r'\bleader_class = ruler\b': 'is_ruler = yes',
         r'\btype = ruler\b': 'ruler = yes',
@@ -1210,18 +1210,18 @@ def modfix(file_list):
             out = descriptor_mod.read()
             pattern = re.compile(r'supported_version=\"(.*?)\"')
             m = re.search(pattern, out)
-            # print(out)
-            if m and m != stellaris_version:
-                m = m.group(1)
+            if m: m = m.group(1)
+             # print(m, isinstance(m, str), len(m))
+            if isinstance(m, str) and m != stellaris_version and m[0:3] != stellaris_version[0:3]:
                 out = re.sub(pattern, r'supported_version="%s"' % stellaris_version, out)
                 out = re.sub(m[0:3], stellaris_version[0:3], out)
                 pattern = re.compile(r'name=\"(.*?)\"\n')
                 pattern = re.search(pattern, out)
                 if pattern: pattern = pattern.group(1)
-                print(pattern, "version %s on 'descriptor.mod' updated to %s!" % (m, stellaris_version))
+                print(pattern.encode(errors='replace'), "version %s on 'descriptor.mod' updated to %s!" % (m, stellaris_version))
                 open(_file, 'w', encoding='utf-8', errors='ignore').write(out)
 
-    print("\nDone!", mod_outpath)
+    print("\nDone!", mod_outpath.encode(errors='replace'))
 
 parse_dir() # mod_path, mod_outpath
 # input("\nPRESS ANY KEY TO EXIT!")
