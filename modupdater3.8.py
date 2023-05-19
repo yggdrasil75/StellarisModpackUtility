@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.8.2
-# @revision: 2023/05/17
+# @revision: 2023/05/19
 # @thanks: OldEnt for detailed rundowns
 # @thanks: yggdrasil75 for cmd params
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
@@ -241,21 +241,25 @@ if only_actual or only_v3_8:
     ]
     targets3 = {
         r'\bset_is_female = yes': 'set_gender = female',
-        r'\n?\s+trait = random_trait\b\n?': '',
+        r'\s+trait = random_traits?\s*': '',
         # r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1', # not necessarily
         r"\bhas_chosen_trait_ruler = yes": "has_trait = leader_trait_chosen",
         r'\bleader_class = ruler\b': 'is_ruler = yes',
         r'\btype = ruler\b': 'ruler = yes',
         r'\b(add|has|remove)_ruler_trait\b': r'\1_trait',
         r'\bclass = ruler\b': 'class = random_ruler',
-        r'\bleader_trait_charismatic\b': 'leader_trait_inspiring',
         r'\bleader_trait_(?:admiral|general|governor|ruler|scientist)_(\w*(?:chosen|psionic|brainslug))\b': r'leader_trait_\1',
-        r'\bleader_trait_newboot\b': 'leader_trait_eager',
-        r'\bleader_trait_flexible_programming\b': 'leader_trait_adaptable',
-        r'\bleader_trait_rigid_programming\b': 'leader_trait_stubborn',
-        r'\bleader_trait_general_mercenary_warrior\b': 'leader_trait_mercenary_warrior',
+        r"\bleader_trait_(\w+)": lambda p: p.group(0) if not p.group(1) or p.group(1) not in {"charismatic", "newboot", "flexible_programming", "rigid_programming", "general_mercenary_warrior", "demoralizer"} else "leader_trait_"+{
+             "charismatic": "inspiring",
+             "newboot": "eager",
+             "flexible_programming": "adaptable",
+             "rigid_programming": "stubborn",
+             "general_mercenary_warrior": "mercenary_warrior",
+             "demoralizer": "dreaded"
+         }[p.group(1)],
         r"([^#]*?)\blength = 0": ("common/edicts", r"\1length = -1"),
         r"([^#]*?)\badd_random_leader_trait = yes": (["common/scripted_effects", "events"], r"\1add_trait = random_common"),
+        r"\s*[^#]*?\bleader_trait = \{\s*\w+\s*\}\s*": ("common/traits", ""),
     }
     targets4 = {
         # r"\btraits = { trait = \w+ trait = \w+ }": ["traits = { <level> = <key> <level> = <key> }"],
@@ -678,21 +682,25 @@ else:
         r"sound = event_primitive_civilization": "sound = event_pre_ftl_civilization",
         ### 3.8
         r'\bset_is_female = yes': 'set_gender = female',
-        r'\n?\s+trait = random_trait\b\n?': '',
-        r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1',
+        r'\s+trait = random_traits?\s*': '',
+        # r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1', # not necessarily
         r"\bhas_chosen_trait_ruler = yes": "has_trait = leader_trait_chosen",
         r'\bleader_class = ruler\b': 'is_ruler = yes',
         r'\btype = ruler\b': 'ruler = yes',
         r'\b(add|has|remove)_ruler_trait\b': r'\1_trait',
         r'\bclass = ruler\b': 'class = random_ruler',
-        r'\bleader_trait_charismatic\b': 'leader_trait_inspiring',
         r'\bleader_trait_(?:admiral|general|governor|ruler|scientist)_(\w*(?:chosen|psionic|brainslug))\b': r'leader_trait_\1',
-        r'\bleader_trait_newboot\b': 'leader_trait_eager',
-        r'\bleader_trait_flexible_programming\b': 'leader_trait_adaptable',
-        r'\bleader_trait_rigid_programming\b': 'leader_trait_stubborn',
-        r'\bleader_trait_general_mercenary_warrior\b': 'leader_trait_mercenary_warrior',
+        r"\bleader_trait_(\w+)": lambda p: p.group(0) if not p.group(1) or p.group(1) not in {"charismatic", "newboot", "flexible_programming", "rigid_programming", "general_mercenary_warrior", "demoralizer"} else "leader_trait_"+{
+             "charismatic": "inspiring",
+             "newboot": "eager",
+             "flexible_programming": "adaptable",
+             "rigid_programming": "stubborn",
+             "general_mercenary_warrior": "mercenary_warrior",
+             "demoralizer": "dreaded"
+         }[p.group(1)],
         r"([^#]*?)\blength = 0": ("common/edicts", r"\1length = -1"),
         r"([^#]*?)\badd_random_leader_trait = yes": (["common/scripted_effects", "events"], r"\1add_trait = random_common"),
+        r"\s*[^#]*?\bleader_trait = \{\s*\w+\s*\}\s*": ("common/traits", ""),
     }
 
     # re flags=re.I|re.M|re.A
