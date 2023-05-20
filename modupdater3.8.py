@@ -248,22 +248,50 @@ if only_actual or only_v3_8:
         r'\btype = ruler\b': 'ruler = yes',
         r'\b(add|has|remove)_ruler_trait\b': r'\1_trait',
         r'\bclass = ruler\b': 'class = random_ruler',
-        r'\bleader_trait_(?:admiral|general|governor|ruler|scientist)_(\w*(?:chosen|psionic|brainslug))\b': r'leader_trait_\1',
-        r"\bleader_trait_(\w+)": lambda p: p.group(0) if not p.group(1) or p.group(1) not in {"charismatic", "newboot", "flexible_programming", "rigid_programming", "general_mercenary_warrior", "demoralizer"} else "leader_trait_"+{
+        r'\bleader_trait_(?:admiral|general|governor|ruler|scientist)_(\w*(?:chosen|psionic|brainslug|synthetic|cyborg|erudite))\b': r'leader_trait_\1',
+        r"\bleader_trait_(\w+)\b": lambda p: p.group(0) if not p.group(1) or p.group(1) not in {
+                "charismatic",
+                "newboot",
+                "flexible_programming",
+                "rigid_programming",
+                "general_mercenary_warrior",
+                "demoralizer",
+                "cataloger",
+                "maintenance_loop",
+                "unstable_code_base",
+                "parts_cannibalizer",
+                "erratic_morality_core",
+                "trickster_fircon",
+                "warbot_tinkerer",
+                "ai_aided_design",
+                "bulldozer",
+                "analytical",
+            } else "leader_trait_"+{
              "charismatic": "inspiring",
              "newboot": "eager",
              "flexible_programming": "adaptable",
              "rigid_programming": "stubborn",
              "general_mercenary_warrior": "mercenary_warrior",
-             "demoralizer": "dreaded"
+             "demoralizer": "dreaded",
+             # DLC negative removed?
+             "cataloger": "xeno_cataloger", # leader_trait_midas_touch
+             "maintenance_loop": "fleet_logistician",
+             "unstable_code_base": "nervous",
+             "parts_cannibalizer": "army_logistician",
+             "erratic_morality_core": "armchair_commander",
+             "trickster_fircon": "trickster_2",
+             "warbot_tinkerer": "army_veteran",
+             "ai_aided_design": "retired_fleet_officer",
+             "bulldozer": "environmental_engineer",
+             "analytical": "intellectual",
          }[p.group(1)],
         r"([^#]*?)\blength = 0": ("common/edicts", r"\1length = -1"),
         r"([^#]*?)\badd_random_leader_trait = yes": (["common/scripted_effects", "events"], r"\1add_trait = random_common"),
         r"\s*[^#]*?\bleader_trait = \{\s*\w+\s*\}\s*": ("common/traits", ""),
-        r"\s+traits = \{\s*\}\s*": "", 
+        # r"\s+traits = \{\s*\}\s*": "", 
     }
     targets4 = {
-        # r"\s+traits = \{\s*\}": "", 
+        r"\s+traits = \{\s*\}": "", 
         r"(exists = sector\s+)?\s?sector = \{\s+exists = leader\s+\}": "", 
         r"\bkill_leader = \{\s*(?:type = ruler|ruler = yes)\s+(show_notification = (?:yes|no))?\s*\}": r"ruler = { kill_leader = { \1 } }", 
     }
@@ -700,7 +728,7 @@ else:
         r"([^#]*?)\blength = 0": ("common/edicts", r"\1length = -1"),
         r"([^#]*?)\badd_random_leader_trait = yes": (["common/scripted_effects", "events"], r"\1add_trait = random_common"),
         r"\s*[^#]*?\bleader_trait = \{\s*\w+\s*\}\s*": ("common/traits", ""),
-        r"\s+traits = \{\s*\}\s*": "", 
+        # r"\s+traits = \{\s*\}\s*": "", 
     }
 
     # re flags=re.I|re.M|re.A
@@ -815,7 +843,7 @@ else:
         ## >= 3.7
         r"\bset_pre_ftl_age_effect = \{\s+primitive_age =": ["primitive_age =", "PRE_FTL_AGE ="],
         ## >= 3.8
-        # r"\s+traits = \{\s*\}": "",
+        r"\s+traits = \{\s*\}": "",
         r"(exists = sector\s+)?\s?sector = \{\s+exists = leader\s+\}": "", 
         r"\bkill_leader = \{\s*(?:type = ruler|ruler = yes)\s+(show_notification = (?:yes|no))?\s*\}": r"ruler = { kill_leader = { \1 } }", 
     }
