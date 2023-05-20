@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.8.2
-# @revision: 2023/05/19
+# @revision: 2023/05/20
 # @thanks: OldEnt for detailed rundowns
 # @thanks: yggdrasil75 for cmd params
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
@@ -241,7 +241,7 @@ if only_actual or only_v3_8:
     ]
     targets3 = {
         r'\bset_is_female = yes': 'set_gender = female',
-        r'\s+trait = random_traits?\s*': '',
+        r'\s+trait = random_trait\b\s*': '',
         # r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1', # not necessarily
         r"\bhas_chosen_trait_ruler = yes": "has_trait = leader_trait_chosen",
         r'\bleader_class = ruler\b': 'is_ruler = yes',
@@ -260,12 +260,11 @@ if only_actual or only_v3_8:
         r"([^#]*?)\blength = 0": ("common/edicts", r"\1length = -1"),
         r"([^#]*?)\badd_random_leader_trait = yes": (["common/scripted_effects", "events"], r"\1add_trait = random_common"),
         r"\s*[^#]*?\bleader_trait = \{\s*\w+\s*\}\s*": ("common/traits", ""),
+        r"\s+traits = \{\s*\}\s*": "", 
     }
     targets4 = {
-        # r"\btraits = { trait = \w+ trait = \w+ }": ["traits = { <level> = <key> <level> = <key> }"],
-        # r"\bcreate_leader = \{[^}]+class = ruler\b": ["class = ruler", "class = admiral"], 
+        # r"\s+traits = \{\s*\}": "", 
         r"(exists = sector\s+)?\s?sector = \{\s+exists = leader\s+\}": "", 
-        r"\s+traits = \{\s*\}": "", 
         r"\bkill_leader = \{\s*(?:type = ruler|ruler = yes)\s+(show_notification = (?:yes|no))?\s*\}": r"ruler = { kill_leader = { \1 } }", 
     }
         
@@ -682,7 +681,7 @@ else:
         r"sound = event_primitive_civilization": "sound = event_pre_ftl_civilization",
         ### 3.8
         r'\bset_is_female = yes': 'set_gender = female',
-        r'\s+trait = random_traits?\s*': '',
+        r'\s+trait = random_trait\b\s*': '',
         # r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1', # not necessarily
         r"\bhas_chosen_trait_ruler = yes": "has_trait = leader_trait_chosen",
         r'\bleader_class = ruler\b': 'is_ruler = yes',
@@ -701,6 +700,7 @@ else:
         r"([^#]*?)\blength = 0": ("common/edicts", r"\1length = -1"),
         r"([^#]*?)\badd_random_leader_trait = yes": (["common/scripted_effects", "events"], r"\1add_trait = random_common"),
         r"\s*[^#]*?\bleader_trait = \{\s*\w+\s*\}\s*": ("common/traits", ""),
+        r"\s+traits = \{\s*\}\s*": "", 
     }
 
     # re flags=re.I|re.M|re.A
@@ -815,8 +815,8 @@ else:
         ## >= 3.7
         r"\bset_pre_ftl_age_effect = \{\s+primitive_age =": ["primitive_age =", "PRE_FTL_AGE ="],
         ## >= 3.8
+        # r"\s+traits = \{\s*\}": "",
         r"(exists = sector\s+)?\s?sector = \{\s+exists = leader\s+\}": "", 
-        r"\s+traits = \{\s*\}": "",
         r"\bkill_leader = \{\s*(?:type = ruler|ruler = yes)\s+(show_notification = (?:yes|no))?\s*\}": r"ruler = { kill_leader = { \1 } }", 
     }
 
