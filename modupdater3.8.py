@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.8.2
-# @revision: 2023/05/20
+# @revision: 2023/05/22
 # @thanks: OldEnt for detailed rundowns
 # @thanks: yggdrasil75 for cmd params
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
@@ -237,10 +237,11 @@ if only_actual or only_v3_8:
         [r"^[^#]+?\shas_mandate = [^\s]+", "Removed in 3.8: replaceable with ?"],
         [r"^[^#]+?\spre_ruler_leader_class =", "Removed in 3.8: replaceable with ?"],
         [r"^[^#]+?\shas_chosen_trait_ruler =", "Removed in 3.8"],
-        [r"^[^#]+?\sis_specialist_researcher =", "Replaced trigger 3.8: is_specialist_researcher_(society|engineering|physics)"],
+        # [r"^[^#]+?\sis_specialist_researcher =", "Replaced trigger 3.8: is_specialist_researcher_(society|engineering|physics)"], scripted trigger now
     ]
     targets3 = {
         r'\bset_is_female = yes': 'set_gender = female',
+        r'\bcountry_command_limit_': 'command_limit_',
         r'\s+trait = random_trait\b\s*': '',
         # r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1', # not necessarily
         r"\bhas_chosen_trait_ruler = yes": "has_trait = leader_trait_chosen",
@@ -266,6 +267,8 @@ if only_actual or only_v3_8:
                 "ai_aided_design",
                 "bulldozer",
                 "analytical",
+                "archaeologist_ancrel",
+                "mindful",
             } else "leader_trait_"+{
              "charismatic": "inspiring",
              "newboot": "eager",
@@ -284,10 +287,12 @@ if only_actual or only_v3_8:
              "ai_aided_design": "retired_fleet_officer",
              "bulldozer": "environmental_engineer",
              "analytical": "intellectual",
+             "archaeologist_ancrel": "archaeologist", # collective_wisdom?
+             "mindful": "insightful",
          }[p.group(1)],
         r"([^#]*?)\blength = 0": ("common/edicts", r"\1length = -1"),
         r"([^#]*?)\badd_random_leader_trait = yes": (["common/scripted_effects", "events"], r"\1add_trait = random_common"),
-        r"\s*[^#]*?\bleader_trait = \{\s*\w+\s*\}\s*": ("common/traits", ""),
+        r"\s*[^#]*?\bleader_trait = (?:all|\{\s*\w+\s*\})\s*": ("common/traits", ""),
         # r"\s+traits = \{\s*\}\s*": "", 
     }
     targets4 = {
@@ -432,7 +437,7 @@ else:
         [r"[^#]*?\bhas_mandate = [^\s]+", "Removed in 3.8: replaceable with ?"],
         [r"[^#]*?\bpre_ruler_leader_class =", "Removed in 3.8: replaceable with ?"],
         [r"[^#]*?\bhas_chosen_trait_ruler =", "Removed in 3.8"],
-        [r"[^#]*?\bis_specialist_researcher =", "Replaced trigger 3.8: is_specialist_researcher_(society|engineering|physics)"],
+        # [r"[^#]*?\bis_specialist_researcher =", "Replaced trigger 3.8: is_specialist_researcher_(society|engineering|physics)"], scripted trigger now
         # 3.7
         [r"^\s+[^#]*?\bid = primitive\.\d", "Removed in 3.7: replaceable with 'preftl.xx' event"],
         [r"^\s+[^#]*?\bremove_all_primitive_buildings =", "Removed in 3.7:"],
@@ -490,7 +495,7 @@ else:
 
     # targets2 = {
     #     r"MACHINE_species_trait_points_add = \d" : ["MACHINE_species_trait_points_add ="," ROBOT_species_trait_points_add = ",""],
-    #     r"job_replicator_add = \d":["if = {limit = {has_authority = auth_machine_intelligence} job_replicator_add = ", "} if = {limit = {has_country_flag = synthetic_empire} job_roboticist_add = ","}"]
+    #     r"job_replicator_add = \d":["if = {limit = {has_authority = \"?auth_machine_intelligence\"?} job_replicator_add = ", "} if = {limit = {has_country_flag = synthetic_empire} job_roboticist_add = ","}"]
     # }
 
     targets3 = {
@@ -708,7 +713,8 @@ else:
         r"_planet_flag = primitives_nuked_themselves": "_planet_flag = pre_ftls_nuked_themselves",
         r"sound = event_primitive_civilization": "sound = event_pre_ftl_civilization",
         ### 3.8
-        r'\bset_is_female = yes': 'set_gender = female',
+                r'\bset_is_female = yes': 'set_gender = female',
+        r'\bcountry_command_limit_': 'command_limit_',
         r'\s+trait = random_trait\b\s*': '',
         # r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1', # not necessarily
         r"\bhas_chosen_trait_ruler = yes": "has_trait = leader_trait_chosen",
@@ -716,18 +722,50 @@ else:
         r'\btype = ruler\b': 'ruler = yes',
         r'\b(add|has|remove)_ruler_trait\b': r'\1_trait',
         r'\bclass = ruler\b': 'class = random_ruler',
-        r'\bleader_trait_(?:admiral|general|governor|ruler|scientist)_(\w*(?:chosen|psionic|brainslug))\b': r'leader_trait_\1',
-        r"\bleader_trait_(\w+)": lambda p: p.group(0) if not p.group(1) or p.group(1) not in {"charismatic", "newboot", "flexible_programming", "rigid_programming", "general_mercenary_warrior", "demoralizer"} else "leader_trait_"+{
+        r'\bleader_trait_(?:admiral|general|governor|ruler|scientist)_(\w*(?:chosen|psionic|brainslug|synthetic|cyborg|erudite))\b': r'leader_trait_\1',
+        r"\bleader_trait_(\w+)\b": lambda p: p.group(0) if not p.group(1) or p.group(1) not in {
+                "charismatic",
+                "newboot",
+                "flexible_programming",
+                "rigid_programming",
+                "general_mercenary_warrior",
+                "demoralizer",
+                "cataloger",
+                "maintenance_loop",
+                "unstable_code_base",
+                "parts_cannibalizer",
+                "erratic_morality_core",
+                "trickster_fircon",
+                "warbot_tinkerer",
+                "ai_aided_design",
+                "bulldozer",
+                "analytical",
+                "archaeologist_ancrel",
+                "mindful",
+            } else "leader_trait_"+{
              "charismatic": "inspiring",
              "newboot": "eager",
              "flexible_programming": "adaptable",
              "rigid_programming": "stubborn",
              "general_mercenary_warrior": "mercenary_warrior",
-             "demoralizer": "dreaded"
+             "demoralizer": "dreaded",
+             # DLC negative removed?
+             "cataloger": "xeno_cataloger", # leader_trait_midas_touch
+             "maintenance_loop": "fleet_logistician",
+             "unstable_code_base": "nervous",
+             "parts_cannibalizer": "army_logistician",
+             "erratic_morality_core": "armchair_commander",
+             "trickster_fircon": "trickster_2",
+             "warbot_tinkerer": "army_veteran",
+             "ai_aided_design": "retired_fleet_officer",
+             "bulldozer": "environmental_engineer",
+             "analytical": "intellectual",
+             "archaeologist_ancrel": "archaeologist", # collective_wisdom?
+             "mindful": "insightful",
          }[p.group(1)],
         r"([^#]*?)\blength = 0": ("common/edicts", r"\1length = -1"),
         r"([^#]*?)\badd_random_leader_trait = yes": (["common/scripted_effects", "events"], r"\1add_trait = random_common"),
-        r"\s*[^#]*?\bleader_trait = \{\s*\w+\s*\}\s*": ("common/traits", ""),
+        r"\s*[^#]*?\bleader_trait = (?:all|\{\s*\w+\s*\})\s*": ("common/traits", ""),
         # r"\s+traits = \{\s*\}\s*": "", 
     }
 
@@ -764,8 +802,8 @@ else:
         r"\n\s+(?:OR = \{)?\s{4,}(?:is_country_type = (?:awakened_)?fallen_empire\s+){2}\}?": [r"(\s+)(OR = \{)?(?(2)\s{4,}|(\s{4,}))is_country_type = (?:awakened_)?fallen_empire\s+is_country_type = (?:awakened_)?fallen_empire(?(2)\1\})", r"\1\3is_fallen_empire = yes"], 
         r"\bNO[RT] = \{\s*is_country_type = (?:default|awakened_fallen_empire)\s+is_country_type = (?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = no",
         r"\bOR = \{\s*is_country_type = (?:default|awakened_fallen_empire)\s+is_country_type = (?:default|awakened_fallen_empire)\s+\}": "is_country_type_with_subjects = yes",
-        r"\s+(?:OR = \{)?\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+\}?": [r"(\s+)(OR = \{)?(?(2)\s+|(\s+))(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)(?(2)\1\})", r"\1\3is_synthetic_empire = yes"], # \s{4,}
-        r"NO[RT] = \{\s*(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+(?:has_authority = auth_machine_intelligence|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+\}": "is_synthetic_empire = no",
+        r"\s+(?:OR = \{)?\s+(?:has_authority = \"?auth_machine_intelligence\"?|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+(?:has_authority = \"?auth_machine_intelligence\"?|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+\}?": [r"(\s+)(OR = \{)?(?(2)\s+|(\s+))(?:has_authority = \"?auth_machine_intelligence\"?|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+(?:has_authority = \"?auth_machine_intelligence\"?|has_country_flag = synthetic_empire|is_machine_empire = yes)(?(2)\1\})", r"\1\3is_synthetic_empire = yes"], # \s{4,}
+        r"NO[RT] = \{\s*(?:has_authority = \"?auth_machine_intelligence\"?|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+(?:has_authority = \"?auth_machine_intelligence\"?|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+\}": "is_synthetic_empire = no",
         r"NO[RT] = \{\s*has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s*has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s*has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s*\}": "is_homicidal = no",
         r"(?:\bOR = \{)\s{4,}?has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s*\}?": [r"(\bOR = \{\s*)?has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?(?(1)\s*\})", "is_homicidal = yes"],
         r"NOT = \{\s*check_variable = \{\s*which = \"?\w+\"?\s+value = [^{}#\s=]\s*\}\s*\}": [r"NOT = \{\s*(check_variable = \{\s*which = \"?\w+\"?\s+value) = ([^{}#\s=])\s*\}\s*\}", r"\1 != \2 }"],
@@ -938,7 +976,7 @@ if code_cosmetic and not only_warning:
 # like targets3 but later
 if mergerofrules:
     targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)\s+\}?"] = [r"(\s+)(\bOR = \{)?(\s+)(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)(?(2)\1\})", (no_trigger_folder, r"\1\3is_mechanical_empire = yes")]
-    targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = auth_machine_intelligence)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = auth_machine_intelligence|is_machine_empire = yes))(?(2)\1\})", (no_trigger_folder, r"\1\3is_robot_empire = yes")]
+    targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = \"?auth_machine_intelligence\"?)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = \"?auth_machine_intelligence\"?)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = \"?auth_machine_intelligence\"?)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = \"?auth_machine_intelligence\"?|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = \"?auth_machine_intelligence\"?|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = \"?auth_machine_intelligence\"?|is_machine_empire = yes))(?(2)\1\})", (no_trigger_folder, r"\1\3is_robot_empire = yes")]
     targets4[r"NO[RT] = \{\s*(?:merg_is_(?:fallen_empire|awakened_fe) = yes\s+){2}\}"] = "is_fallen_empire = no"
     targets4[r"\n\s+(?:OR = \{)?\s+(?:merg_is_(?:fallen_empire|awakened_fe) = yes\s+){2}\}?"] = [r"(\s+)(OR = \{)?(?(2)\s+|(\s+))merg_is_(?:fallen_empire|awakened_fe) = yes\s+merg_is_(?:fallen_empire|awakened_fe) = yes(?(2)\1\})", r"\1\3is_fallen_empire = yes"]
     targets4[r"\bNO[RT] = \{\s*(merg_is_(?:default_empire|awakened_fe) = yes\s+){2}\}"] = "is_country_type_with_subjects = no"
@@ -949,11 +987,11 @@ if mergerofrules:
     targets3[r"\b(is_planet_class = pc_habitat\b|is_pd_habitat = yes)"] = (no_trigger_folder, "merg_is_habitat = yes")
     targets3[r"\b(is_planet_class = pc_machine\b|is_pd_machine = yes)"] = (no_trigger_folder, "merg_is_machine_world = yes")
     targets3[r"\b(is_planet_class = pc_city\b|is_pd_arcology = yes|is_city_planet = yes)"] = (no_trigger_folder, "merg_is_arcology = yes")
-    targets3[r"\bhas_ethic = ethic_gestalt_consciousness\b"] = (no_trigger_folder, "is_gestalt = yes")
-    targets3[r"\bhas_authority = auth_machine_intelligence\b"] = (no_trigger_folder, "is_machine_empire = yes")
-    targets3[r"\bhas_authority = auth_hive_mind\b"] = (no_trigger_folder, "is_hive_empire = yes")
-    targets3[r"\bhas_authority = auth_corporate\b"] = (no_trigger_folder, "is_megacorp = yes")
-    targets3[r"\bowner_species = \{ has_trait = trait_cybernetic \}\b"] = (no_trigger_folder, "is_cyborg_empire = yes")
+    targets3[r"\bhas_ethic = (\"?)ethic_gestalt_consciousness\1\b"] = (no_trigger_folder, "is_gestalt = yes")
+    targets3[r"\bhas_authority = (\"?)auth_machine_intelligence\1\b"] = (no_trigger_folder, "is_machine_empire = yes")
+    targets3[r"\bhas_authority = (\"?)auth_hive_mind\1\b"] = (no_trigger_folder, "is_hive_empire = yes")
+    targets3[r"\bhas_authority = (\"?)auth_corporate\1\b"] = (no_trigger_folder, "is_megacorp = yes")
+    targets3[r"\bowner_species = \{\s+has_trait = (\"?)trait_cybernetic\1\s+\}\b"] = (no_trigger_folder, "is_cyborg_empire = yes")
     # targets31 = [(re.compile(k, flags=0), targets31[k]) for k in targets31]
 
 
