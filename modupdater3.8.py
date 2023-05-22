@@ -26,7 +26,7 @@ only_actual = True
 code_cosmetic = False
 also_old = False
 debug_mode = False
-mergerofrules = False
+mergerofrules = True
 keep_default_country_trigger = False
 only_v3_8 = False
 only_v3_7 = False
@@ -298,7 +298,7 @@ if only_actual or only_v3_8:
     targets4 = {
         r"\s+traits = \{\s*\}": "", 
         r"(exists = sector\s+)?\s?sector = \{\s+exists = leader\s+\}": "", 
-        r"\bkill_leader = \{\s*(?:type = ruler|ruler = yes)\s+(show_notification = (?:yes|no))?\s*\}": r"ruler = { kill_leader = { \1 } }", 
+        r"\bkill_leader = \{\s+(?:type = ruler|ruler = yes)\s+(?:show_notification = (?:yes|no))?\s*\}": [r"\bkill_leader = \{\s*(?:type = ruler|ruler = yes)\s+(show_notification = (?:yes|no))?\s*\}", r"ruler = { kill_leader = { \1 } }"], 
     }
         
 elif only_v3_7: 
@@ -883,7 +883,7 @@ else:
         ## >= 3.8
         r"\s+traits = \{\s*\}": "",
         r"(exists = sector\s+)?\s?sector = \{\s+exists = leader\s+\}": "", 
-        r"\bkill_leader = \{\s*(?:type = ruler|ruler = yes)\s+(show_notification = (?:yes|no))?\s*\}": r"ruler = { kill_leader = { \1 } }", 
+        r"\bkill_leader = \{\s+(?:type = ruler|ruler = yes)\s+(?:show_notification = (?:yes|no))?\s*\}": [r"\bkill_leader = \{\s*(?:type = ruler|ruler = yes)\s+(show_notification = (?:yes|no))?\s*\}", r"ruler = { kill_leader = { \1 } }"],
     }
 
 if also_old:

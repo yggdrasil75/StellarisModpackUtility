@@ -59,14 +59,14 @@ localModPath = ["Gray Tempest Shipset", ["german", "spanish", "braz_por", "frenc
 localModPath = ["distant_stars_overhaul", ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"]]
 localModPath = ["New Job Manager", ["german", "spanish", "braz_por", "french", "polish", "korean"]]
 localModPath = ["CrisisManager_Sleeper", ["french", "polish", "korean"]]
-localModPath = ["CrisisManager_EndGame", ["french", "polish", "japanese", "korean"]]
 localModPath = ["TheGreatKhanExpanded", ["english"]]
-localModPath = ["CrisisManager_MidGame", ["french", "polish", "korean"]]
 localModPath = ["honor_leaders", ["japanese", "korean"]] 
-localModPath = ["ADeadlyTempest", ["english", "french", "polish", "japanese", "korean"]]
 localModPath = ["Realistic_Pirates", ["english", "polish", "japanese", "korean"]]
 localModPath = ["Species Engineering", ["german", "russian", "spanish", "braz_por", "french", "polish", "simp_chinese", "japanese", "korean"]]
+localModPath = ["ADeadlyTempest", ["english", "french", "polish", "japanese", "korean"]]
+localModPath = ["CrisisManager_MidGame", ["french", "polish", "korean"]]
 localModPath = ["UAP_dev", ["german", "spanish", "braz_por", "french", "polish", "korean"]]
+localModPath = ["CrisisManager_EndGame", ["french", "polish", "japanese", "korean"]]
 
 
 # localModPath = ["c:\\Games\\steamapps\\workshop\\content\\281990\\2268189539\\", ["braz_por"]]
