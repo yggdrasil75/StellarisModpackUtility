@@ -81,3 +81,7 @@ modupdater3.*.py:
 Modded_Tech_Relations_Generator.py:
 
 - Generates a tech tree diagram as txt: <https://forum.paradoxplaza.com/forum/threads/1484867/>
+
+RecordStellarisTime.py:
+
+- Monitors stellaris.exe process with timer that records the elapsed time between when the process was opened, and when the game has fully loaded.

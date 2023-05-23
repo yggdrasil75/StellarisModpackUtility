@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.8.2
-# @revision: 2023/05/22
+# @revision: 2023/05/23
 # @thanks: OldEnt for detailed rundowns
 # @thanks: yggdrasil75 for cmd params
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
@@ -26,7 +26,7 @@ only_actual = True
 code_cosmetic = False
 also_old = False
 debug_mode = False
-mergerofrules = True
+mergerofrules = False
 keep_default_country_trigger = False
 only_v3_8 = False
 only_v3_7 = False
@@ -246,7 +246,7 @@ if only_actual or only_v3_8:
         # r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1', # not necessarily
         r"\bhas_chosen_trait_ruler = yes": "has_trait = leader_trait_chosen",
         r'\bleader_class = ruler\b': 'is_ruler = yes',
-        r'\btype = ruler\b': 'ruler = yes',
+        r'\btype = ruler\b': 'ruler = yes', # kill_leader
         r'\b(add|has|remove)_ruler_trait\b': r'\1_trait',
         r'\bclass = ruler\b': 'class = random_ruler',
         r'\bleader_trait_(?:admiral|general|governor|ruler|scientist)_(\w*(?:chosen|psionic|brainslug|synthetic|cyborg|erudite))\b': r'leader_trait_\1',
@@ -298,7 +298,7 @@ if only_actual or only_v3_8:
     targets4 = {
         r"\s+traits = \{\s*\}": "", 
         r"(exists = sector\s+)?\s?sector = \{\s+exists = leader\s+\}": "", 
-        r"\bkill_leader = \{\s+(?:type = ruler|ruler = yes)\s+(?:show_notification = (?:yes|no))?\s*\}": [r"\bkill_leader = \{\s*(?:type = ruler|ruler = yes)\s+(show_notification = (?:yes|no))?\s*\}", r"ruler = { kill_leader = { \1 } }"], 
+        r"research_leader = \{\s+area = \w+\s+has_trait = \"?\w+\"?\s+\}": [r"research_leader = \{\s+area = \w+\s+has_trait = \"?(\w+)\"?\s+\}", ('common/technology', r"has_trait_in_council = { TRAIT = \1 }")],
     }
         
 elif only_v3_7: 
@@ -719,7 +719,7 @@ else:
         # r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1', # not necessarily
         r"\bhas_chosen_trait_ruler = yes": "has_trait = leader_trait_chosen",
         r'\bleader_class = ruler\b': 'is_ruler = yes',
-        r'\btype = ruler\b': 'ruler = yes',
+        r'\btype = ruler\b': 'ruler = yes', # kill_leader
         r'\b(add|has|remove)_ruler_trait\b': r'\1_trait',
         r'\bclass = ruler\b': 'class = random_ruler',
         r'\bleader_trait_(?:admiral|general|governor|ruler|scientist)_(\w*(?:chosen|psionic|brainslug|synthetic|cyborg|erudite))\b': r'leader_trait_\1',
@@ -883,7 +883,7 @@ else:
         ## >= 3.8
         r"\s+traits = \{\s*\}": "",
         r"(exists = sector\s+)?\s?sector = \{\s+exists = leader\s+\}": "", 
-        r"\bkill_leader = \{\s+(?:type = ruler|ruler = yes)\s+(?:show_notification = (?:yes|no))?\s*\}": [r"\bkill_leader = \{\s*(?:type = ruler|ruler = yes)\s+(show_notification = (?:yes|no))?\s*\}", r"ruler = { kill_leader = { \1 } }"],
+        r"research_leader = \{\s+area = \w+\s+has_trait = \"?\w+\"?\s+\}": [r"research_leader = \{\s+area = \w+\s+has_trait = \"?(\w+)\"?\s+\}", ('common/technology', r"has_trait_in_council = { TRAIT = \1 }")],
     }
 
 if also_old:
