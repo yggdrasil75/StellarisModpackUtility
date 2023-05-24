@@ -1,6 +1,6 @@
 # @author: FirePrince
 # @version: 3.8.2
-# @revision: 2023/05/23
+# @revision: 2023/05/24
 # @thanks: OldEnt for detailed rundowns
 # @thanks: yggdrasil75 for cmd params
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
@@ -22,11 +22,11 @@ stellaris_version = '3.8.2'
 # Default values
 mod_path = ''
 only_warning = False
-only_actual = True
+only_actual = False
 code_cosmetic = False
 also_old = False
 debug_mode = False
-mergerofrules = False
+mergerofrules = True
 keep_default_country_trigger = False
 only_v3_8 = False
 only_v3_7 = False
@@ -330,8 +330,10 @@ elif only_v3_7:
     }
 elif only_v3_6: 
     removedTargets = [
-        [r"\bhas_ascension_perk = ap_transcendence\b", "Removed in 3.6: can be replaced with 'has_tradition = tr_psionics_finish'"],
-        [r"\bhas_ascension_perk = ap_evolutionary_mastery\b", "Removed in 3.6: can be replaced with 'has_tradition = tr_genetics_resequencing'"],
+        [r"^\s+[^#]*?\bhas_ascension_perk = ap_transcendence\b", "Removed in 3.6: can be replaced with 'has_tradition = tr_psionics_finish'"],
+        [r"^\s+[^#]*?\bhas_ascension_perk = ap_evolutionary_mastery\b", "Removed in 3.6: can be replaced with 'has_tradition = tr_genetics_resequencing'"],
+        [r"^\s+[^#]*?\btech_genetic_resequencing\b", "Replaced in 3.6: with 'tr_genetics_resequencing'"],
+        [r"^\s+[^#]*?\bcan_remove_beneficial_traits\b", "Removed in 3.6:"],
     ]
     targets3 = {
         r"\bpop_assembly_speed": "planet_pop_assembly_mult",
@@ -343,6 +345,7 @@ elif only_v3_6:
         r"\btoken = citizenship_purge(?:_machine)?\b": ("common/species_rights", "is_purge = yes"),
         r"\bhas_ascension_perk = ap_transcendence\b": "has_tradition = tr_psionics_finish",
         r"\bhas_ascension_perk = ap_evolutionary_mastery\b": "has_tradition = tr_genetics_resequencing",
+        r"\bhas_technology = \"?tech_genetic_resequencing\"?\b": "has_tradition = tr_genetics_resequencing",
     }
     targets4 = {
         r"\bis_triggered_only = yes\s+trigger = \{\s+always = no": [r"(\s+)(trigger = \{\s+always = no)", ('events', r'\1is_test_event = yes\1\2')],
@@ -444,8 +447,10 @@ else:
         [r"^\s+[^#]*?\buplift_planet_mod_clear =", "Removed in 3.7:"],
         [r"^\s+[^#]*?\bcreate_primitive_armies =", "Removed in 3.7: done via pop job now"],
         # 3.6
-        [r"\bhas_ascension_perk = ap_transcendence\b", "Removed in 3.6: can be replaced with 'has_tradition = tr_psionics_finish'"],
-        [r"\bhas_ascension_perk = ap_evolutionary_mastery\b", "Removed in 3.6: can be replaced with 'has_tradition = tr_genetics_resequencing'"],
+        [r"^\s+[^#]*?\bhas_ascension_perk = ap_transcendence\b", "Removed in 3.6: can be replaced with 'has_tradition = tr_psionics_finish'"],
+        [r"^\s+[^#]*?\bhas_ascension_perk = ap_evolutionary_mastery\b", "Removed in 3.6: can be replaced with 'has_tradition = tr_genetics_resequencing'"],
+        [r"^\s+[^#]*?\btech_genetic_resequencing\b", "Replaced in 3.6: with 'tr_genetics_resequencing'"],
+        [r"^\s+[^#]*?\bcan_remove_beneficial_traits\b", "Removed in 3.6:"],
         # 3.4
         ("common/ship_sizes", [r"^\s+empire_limit = \{\s+", '"empire_limit" has been replaces by "ai_ship_data" and "country_limit"']),
         ("common/country_types", [r"^\s+(?:ship_data|army_data) = { = \{", '"ship_data & army_data" has been replaces by "ai_ship_data" and "country_limits"']),
@@ -699,6 +704,7 @@ else:
         r"\btoken = citizenship_purge(?:_machine)?\b": ("common/species_rights", "is_purge = yes"),
         r"\bhas_ascension_perk = ap_transcendence\b": "has_tradition = tr_psionics_finish",
         r"\bhas_ascension_perk = ap_evolutionary_mastery\b": "has_tradition = tr_genetics_resequencing",
+        r"\bhas_technology = \"?tech_genetic_resequencing\"?\b": "has_tradition = tr_genetics_resequencing",
         ### 3.7
         r'\bvariable_string = "([\w.:]+)"': r'variable_string = "[\1]"', # set square brackets
         r"\bset_mia = yes": "set_mia = mia_return_home",
@@ -927,6 +933,7 @@ if not keep_default_country_trigger:
 if code_cosmetic and not only_warning:
     triggerScopes = r"limit|trigger|any_\w+|leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+"
     targets3[r"((?:[<=>]\s|\.|PREV|FROM|Prev|From)+(PREV|FROM|ROOT|THIS|Prev|From|Root|This)+)\b"] = lambda p: p.group(1).lower()
+    targets3[r"\b(IF|ELSE|ELSE_IF) ="] = lambda p: p.group(1).lower() + " ="
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"^(\s+)limit = \{\s*\}"] = r"\1# limit = { }"
     targets3[r'\bhost_has_dlc = "([\s\w]+)"'] = lambda p: p.group(0) if p.group(1) and p.group(1) in {"Anniversary Portraits", "Apocalypse", "Arachnoid Portrait Pack", "Creatures of the Void Portrait Pack", "Megacorp", "Utopia"} else "has_" + {
@@ -979,8 +986,10 @@ if mergerofrules:
     targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = \"?auth_machine_intelligence\"?)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = \"?auth_machine_intelligence\"?)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = \"?auth_machine_intelligence\"?)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = \"?auth_machine_intelligence\"?|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = \"?auth_machine_intelligence\"?|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = \"?auth_machine_intelligence\"?|is_machine_empire = yes))(?(2)\1\})", (no_trigger_folder, r"\1\3is_robot_empire = yes")]
     targets4[r"NO[RT] = \{\s*(?:merg_is_(?:fallen_empire|awakened_fe) = yes\s+){2}\}"] = "is_fallen_empire = no"
     targets4[r"\n\s+(?:OR = \{)?\s+(?:merg_is_(?:fallen_empire|awakened_fe) = yes\s+){2}\}?"] = [r"(\s+)(OR = \{)?(?(2)\s+|(\s+))merg_is_(?:fallen_empire|awakened_fe) = yes\s+merg_is_(?:fallen_empire|awakened_fe) = yes(?(2)\1\})", r"\1\3is_fallen_empire = yes"]
-    targets4[r"\bNO[RT] = \{\s*(merg_is_(?:default_empire|awakened_fe) = yes\s+){2}\}"] = "is_country_type_with_subjects = no"
-    targets4[r"\bOR = \{\s*(merg_is_(?:default_empire|awakened_fe) = yes\s+){2}\}"] = "is_country_type_with_subjects = yes"
+    targets4[r"\bNO[RT] = \{\s*(?:merg_is_(?:default_empire|awakened_fe) = yes\s+){2}\}"] = "is_country_type_with_subjects = no"
+    targets4[r"\bOR = \{\s*(?:merg_is_(?:default_empire|awakened_fe) = yes\s+){2}\}"] = "is_country_type_with_subjects = yes"
+    targets4[r"\bNO[RT] = \{\s*(?:merg_is_(?:default|fallen)_empire = yes\s+){2}\}"] = "is_default_or_fallen = no"
+    targets4[r"\bOR = \{\s*(?:merg_is_(?:default|fallen)_empire = yes\s+){2}\}"] = "is_default_or_fallen = yes"
     targets3[r"\bis_country_type = default\b"] = (no_trigger_folder, "merg_is_default_empire = yes")
     targets3[r"\bis_country_type = fallen_empire\b"] = (no_trigger_folder, "merg_is_fallen_empire = yes")
     targets3[r"\bis_country_type = awakened_fallen_empire\b"] = (no_trigger_folder, "merg_is_awakened_fe = yes")
