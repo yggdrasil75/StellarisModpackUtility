@@ -1015,13 +1015,13 @@ def parse_dir():
                 print(mod_path)
                 files = glob.iglob(mod_path + '/**', recursive=True)  # '\\*.txt'
                 modfix(files)
-        # FIXME: 'generator' has no len()
-        if len(files) == 0:
-            print("We have a sub folder")
+        # FIXME: checks it twice?
+        if next(files, -1) == -1:
+            print("We have a sub-folder")
             files = glob.glob(mod_path + '/**', recursive=True)  # '\\*.txt'
             modfix(files)
         elif debug_mode:
-            print("We have a main folder", files)
+            print("We have a main-folder", files)
 
 
 def modfix(file_list):
