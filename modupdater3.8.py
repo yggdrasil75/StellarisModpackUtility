@@ -1,9 +1,10 @@
 # @author: FirePrince
-# @version: 3.8.2
-# @revision: 2023/05/28
-# @thanks: OldEnt for detailed rundowns
+stellaris_version = '3.8.3' # @version
+# @revision: 2023/05/30
+# @thanks: OldEnt for detailed rundowns (<3.2)
 # @thanks: yggdrasil75 for cmd params
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
+# @Git: https://github.com/F1r3Pr1nc3/StellarisModpackUtility/blob/master/modupdater3.8.py
 # @TODO: replace in *.YML ?
 # @TODO: extended support The Merger of Rules ?
 # ============== Import libs ===============
@@ -17,18 +18,18 @@ import sys
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
-stellaris_version = '3.8.2'
+
 
 # Default values
 mod_path = ''
 only_warning = False
-only_actual = False # TODO Deprecate value - replaced by var only_from_version !?
+only_actual = True # TODO Deprecate value - replaced by var only_from_version !?
 code_cosmetic = False
 also_old = False
 debug_mode = False
-mergerofrules = False # TODO auto detect?
+mergerofrules = True # TODO auto detect?
 keep_default_country_trigger = False
-only_upto_version = 3.8 # Only supports numbers with one digit after the decimal point.
+only_upto_version = 3.8 # Only supports numbers as int or with one digit after the decimal point (only 3-3.8 is supported yet)
 # only_from_version = 3.8 # TODO Overwrites var only_upto_version: Only supports numbers with one digit after the decimal point.
 
 # TODO Deprecate values - replaced by var only_from_version !?
@@ -253,7 +254,7 @@ v3_8 = {
         [r"^[^#]+?\sleader_of_faction = [^\s]+", "Removed in 3.8: replaceable with ?"],
         [r"^[^#]+?\shas_mandate = [^\s]+", "Removed in 3.8: replaceable with ?"],
         [r"^[^#]+?\spre_ruler_leader_class =", "Removed in 3.8: replaceable with ?"],
-        [r"^[^#]+?\shas_chosen_trait_ruler =", "Removed in 3.8"],
+        # [r"^[^#]+?\shas_chosen_trait_ruler =", "Replaced in 3.8.3 with 'has_chosen_one_leader_trait'"],
         # [r"^[^#]+?\sis_specialist_researcher =", "Replaced trigger 3.8: is_specialist_researcher_(society|engineering|physics)"], scripted trigger now
     ],
     "targets3": {
@@ -261,7 +262,7 @@ v3_8 = {
         r'\bcountry_command_limit_': 'command_limit_',
         r'\s+trait = random_trait\b\s*': '',
         # r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1', # not necessarily
-        r"\bhas_chosen_trait_ruler = yes": "has_trait = leader_trait_chosen",
+        r"(\s)has_chosen_trait_ruler =": r"\1has_chosen_one_leader_trait =", # scripted trigger
         r'\bleader_class = ruler\b': 'is_ruler = yes',
         r'\btype = ruler\b': 'ruler = yes', # kill_leader
         r'\b(add|has|remove)_ruler_trait\b': r'\1_trait',
@@ -725,10 +726,10 @@ else:
         #     r"MACHINE_species_trait_points_add = \d" : ["MACHINE_species_trait_points_add ="," ROBOT_species_trait_points_add = ",""],
         #     r"job_replicator_add = \d":["if = {limit = {has_authority = \"?auth_machine_intelligence\"?} job_replicator_add = ", "} if = {limit = {has_country_flag = synthetic_empire} job_roboticist_add = ","}"]
         # }
+        ### (only one-liner)
         "targets3": {
             r"\bstatic_rotation = yes\s": ("common/component_templates", ""),
             r"\bowner\.species\b": "owner_species",
-            ### (only one-liner)
             ### somewhat older
             r"(\s+)ship_upkeep_mult\s*=": r"\1ships_upkeep_mult =",
             r"\b(contact_rule = )script_only": ("common/country_types", r"\1on_action_only"),
@@ -864,6 +865,10 @@ if not keep_default_country_trigger:
     targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes))|(?:(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = default|merg_is_default_empire = yes))|(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_country_type = fallen_empire|merg_is_fallen_empire = yes|is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)(\s+)){2,}", (no_trigger_folder, r"is_default_or_fallen = yes\2")]
     # with is_country_type_with_subjects & without AFE but with is_fallen_empire
     targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)\s+is_fallen_empire = yes)|(?:is_fallen_empire = yes\s+(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)))\s+"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_fallen_empire = yes|is_country_type_with_subjects = yes)(\s+)){2,}", (no_trigger_folder, r"is_default_or_fallen = yes\2")]
+elif not mergerofrules:
+    targets3[r"\bmerg_is_default_empire = (yes|no)"] = lambda p: {"yes": "is_country_type = default", "no": "NOT = { is_country_type = default }"}[p.group(1)]
+    targets3[r"\bmerg_is_fallen_empire = (yes|no)"] = lambda p: {"yes": "is_country_type = fallen_empire", "no": "NOT = { is_country_type = fallen_empire }"}[p.group(1)] # Compare vanilla is_valid_fallen_empire_for_task
+    targets3[r"\bmerg_is_awakened_fe = (yes|no)"] = lambda p: {"yes": "is_country_type = awakened_fallen_empire", "no": "NOT = { is_country_type = awakened_fallen_empire }"}[p.group(1)] # Compare vanilla is_valid_fallen_empire_for_task
 
 
 if code_cosmetic and not only_warning:
@@ -1008,20 +1013,27 @@ def parse_dir():
         "We have a main or a sub folder"
         # folders = [f for f in os.listdir(mod_path) if os.path.isdir(os.path.join(mod_path, f))]
         folders = glob.iglob(mod_path + "/*/", recursive=True)
-        for _f in folders:
-            if os.path.exists(os.path.join(_f, 'descriptor.mod')):
-                mod_path = _f
-                mod_outpath = os.path.join(mod_outpath, _f)
-                print(mod_path)
-                files = glob.iglob(mod_path + '/**', recursive=True)  # '\\*.txt'
+        if next(folders, -1) == -1:
+            files = glob.glob(mod_path + '/**', recursive=False)  # '\\*.txt'
+            if next(files, -1) == -1 and debug_mode:
+                print("Empty folder", mod_path) 
+            else:
+                print("We have clear a sub-folder")
                 modfix(files)
-        # FIXME: checks it twice?
-        if next(files, -1) == -1:
-            print("We have a sub-folder")
-            files = glob.glob(mod_path + '/**', recursive=True)  # '\\*.txt'
-            modfix(files)
-        elif debug_mode:
-            print("We have a main-folder", files)
+        else:
+            # We have a main-folder?
+            for _f in folders:
+                if os.path.exists(os.path.join(_f, 'descriptor.mod')):
+                    mod_path = _f
+                    mod_outpath = os.path.join(mod_outpath, _f)
+                    print(mod_path)
+                    files = glob.iglob(mod_path + '/**', recursive=True)  # '\\*.txt'
+                    modfix(files)
+                else:
+                    files = glob.glob(mod_path + '/**', recursive=True)  # '\\*.txt'
+                    if next(files, -1) != -1:
+                        print("We have probably a mod sub-folder")
+                        modfix(files)
 
 
 def modfix(file_list):
