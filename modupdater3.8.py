@@ -1,6 +1,6 @@
 # @author: FirePrince
 stellaris_version = '3.8.3' # @version
-# @revision: 2023/05/30
+# @revision: 2023/06/08
 # @thanks: OldEnt for detailed rundowns (<3.2)
 # @thanks: yggdrasil75 for cmd params
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
@@ -23,11 +23,11 @@ from tkinter import messagebox
 # Default values
 mod_path = ''
 only_warning = False
-only_actual = True # TODO Deprecate value - replaced by var only_from_version !?
+only_actual = False # TODO Deprecate value - replaced by var only_from_version !?
 code_cosmetic = False
 also_old = False
 debug_mode = False
-mergerofrules = True # TODO auto detect?
+mergerofrules = False # TODO auto detect?
 keep_default_country_trigger = False
 only_upto_version = 3.8 # Only supports numbers as int or with one digit after the decimal point (only 3-3.8 is supported yet)
 # only_from_version = 3.8 # TODO Overwrites var only_upto_version: Only supports numbers with one digit after the decimal point.
@@ -730,6 +730,8 @@ else:
         "targets3": {
             r"\bstatic_rotation = yes\s": ("common/component_templates", ""),
             r"\bowner\.species\b": "owner_species",
+            ### < 2.2
+            r"\bhas_job = unemployed\b": "is_unemployed = yes",
             ### somewhat older
             r"(\s+)ship_upkeep_mult\s*=": r"\1ships_upkeep_mult =",
             r"\b(contact_rule = )script_only": ("common/country_types", r"\1on_action_only"),
@@ -747,7 +749,7 @@ else:
             r"\b(?:OR = \{)?\s+?has_ethic = \"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s+has_ethic = \"?ethic_(?:(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(?:pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*\}?": [r"(\bOR = \{)?(\s*?\n*?\s*?)?(?(1)\t?)has_ethic = \"?ethic_(?:(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe)|fanatic_(pacifist|militarist|materialist|spiritualist|egalitarian|authoritarian|xenophile|xenophobe))\"?\s*?has_ethic = \"?ethic_(?:(?:\4|\3)|fanatic_(?:\4|\3))\"?\s*?(?(1)\})", r"\2is_\3\4 = yes"], # r"\4is_ethics_aligned = { ARG1 = \2\3 }",
             ### Boolean operator merge
             # NAND <=> OR = { NOT
-            r"\s+OR = \{(?:\s*NOT = \{[^{}#]*?\})+\s*\}[ \t]*\n": [r"^(\s+)OR = \{\s*?\n(?:(\s+)NOT = \{\s*)?([^{}#]*?)\s*\}(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?", r"\1NAND = {\n\2\3\4\5\6\7\8\9\10\11\12\13\14\15"], # up to 7 items (sub-trigger)
+            r"\s+OR = \{(?:\s*NOT = \{[^{}#]*?\})+\s*\}[ \t]*\n": [r"^(\s+)OR = \{\s*?\n(?:(\s+)NOT = \{\s+)?([^{}#]*?)\s*\}(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?(?:(\s+)?NOT = \{\s*([^{}#]*?)\s*\})?", r"\1NAND = {\n\2\3\4\5\6\7\8\9\10\11\12\13\14\15"], # up to 7 items (sub-trigger)
             # NOR <=> AND = { NOT
             r"\n\s+AND = \{\s(?:\s+NOT = \{\s*(?:[^{}#]+|\w+ = {[^{}#]+\})\s*\}){2,}\s+\}?": [r"(\n\s+)AND = \{\s*?(?:(\n\s+)NOT = \{\s*([^{}#]+?|\w+ = \{[^{}#]+\s*\})\s+\})(?=((\2)?NOT = \{\s+([^{}#]+?|\w+ = \{[^{}#]+\s*\})\s*\})?)\4(?(4)(?=((\2)?NOT = \{\s+([^{}#]+?|\w+ = \{[^{}#]+\s*\})\s*\})?)\7(?(7)(?=((\2)?NOT = \{\s+([^{}#]+?|\w+ = \{[^{}#]+\s*\})\s*\})?)\10(?(10)(?=((\2)?NOT = \{\s+([^{}#]+?|\w+ = \{[^{}#]+\s*\})\s*\})?)\13(?(13)(?=((\2)?NOT = \{\s+([^{}#]+?|\w+ = \{[^{}#]+\s*\})\s*\})?)\16(?(16)(?=((\2)?NOT = \{\s+([^{}#]+?|\w+ = \{[^{}#]+\s*\})\s*\})?)\19)?)?)?)?)?\1\}", r"\1NOR = {\2\3\5\6\8\9\11\12\14\15\17\18\20\21\1}"], # up to 7 items (sub-trigger)
             # NOR <=> (AND) = { NOT
@@ -768,7 +770,7 @@ else:
             r"\s+(?:OR = \{)?\s+(?:has_authority = \"?auth_machine_intelligence\"?|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+(?:has_authority = \"?auth_machine_intelligence\"?|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+\}?": [r"(\s+)(OR = \{)?(?(2)\s+|(\s+))(?:has_authority = \"?auth_machine_intelligence\"?|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+(?:has_authority = \"?auth_machine_intelligence\"?|has_country_flag = synthetic_empire|is_machine_empire = yes)(?(2)\1\})", r"\1\3is_synthetic_empire = yes"], # \s{4,}
             r"NO[RT] = \{\s*(?:has_authority = \"?auth_machine_intelligence\"?|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+(?:has_authority = \"?auth_machine_intelligence\"?|has_country_flag = synthetic_empire|is_machine_empire = yes)\s+\}": "is_synthetic_empire = no",
             r"NO[RT] = \{\s*has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s*has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s*has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s*\}": "is_homicidal = no",
-            r"(?:\bOR = \{)\s{4,}?has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s*\}?": [r"(\bOR = \{\s*)?has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?(?(1)\s*\})", "is_homicidal = yes"],
+            r"(?:\bOR = \{)\s{4,}?has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s*\}?": [r"(\bOR = \{\s+)?has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?\s+has_(?:valid_)?civic = \"?civic_(?:fanatic_purifiers|machine_terminator|hive_devouring_swarm)\"?(?(1)\s*\})", "is_homicidal = yes"],
             r"NOT = \{\s*check_variable = \{\s*which = \"?\w+\"?\s+value = [^{}#\s=]\s*\}\s*\}": [r"NOT = \{\s*(check_variable = \{\s*which = \"?\w+\"?\s+value) = ([^{}#\s=])\s*\}\s*\}", r"\1 != \2 }"],
             # r"change_species_characteristics = \{\s*?[^{}\n]*?
             r"[\s#]+new_pop_resource_requirement = \{[^{}]+\}\s*": [r"([\s#]+new_pop_resource_requirement = \{[^{}]+\}[ \t]*)", ""],
@@ -858,7 +860,7 @@ if also_old:
     # targets3[r"\bhas_resource = \{ type = (%s) amount( = (?:\d+|@\w+)) \}" % resource_items] = (["common/scripted_triggers", "common/scripted_effects", "events"], r"\1\2 ")
 
 if not keep_default_country_trigger:
-    targets4[r"\s(?:every|random|count|any)_playable_country = \{[^{}#]*(?:limit = \{\s*)?(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes|merg_is_default_empire = yes)\s*"] = [r"((?:every|random|count|any)_playable_country = \{[^{}#]*?(?:limit = \{\s*)?)(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes|merg_is_default_empire = yes)\s*", r"\1"]
+    targets4[r"\s(?:every|random|count|any)_playable_country = \{[^{}#]*(?:limit = \{\s+)?(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes|merg_is_default_empire = yes)\s*"] = [r"((?:every|random|count|any)_playable_country = \{[^{}#]*?(?:limit = \{\s+)?)(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes|merg_is_default_empire = yes)\s*", r"\1"]
     # v3.8 former merg_is_standard_empire Merger Rule now vanilla
     targets3[r"\bmerg_is_standard_empire = (yes|no)"] = r"is_default_or_fallen = \1"
     # without is_country_type_with_subjects & without is_fallen_empire = yes
@@ -931,18 +933,23 @@ if mergerofrules:
     targets4[r"\bOR = \{\s*(?:merg_is_(?:default_empire|awakened_fe) = yes\s+){2}\}"] = "is_country_type_with_subjects = yes"
     targets4[r"\bNO[RT] = \{\s*(?:merg_is_(?:default|fallen)_empire = yes\s+){2}\}"] = "is_default_or_fallen = no"
     targets4[r"\bOR = \{\s*(?:merg_is_(?:default|fallen)_empire = yes\s+){2}\}"] = "is_default_or_fallen = yes"
-    targets3[r"\bis_country_type = default\b"] = (no_trigger_folder, "merg_is_default_empire = yes")
+    if not keep_default_country_trigger:
+        targets3[r"\bis_country_type = default\b"] = (no_trigger_folder, "merg_is_default_empire = yes")
     targets3[r"\bis_country_type = fallen_empire\b"] = (no_trigger_folder, "merg_is_fallen_empire = yes")
     targets3[r"\bis_country_type = awakened_fallen_empire\b"] = (no_trigger_folder, "merg_is_awakened_fe = yes")
     targets3[r"\b(is_planet_class = pc_habitat\b|is_pd_habitat = yes)"] = (no_trigger_folder, "merg_is_habitat = yes")
     targets3[r"\b(is_planet_class = pc_machine\b|is_pd_machine = yes)"] = (no_trigger_folder, "merg_is_machine_world = yes")
     targets3[r"\b(is_planet_class = pc_city\b|is_pd_arcology = yes|is_city_planet = yes)"] = (no_trigger_folder, "merg_is_arcology = yes")
+    targets3[r"\b(is_planet_class = pc_ringworld_habitable\b|uses_district_set = ring_world\b|is_planetary_diversity_ringworld = yes|is_giga_ringworld = yes)"] = (no_trigger_folder, "merg_is_hab_ringworld = yes")
+    targets3[r"\b(is_planet_class = pc_hive\b|is_pd_hive_world = yes)"] = (no_trigger_folder, "merg_is_hive_world = yes")
     targets3[r"\bhas_ethic = (\"?)ethic_gestalt_consciousness\1\b"] = (no_trigger_folder, "is_gestalt = yes")
     targets3[r"\bhas_authority = (\"?)auth_machine_intelligence\1\b"] = (no_trigger_folder, "is_machine_empire = yes")
     targets3[r"\bhas_authority = (\"?)auth_hive_mind\1\b"] = (no_trigger_folder, "is_hive_empire = yes")
     targets3[r"\bhas_authority = (\"?)auth_corporate\1\b"] = (no_trigger_folder, "is_megacorp = yes")
     targets3[r"\bowner_species = \{\s+has_trait = (\"?)trait_cybernetic\1\s+\}\b"] = (no_trigger_folder, "is_cyborg_empire = yes")
     # targets31 = [(re.compile(k, flags=0), targets31[k]) for k in targets31]
+else:
+    targets3[r"\bmerg_is_hab_ringworld = (yes|no)"] = r"is_ringworld = \1"
 
 
 if debug_mode:
@@ -1015,7 +1022,7 @@ def parse_dir():
         folders = glob.iglob(mod_path + "/*/", recursive=True)
         if next(folders, -1) == -1:
             files = glob.glob(mod_path + '/**', recursive=False)  # '\\*.txt'
-            if next(files, -1) == -1 and debug_mode:
+            if not files or not isinstance(files, list) and next(files, -1) == -1 and debug_mode:
                 print("Empty folder", mod_path) 
             else:
                 print("We have clear a sub-folder")
@@ -1242,10 +1249,11 @@ def modfix(file_list):
             pattern = re.compile(r'supported_version=\"(.*?)\"')
             m = re.search(pattern, out)
             if m: m = m.group(1)
-             # print(m, isinstance(m, str), len(m))
+            if debug_mode: print(m, isinstance(m, str), len(m))
             if isinstance(m, str) and m != stellaris_version and m[0:3] != stellaris_version[0:3]:
                 out = re.sub(pattern, r'supported_version="%s"' % stellaris_version, out)
-                out = re.sub(m[0:3], stellaris_version[0:3], out)
+                if debug_mode: print(type(out), out.encode('utf-8', errors='replace'), m[0:3], stellaris_version[0:3])
+                out = out.replace(m[0:3], stellaris_version[0:3], 1)
                 pattern = re.compile(r'name=\"(.*?)\"\n')
                 pattern = re.search(pattern, out)
                 if pattern: pattern = pattern.group(1)
