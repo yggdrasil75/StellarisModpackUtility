@@ -1,6 +1,6 @@
 # @author: FirePrince
-stellaris_version = '3.8.3' # @version
-# @revision: 2023/06/13
+stellaris_version = '3.8.4' # @version
+# @revision: 2023/06/18
 # @thanks: OldEnt for detailed rundowns (<3.2)
 # @thanks: yggdrasil75 for cmd params
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
@@ -406,8 +406,8 @@ v3_4 = {
     "targetsR": [
         ("common/ship_sizes", [r"^\s+empire_limit = \{", 'v3.4: "empire_limit" has been replaces by "ai_ship_data" and "country_limits"']),
         ("common/country_types", [r"^\s+(?:ship_data|army_data) = { = \{", 'v3.4: "ship_data & army_data" has been replaces by "ai_ship_data" and "country_limits"']),
-        r"\b(fire_warning_sign|add_unity_times_empire_size) = yes",
-        r"\boverlord_has_(num_constructors|more_than_num_constructors|num_science_ships|more_than_num_science_ships)_in_orbit\b",
+        r"^\s+[^#]*?\b(fire_warning_sign|add_unity_times_empire_size) = yes",
+        r"^\s+[^#]*?\boverlord_has_(num_constructors|more_than_num_constructors|num_science_ships|more_than_num_science_ships)_in_orbit\b",
     ],
     "targets3": {
         r"\bis_subject_type = vassal": "is_subject = yes",
@@ -487,7 +487,7 @@ v3_2 = {
         r"\badd_tech_progress_effect":  "add_tech_progress",
         r"\bgive_scaled_tech_bonus_effect": "add_monthly_resource_mult",
         r"\bclear_uncharted_space = \{\s*from = ([^\n{}# ])\s*\}": r"clear_uncharted_space = \1",
-        r"\bhomeworld = ": ("common/governments/civics", r"starting_colony = "),
+        r"\bhomeworld =": ("common/governments/civics", "starting_colony ="),
         # r"^((?:\t|    )parent = planet_jobs)\b": ("common/economic_categories", r"\1_productive"), TODO
         r"^(\t|    )energy = (\d+|@\w+)": ("common/terraform", r"\1resources = {\n\1\1category = terraforming\n\1\1cost = { energy = \2 }\n\1}"),
     },
@@ -880,7 +880,7 @@ if code_cosmetic and not only_warning:
     targets3[r"\b(IF|ELSE|ELSE_IF) ="] = lambda p: p.group(1).lower() + " ="
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"^(\s+)limit = \{\s*\}"] = r"\1# limit = { }"
-    targets3[r'\bhost_has_dlc = "([\s\w]+)"'] = lambda p: p.group(0) if p.group(1) and p.group(1) in {"Anniversary Portraits", "Apocalypse", "Arachnoid Portrait Pack", "Creatures of the Void Portrait Pack", "Megacorp", "Utopia"} else "has_" + {
+    targets3[r'\bhost_has_dlc = "([\s\w]+)"'] = (re.compile(r"^(?!common/traits)"), lambda p: p.group(0) if p.group(1) and p.group(1) in {"Anniversary Portraits", "Apocalypse", "Arachnoid Portrait Pack", "Creatures of the Void Portrait Pack", "Megacorp", "Utopia"} else "has_" + {
             "Ancient Relics Story Pack": "ancrel",
             "Aquatics Species Pack": "aquatics",
             "Distant Stars Story Pack": "distar",
@@ -897,7 +897,7 @@ if code_cosmetic and not only_warning:
             "Toxoids Species Pack": "toxoids",
             "First Contact Story Pack": "first_contact_dlc",
             "Galactic Paragons": "paragon_dlc",
-         }[p.group(1)] + " = yes"
+         }[p.group(1)] + " = yes")
     # targets3[r"\s*days\s*=\s*-1\s*"] = ' ' # still needed to execute immediately
     # targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
     targets3[r"#([^\-\s#])"] = r"# \1" # r"#([^\s#])": r"# \1", # format comment
