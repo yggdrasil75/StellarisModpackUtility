@@ -1,6 +1,6 @@
 # @author: FirePrince
 stellaris_version = '3.8.4' # @version
-# @revision: 2023/06/18
+# @revision: 2023/06/20
 # @thanks: OldEnt for detailed rundowns (<3.2)
 # @thanks: yggdrasil75 for cmd params
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
@@ -320,6 +320,8 @@ v3_8 = {
         r"(exists = sector\s+)?\s?sector = \{\s+exists = leader\s+\}": "",
         r"research_leader = \{\s+area = \w+\s+has_trait = \"?\w+\"?\s+\}": [r"research_leader = \{\s+area = \w+\s+has_trait = \"?(\w+)\"?\s+\}", ('common/technology', r"has_trait_in_council = { TRAIT = \1 }")],
         r"\b(?:OR|NO[RT]) = \{\s*is_(?:default_or_fallen|synthetic_empire) = yes\s*\}": [r"\b(OR|NO[RT]) = \{\s*is_(default_or_fallen|synthetic_empire) = yes\s*\}", lambda p: "is_"+p.group(2)+" = "+{"OR": "yes", "NO": "no"}[p.group(1)[0:2].upper()]],
+        # with is_country_type_with_subjects & without AFE but with is_fallen_empire
+        r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)\s+is_fallen_empire = yes)|(?:is_fallen_empire = yes\s+(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)))\s+": [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_fallen_empire = yes|is_country_type_with_subjects = yes)(\s+)){2,}", (no_trigger_folder, r"is_default_or_fallen = yes\2")],
     }
 }
 """== 3.7 Quick stats ==
@@ -396,8 +398,8 @@ v3_5 = {
         # r"(\"NAME_[^-\s\"]+)-([^-\s\"]+)\"": r'\1_\2"', mostly but not generally done
     },
     "targets4": {
-        r"\bany_system_(?:planet|colony) = \{[^{}#]*(?:has_owner = yes|is_colony = yes|exists = owner)\s+": [r"any_system_(?:planet|colony) = (\{[^{}#]*)(?:has_owner = yes|is_colony = yes|exists = owner)\s+", r"any_system_colony = \1"],
-        r"\s(?:every|random|count|ordered)_system_planet = \{[^{}#]*limit = \{\s*(?:has_owner = yes|is_colony = yes|exists = owner)\s+": [r"(every|random|count)_system_planet = (\{[^{}#]*limit = \{\s*)(?:has_owner = yes|is_colony = yes|exists = owner)\s+", r"\1_system_colony = \2"],
+        r"\bany_system_(?:planet|colony) = \{[^{}#]*(?:has_owner = yes|is_colony = yes|exists = owner)\s+": [r"any_system_(?:planet|colony) = (\{[^{}#]*(?:has_owner = yes|is_colony = yes|exists = owner))\s+", r"any_system_colony = \1"],
+        r"\s(?:every|random|count|ordered)_system_planet = \{[^{}#]*limit = \{\s*(?:has_owner = yes|is_colony = yes|exists = owner)\s+": [r"(every|random|count)_system_planet = (\{[^{}#]*limit = \{\s*(?:has_owner = yes|is_colony = yes|exists = owner))\s+", r"\1_system_colony = \2"],
         r"(\bOR = \{\s+(has_trait = trait_(?:plantoid|lithoid)_budding\s+){2}\})": "has_budding_trait = yes",
         r"_pop = \{\s+unemploy_pop = yes\s+kill_pop = yes": [r"(_pop = \{\s+)unemploy_pop = yes\s+(kill_pop = yes)", r"\1\2"], # ghost pop bug fixed
     }
@@ -866,8 +868,6 @@ if not keep_default_country_trigger:
     targets4[r"\s(?:every|random|count|any)_playable_country = \{[^{}#]*(?:limit = \{\s+)?(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes|merg_is_default_empire = yes)\s*"] = [r"((?:every|random|count|any)_playable_country = \{[^{}#]*?(?:limit = \{\s+)?)(?:is_country_type = default|CmtTriggerIsPlayableEmpire = yes|is_zofe_compatible = yes|merg_is_default_empire = yes)\s*", r"\1"]
     # without is_country_type_with_subjects & without is_fallen_empire = yes
     targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes))|(?:(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = default|merg_is_default_empire = yes))|(?:(?:is_country_type = default|merg_is_default_empire = yes)\s+(is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)\s+(?:is_country_type = fallen_empire|merg_is_fallen_empire = yes)))"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_country_type = fallen_empire|merg_is_fallen_empire = yes|is_country_type = awakened_fallen_empire|merg_is_awakened_fe = yes)(\s+)){2,}", (no_trigger_folder, r"is_default_or_fallen = yes\2")]
-    # with is_country_type_with_subjects & without AFE but with is_fallen_empire
-    targets4[r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)\s+is_fallen_empire = yes)|(?:is_fallen_empire = yes\s+(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)))\s+"] = [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_fallen_empire = yes|is_country_type_with_subjects = yes)(\s+)){2,}", (no_trigger_folder, r"is_default_or_fallen = yes\2")]
 elif not mergerofrules:
     targets3[r"\bmerg_is_default_empire = (yes|no)"] = lambda p: {"yes": "is_country_type = default", "no": "NOT = { is_country_type = default }"}[p.group(1)]
     targets3[r"\bmerg_is_fallen_empire = (yes|no)"] = lambda p: {"yes": "is_country_type = fallen_empire", "no": "NOT = { is_country_type = fallen_empire }"}[p.group(1)] # Compare vanilla is_valid_fallen_empire_for_task
