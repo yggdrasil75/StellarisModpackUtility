@@ -265,6 +265,7 @@ v3_9 = {
     "targetsR": [
         [r"^[^#]+?\sland_army\s", "Removed army parameter in 3.9:"], # only from 3.8
         [r"^[^#]+?\sdistrict_hab_cultural", "Removed in 3.9: replaceable with district_hab_housing?"],
+        [r"^[^#]+?\sdistrict_hab_commercial", "Removed in 3.9: replaceable with district_hab_energy?"],
         [r"^[^#]+?\sis_regular_empire_or_primitive\b", "Removed in 3.9: replaceable with OR = { is_regular_empire is_primitive = yes }?"], # only from 3.8
     ],
     "targets3": {
@@ -319,6 +320,8 @@ v3_8 = {
                 "analytical",
                 "archaeologist_ancrel",
                 "mindful",
+                "mindfulness",
+                "amplifier",
             } else "leader_trait_"+{
              "charismatic": "inspiring",
              "newboot": "eager",
@@ -339,10 +342,13 @@ v3_8 = {
              "analytical": "intellectual",
              "archaeologist_ancrel": "archaeologist", # collective_wisdom?
              "mindful": "insightful",
+             "mindfulness": "bureaucrat",
+             "amplifier": "bureaucrat",
          }[p.group(1)],
         r"([^#]*?)\blength = 0": ("common/edicts", r"\1length = -1"),
         r"([^#]*?)\badd_random_leader_trait = yes": (["common/scripted_effects", "events"], r"\1add_trait = random_common"),
         r"\s*[^#]*?\bleader_trait = (?:all|\{\s*\w+\s*\})\s*": ("common/traits", ""),
+        r'(\s*[^#]*?)\bleader_class ?= ?\"?ruler\"?': ("prescripted_countries", '\1leader_class = "governor"'),
         # r"\s+traits = \{\s*\}\s*": "",
         r"\bmerg_is_standard_empire = (yes|no)": r"is_default_or_fallen = \1",  # v3.8 former merg_is_standard_empire Merger Rule now vanilla
 
