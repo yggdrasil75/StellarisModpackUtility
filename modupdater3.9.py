@@ -1,10 +1,10 @@
 # @author: FirePrince
 stellaris_version = '3.9.0' # @version
-# @revision: 2023/09/02
+# @revision: 2023/09/04
 # @thanks: OldEnt for detailed rundowns (<3.2)
 # @thanks: yggdrasil75 for cmd params
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
-# @Git: https://github.com/F1r3Pr1nc3/StellarisModpackUtility/blob/master/modupdater3.8.py
+# @Git: https://github.com/F1r3Pr1nc3/StellarisModpackUtility/blob/master/modupdater3.9.py
 # @TODO: replace in *.YML ?
 # @TODO: extended support The Merger of Rules ?
 # ============== Import libs ===============
@@ -33,11 +33,11 @@ only_upto_version = 3.9 # Only supports numbers as int or with one digit after t
 # only_from_version = 3.8 # TODO Overwrites var only_upto_version: Only supports numbers with one digit after the decimal point.
 
 # TODO Deprecate values - replaced by var only_from_version !?
-only_v3_8 = False
-only_v3_7 = False
-only_v3_6 = False
-only_v3_5 = False
-only_v3_4 = False
+# only_v3_8 = False
+# only_v3_7 = False
+# only_v3_6 = False
+# only_v3_5 = False
+# only_v3_4 = False
 
 # Print available options and descriptions if /? or --help is provided
 if '/?' in sys.argv or '--help' in sys.argv or '-h' in sys.argv:
@@ -51,11 +51,11 @@ if '/?' in sys.argv or '--help' in sys.argv or '-h' in sys.argv:
     print("-m, --mergerofrules\tTrue Support global compatibility for The Merger of Rules; needs scripted_trigger file or mod")
     print("-k, --keep_default_country_trigger\ton playable effect \"is_country_type = default\"")
     print("-ut, --only_upto_version\tversions nr to update only, e.g. = 3.7")
-    print("-v3.8, --only_v3_8\tSingle version")
-    print("-v3.7, --only_v3_7\tSingle version")
-    print("-v3.6, --only_v3_6\tSingle version")
-    print("-v3.5, --only_v3_5\tSingle version")
-    print("-v3.4, --only_v3_4\tSingle version")
+    # print("-v3.8, --only_v3_8\tSingle version")
+    # print("-v3.7, --only_v3_7\tSingle version")
+    # print("-v3.6, --only_v3_6\tSingle version")
+    # print("-v3.5, --only_v3_5\tSingle version")
+    # print("-v3.4, --only_v3_4\tSingle version")
     exit()
 
 # Process command-line arguments
@@ -133,62 +133,62 @@ while i < len(sys.argv):
             elif isinstance(sys.argv[i + 1], str) and sys.argv[i + 1].replace('.', '', 1).isdigit():
                 only_upto_version = float(sys.argv[i + 1])
                 i += 1
-    elif arg == '-v3.8' or arg == '--only_v3_8':
-        if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false' or sys.argv[i + 1] == '0':
-            only_v3_8 = False
-            i += 1
-        elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true' or sys.argv[i + 1] == '1':
-            i += 1
-            only_v3_8 = True
-        else:
-            only_v3_8 = True
-    elif arg == '-v3.7' or arg == '--only_v3_7':
-        if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false' or sys.argv[i + 1] == '0':
-            only_v3_7 = False
-            i += 1
-        elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true' or sys.argv[i + 1] == '1':
-            i += 1
-        else:
-            only_v3_7 = True
-    elif arg == '-v3.6' or arg == '--only_v3_6':
-        if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false' or sys.argv[i + 1] == '0':
-            only_v3_6 = False
-            i += 1
-        elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true' or sys.argv[i + 1] == '1':
-            i += 1
-            only_v3_6 = True
-        else:
-            only_v3_6 = True
-    elif arg == '-v3.5' or arg == '--only_v3_5':
-        if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false' or sys.argv[i + 1] == '0':
-            only_v3_5 = False
-            i += 1
-        elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true' or sys.argv[i + 1] == '1':
-            i += 1
-            only_v3_5 = True
-        else:
-            only_v3_5 = True
-    elif arg == '-v3.4' or arg == '--only_v3_4':
-        if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false' or sys.argv[i + 1] == '0':
-            only_v3_4 = False
-            i += 1
-        elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true' or sys.argv[i + 1] == '1':
-            i += 1
-            only_v3_4 = True
-        else:
-            only_v3_4 = True
-    elif arg == '-only' or arg == '--onlyVersion':
-        arg2 = sys.argv[i+1]
-        if arg2 == '3.4':
-            only_v3_4 = True
-        elif arg2 == '3.5':
-            only_v3_5 = True
-        elif arg2 == '3.6':
-            only_v3_6 = True
-        elif arg2 == '3.7':
-            only_v3_7 = True
-        elif arg2 == '3.8':
-            only_v3_8 = True
+    # elif arg == '-v3.8' or arg == '--only_v3_8':
+    #     if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false' or sys.argv[i + 1] == '0':
+    #         only_v3_8 = False
+    #         i += 1
+    #     elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true' or sys.argv[i + 1] == '1':
+    #         i += 1
+    #         only_v3_8 = True
+    #     else:
+    #         only_v3_8 = True
+    # elif arg == '-v3.7' or arg == '--only_v3_7':
+    #     if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false' or sys.argv[i + 1] == '0':
+    #         only_v3_7 = False
+    #         i += 1
+    #     elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true' or sys.argv[i + 1] == '1':
+    #         i += 1
+    #     else:
+    #         only_v3_7 = True
+    # elif arg == '-v3.6' or arg == '--only_v3_6':
+    #     if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false' or sys.argv[i + 1] == '0':
+    #         only_v3_6 = False
+    #         i += 1
+    #     elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true' or sys.argv[i + 1] == '1':
+    #         i += 1
+    #         only_v3_6 = True
+    #     else:
+    #         only_v3_6 = True
+    # elif arg == '-v3.5' or arg == '--only_v3_5':
+    #     if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false' or sys.argv[i + 1] == '0':
+    #         only_v3_5 = False
+    #         i += 1
+    #     elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true' or sys.argv[i + 1] == '1':
+    #         i += 1
+    #         only_v3_5 = True
+    #     else:
+    #         only_v3_5 = True
+    # elif arg == '-v3.4' or arg == '--only_v3_4':
+    #     if i + 1 < len(sys.argv) and sys.argv[i + 1].lower() == 'false' or sys.argv[i + 1] == '0':
+    #         only_v3_4 = False
+    #         i += 1
+    #     elif i + 1 < len(sys.argv) and sys.argv[i+1].lower() == 'true' or sys.argv[i + 1] == '1':
+    #         i += 1
+    #         only_v3_4 = True
+    #     else:
+    #         only_v3_4 = True
+    # elif arg == '-only' or arg == '--onlyVersion':
+    #     arg2 = sys.argv[i+1]
+    #     if arg2 == '3.4':
+    #         only_v3_4 = True
+    #     elif arg2 == '3.5':
+    #         only_v3_5 = True
+    #     elif arg2 == '3.6':
+    #         only_v3_6 = True
+    #     elif arg2 == '3.7':
+    #         only_v3_7 = True
+    #     elif arg2 == '3.8':
+    #         only_v3_8 = True
     elif arg == '-input' and i+1 < len(sys.argv):
         mod_path = sys.argv[i+1]
         i += 1
@@ -264,14 +264,15 @@ v3_9 = {
 
     "targetsR": [
         [r"^[^#]+?\sland_army\s", "Removed army parameter in 3.9:"], # only from 3.8
+        [r"^[^#]+?\bhabitat_0\s", "Removed in 3.9: replaceable with major_orbital"], # only from 3.8
         [r"^[^#]+?\sdistrict_hab_cultural", "Removed in 3.9: replaceable with district_hab_housing?"],
         [r"^[^#]+?\sdistrict_hab_commercial", "Removed in 3.9: replaceable with district_hab_energy?"],
         [r"^[^#]+?\sis_regular_empire_or_primitive\b", "Removed in 3.9: replaceable with OR = { is_regular_empire is_primitive = yes }?"], # only from 3.8
     ],
     "targets3": {
-        r'\bhabitat_0\b': 'major_orbital', # 'habitat_central_complex',
+        # r'\bhabitat_0\b': 'major_orbital', # 'habitat_central_complex',
         r'\bimperial_origin_start_spawn_effect =': 'origin_spawn_system_effect =',
-        r'\b(?:is_orbital_ring = (yes|no)|has_starbase_size (>)=? starbase_outpost)': lambda p: 'is_normal_starbase = ' + {"yes": "no", "no": "yes", ">": "yes"}[p.group(1)], # has_starbase_size >= orbital_ring_tier_1
+        r'\b(?:is_orbital_ring = (yes|no)|has_starbase_size >=? starbase_outpost)': lambda p: 'is_normal_starbase = yes' if not p.group(1) else 'is_normal_starbase = ' + {"yes": "no", "no": "yes"}[p.group(1)], # has_starbase_size >= orbital_ring_tier_1
         # r'\bhas_starbase_size (>)=? starbase_outpost': lambda p: 'is_normal_starbase = yes',
     },
     "targets4": {
@@ -748,11 +749,12 @@ v3_0 = {
    }
 }
 
-if only_actual or only_v3_8: actuallyTargets = v3_8
-elif only_v3_7: actuallyTargets = v3_7
-elif only_v3_6: actuallyTargets = v3_6
-elif only_v3_5: actuallyTargets = v3_5
-elif only_v3_4: actuallyTargets = v3_4
+if only_actual: actuallyTargets = v3_9
+# if only_actual or only_v3_8: actuallyTargets = v3_8
+# elif only_v3_7: actuallyTargets = v3_7
+# elif only_v3_6: actuallyTargets = v3_6
+# elif only_v3_5: actuallyTargets = v3_5
+# elif only_v3_4: actuallyTargets = v3_4
 # elif only_v3_3: actuallyTargets = v3_3
 # elif only_v3_2: actuallyTargets = v3_2
 # elif only_v3_1: actuallyTargets = v3_1
