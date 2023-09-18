@@ -1,6 +1,6 @@
 # @author: FirePrince
-stellaris_version = '3.9.0' # @version
-# @revision: 2023/09/04
+stellaris_version = '3.9.1' # @version
+# @revision: 2023/09/18
 # @thanks: OldEnt for detailed rundowns (<3.2)
 # @thanks: yggdrasil75 for cmd params
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
@@ -27,7 +27,7 @@ only_actual = 0 # TODO Deprecate value - replaced by var only_from_version !?
 code_cosmetic = 0
 also_old = 0
 debug_mode = 0
-mergerofrules = 0 # TODO auto detect?
+mergerofrules = 1 # TODO auto detect?
 keep_default_country_trigger = 0
 only_upto_version = 3.9 # Only supports numbers as int or with one digit after the decimal point (only 3-3.8 is supported yet)
 # only_from_version = 3.8 # TODO Overwrites var only_upto_version: Only supports numbers with one digit after the decimal point.
@@ -272,8 +272,10 @@ v3_9 = {
     "targets3": {
         # r'\bhabitat_0\b': 'major_orbital', # 'habitat_central_complex',
         r'\bimperial_origin_start_spawn_effect =': 'origin_spawn_system_effect =',
-        r'\b(?:is_orbital_ring = (yes|no)|has_starbase_size >=? starbase_outpost)': lambda p: 'is_normal_starbase = yes' if not p.group(1) else 'is_normal_starbase = ' + {"yes": "no", "no": "yes"}[p.group(1)], # has_starbase_size >= orbital_ring_tier_1
+        r'\b(?:is_orbital_ring = no|has_starbase_size >= starbase_outpost)': 'is_normal_starbase = yes', # has_starbase_size >= orbital_ring_tier_1
         # r'\bhas_starbase_size (>)=? starbase_outpost': lambda p: 'is_normal_starbase = yes',
+        r'\bcan_see_in_list = no': 'hide_leader = yes',
+        # r'\bis_roaming_space_critter_country_type = (yes|no)':  lambda p: {"yes": "", "no": "N"}[p.group(1)] + 'OR = {is_country_type = tiyanki is_country_type = amoeba is_country_type = amoeba_borderless }', # just temp beta
     },
     "targets4": {
         # spawn_habitat_cracker_effect includes remove_planet = yes cosmetic
@@ -297,7 +299,6 @@ v3_8 = {
         r'\s+trait = random_trait\b\s*': '',
         # r'\btrait = leader_trait_(\w+)\b': r'0 = leader_trait_\1', # not necessarily
         r"(\s)has_chosen_trait_ruler =": r"\1has_chosen_one_leader_trait =", # scripted trigger
-        r'\bleader_class = ruler\b': 'is_ruler = yes',
         r'\btype = ruler\b': 'ruler = yes', # kill_leader
         r'\b(add|has|remove)_ruler_trait\b': r'\1_trait',
         r'\bclass = ruler\b': 'class = random_ruler',
@@ -349,7 +350,8 @@ v3_8 = {
         r"([^#]*?)\blength = 0": ("common/edicts", r"\1length = -1"),
         r"([^#]*?)\badd_random_leader_trait = yes": (["common/scripted_effects", "events"], r"\1add_trait = random_common"),
         r"\s*[^#]*?\bleader_trait = (?:all|\{\s*\w+\s*\})\s*": ("common/traits", ""),
-        r'(\s*[^#]*?)\bleader_class ?= ?\"?ruler\"?': ("prescripted_countries", '\1leader_class = "governor"'),
+        r'(\s*[^#]*?)\bleader_class ?= ?\"?ruler\"?': ("prescripted_countries", r'\1leader_class="governor"'),
+        r'\bleader_class = ruler\b': 'is_ruler = yes',
         # r"\s+traits = \{\s*\}\s*": "",
         r"\bmerg_is_standard_empire = (yes|no)": r"is_default_or_fallen = \1",  # v3.8 former merg_is_standard_empire Merger Rule now vanilla
 
@@ -732,7 +734,7 @@ v3_0 = {
         r"(\s+)any_system_within_border = \{\s*any_system_planet = (.*?\s*\})\s*\}": r"\1any_planet_within_border = \2", # very rare, maybe put to cosmetic
         r"is_country_type = default\s+has_monthly_income = \{\s*resource = (\w+) value <=? \d": r"no_resource_for_component = { RESOURCE = \1",
         r"([^\._])owner = \{\s*is_same_(?:empire|value) = ([\w\._:]+)\s*\}": r"\1is_owned_by = \2",
-        r"(\s+)is_(?:country|same_value) = ([\w\._:]+\.(?:controller|(?:space_)?owner)(?:\.overlord)?(?:[\s}]|$))": r"\1is_same_empire = \2",
+        r"(\s+)is_(?:country|same_value) = ([\w\._:]+\.(?:controller|(?:space_)?owner)(?:\.overlord)?(?:[\s}]+|$))": r"\1is_same_empire = \2",
         # r"exists = (?:solar_system|planet)\.(?:space_)?owner( |$)": r"has_owner = yes\1", TODO not sure
         # code opts/cosmetic only
         r"\bNO[RT] = \{\s*([^\s]+) = yes\s*\}": r"\1 = no",
@@ -952,6 +954,7 @@ if code_cosmetic and not only_warning:
     # NOT NUM triggers. TODO <> ?
     targets3[r"\bNOT = \{\s*(num_\w+|\w+?(?:_passed)) = (\d+)\s*\}"] = r"\1 != \2"
     targets3[r"\bfleet = \{\s*(destroy|delete)_fleet = this\s*\}"] = r"\1_fleet = fleet" # TODO may extend
+    targets3[r"(species|country|ship|pop|leader|army)\s*=\s*\{\s*is_same_value\s*=\s*([\w\._:]+?\.?species(?:[\s}]+|$))"] = r"\1 = { is_same_species = \2"
 
     ## targets3[r"# *([A-Z][\w ={}]+?)\.$"] = r"# \1" # remove comment punctuation mark
     targets4[r"\n{3,}"] = "\n\n" # r"\s*\n{2,}": "\n\n", # cosmetic remove surplus lines
@@ -1298,9 +1301,18 @@ def modfix(file_list):
             if m: m = m.group(1)
             if debug_mode: print(m, isinstance(m, str), len(m))
             if isinstance(m, str) and m != stellaris_version and m[0:3] != stellaris_version[0:3]:
-                out = re.sub(pattern, r'supported_version="%s"' % stellaris_version, out)
+                if re.search(r"\*", m):
+                    out = re.sub(pattern, r'supported_version="%s"' % (stellaris_version[0:4] + '*'), out)
+                else:
+                    out = re.sub(pattern, r'supported_version="%s"' % stellaris_version, out)
                 if debug_mode: print(type(out), out.encode('utf-8', errors='replace'), m[0:3], stellaris_version[0:3])
-                out = out.replace(m[0:3], stellaris_version[0:3])
+                pattern = re.compile(r'version=\"(.*?)\"\n')
+                m = re.search(pattern, out)
+                if m: m = m.group(1)
+                if 5 <= len(m) and re.search(r".\d+", m[3:5]):
+                    out = out.replace(m[0:5], stellaris_version)
+                else:
+                    out = out.replace(m[0:3], stellaris_version[0:3])
                 pattern = re.compile(r'name=\"(.*?)\"\n')
                 pattern = re.search(pattern, out)
                 if pattern: pattern = pattern.group(1)
