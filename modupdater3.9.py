@@ -1,6 +1,6 @@
 # @author: FirePrince
-stellaris_version = '3.9.1' # @version
-# @revision: 2023/09/18
+stellaris_version = '3.9.2' # @version
+# @revision: 2023/10/07
 # @thanks: OldEnt for detailed rundowns (<3.2)
 # @thanks: yggdrasil75 for cmd params
 # @forum: https://forum.paradoxplaza.com/forum/threads/1491289/
@@ -27,7 +27,7 @@ only_actual = 0 # TODO Deprecate value - replaced by var only_from_version !?
 code_cosmetic = 0
 also_old = 0
 debug_mode = 0
-mergerofrules = 1 # TODO auto detect?
+mergerofrules = 0 # TODO auto detect?
 keep_default_country_trigger = 0
 only_upto_version = 3.9 # Only supports numbers as int or with one digit after the decimal point (only 3-3.8 is supported yet)
 # only_from_version = 3.8 # TODO Overwrites var only_upto_version: Only supports numbers with one digit after the decimal point.
@@ -261,18 +261,19 @@ actuallyTargets = {
 
 
 v3_9 = {
-
     "targetsR": [
-        [r"^[^#]+?\sland_army\s", "Removed army parameter in 3.9:"], # only from 3.8
-        [r"^[^#]+?\bhabitat_0\s", "Removed in 3.9: replaceable with major_orbital"], # only from 3.8
-        [r"^[^#]+?\sdistrict_hab_cultural", "Removed in 3.9: replaceable with district_hab_housing?"],
-        [r"^[^#]+?\sdistrict_hab_commercial", "Removed in 3.9: replaceable with district_hab_energy?"],
-        [r"^[^#]+?\sis_regular_empire_or_primitive\b", "Removed in 3.9: replaceable with OR = { is_regular_empire is_primitive = yes }?"], # only from 3.8
+        [r"^[^#]+?\sland_army\s", "Removed army parameter from 3.8 in 3.9:"], # only from 3.8
+        [r"^[^#]+?\bhabitat_0\s", "Removed in 3.9: replaceable with 'major_orbital'"], # only from 3.8
+        [r"^[^#]+?\sdistrict_hab_cultural", "Removed in 3.9: replaceable with 'district_hab_housing'?"],
+        [r"^[^#]+?\sdistrict_hab_commercial", "Removed in 3.9: replaceable with 'district_hab_energy'?"],
+        [r"^[^#]+?\sis_regular_empire_or_primitive\b", "Removed in 3.9.0 from 3.6: replaceable with OR = { is_regular_empire is_primitive = yes }?"], # only from 3.8
+        [r"^[^#]+?\sis_space_critter_country_type\b", "Removed in 3.9.2: possible replaceable with 'is_non_hostile_to_wraith'?"], # only from 3.8
     ],
     "targets3": {
         # r'\bhabitat_0\b': 'major_orbital', # 'habitat_central_complex',
         r'\bimperial_origin_start_spawn_effect =': 'origin_spawn_system_effect =',
-        r'\b(?:is_orbital_ring = no|has_starbase_size >= starbase_outpost)': 'is_normal_starbase = yes', # has_starbase_size >= orbital_ring_tier_1
+        r'\b(?:is_orbital_ring = no|has_starbase_size >= starbase_outpost)': 'is_normal_starbase = yes',
+        r'\b(?:is_normal_starbase = no|has_starbase_size >= orbital_ring_tier_1)': 'is_orbital_ring = yes',
         # r'\bhas_starbase_size (>)=? starbase_outpost': lambda p: 'is_normal_starbase = yes',
         r'\bcan_see_in_list = no': 'hide_leader = yes',
         # r'\bis_roaming_space_critter_country_type = (yes|no)':  lambda p: {"yes": "", "no": "N"}[p.group(1)] + 'OR = {is_country_type = tiyanki is_country_type = amoeba is_country_type = amoeba_borderless }', # just temp beta
@@ -281,6 +282,7 @@ v3_9 = {
         # spawn_habitat_cracker_effect includes remove_planet = yes cosmetic
     }
 }
+# Galactic Paragons
 v3_8 = {
     "targetsR": [
         # [r"^[^#]+?\ssector(?:\.| = \{ )leader\b", "Removed in 3.8: replaceable with planet?"],
@@ -354,7 +356,7 @@ v3_8 = {
         r'\bleader_class = ruler\b': 'is_ruler = yes',
         # r"\s+traits = \{\s*\}\s*": "",
         r"\bmerg_is_standard_empire = (yes|no)": r"is_default_or_fallen = \1",  # v3.8 former merg_is_standard_empire Merger Rule now vanilla
-
+        # r"\bspecies = \{ has_trait = trait_hive_mind \}": r'is_hive_species = yes',
     },
     "targets4": {
         r"\s+traits = \{\s*\}": "",
@@ -363,6 +365,7 @@ v3_8 = {
         r"\b(?:OR|NO[RT]) = \{\s*is_(?:default_or_fallen|synthetic_empire) = yes\s*\}": [r"\b(OR|NO[RT]) = \{\s*is_(default_or_fallen|synthetic_empire) = yes\s*\}", lambda p: "is_"+p.group(2)+" = "+{"OR": "yes", "NO": "no"}[p.group(1)[0:2].upper()]],
         # with is_country_type_with_subjects & without AFE but with is_fallen_empire
         r"\b(?:(?:(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)\s+is_fallen_empire = yes)|(?:is_fallen_empire = yes\s+(?:is_country_type = default|merg_is_default_empire = yes|is_country_type_with_subjects = yes)))\s+": [r"\b((?:is_country_type = default|merg_is_default_empire = yes|is_fallen_empire = yes|is_country_type_with_subjects = yes)(\s+)){2,}", (no_trigger_folder, r"is_default_or_fallen = yes\2")],
+        r"(\t?(?:species|pop) = \{\s+(?:limit = \{\s+)?(NOT = \{\s*)?has_trait = trait_hive_mind\s*\}(?(2)\s*\}))": [r"((\t?)(?:species|pop) = \{\s*?(limit = \{)?(\s+))(NOT = \{\s*)?has_trait = trait_hive_mind\s*\}((?(4)\s*\}))", lambda p: p.group(2) + (p.group(1) if p.group(3) else ('' if p.group(2) and len(p.group(2)) > 0 else p.group(1))) + 'is_hive_species = ' + ('no' if p.group(5) else 'yes') + (p.group(6) if (p.group(3) and p.group(6) or not p.group(2) or len(p.group(2)) == 0 ) else '')],
     }
 }
 """== 3.7 Quick stats ==
@@ -380,6 +383,7 @@ v3_7 = {
         r'\bvariable_string = "([\w.:]+)"': r'variable_string = "[\1]"', # set square brackets
         r"\bset_mia = yes": "set_mia = mia_return_home",
         r"\bset_primitive_age( =|_effect =)": r"set_pre_ftl_age\1",
+        r"\bis_country_type = primitive": r"is_primitive = yes",
         r"\bcreate_primitive_(species|blockers) = yes": r"create_pre_ftl_\1 = yes",
         r"\bsetup_primitive_planet = yes": "setup_pre_ftl_planet = yes",
         r"\bremove_primitive_flags = yes": "remove_pre_ftl_flags = yes",
@@ -457,6 +461,7 @@ v3_4 = {
     "targets3": {
         r"\bis_subject_type = vassal": "is_subject = yes",
         r"\bis_subject_type = (\w+)": r"any_agreement = { agreement_preset = preset_\1 }",
+        r"\bpreset = (tributary|vassal|satellite|scion|signatory|subsidiary|protectorate|dominion|thrall|satrapy)": r"preset = preset_\1",
         r"\bsubject_type = (\w+)": r"preset = preset_\1",
         r"\badd_100_unity_per_year_passed =": "add_500_unity_per_year_passed =",
         r"\bcount_drones_to_recycle =": "count_robots_to_recycle =",
@@ -464,7 +469,7 @@ v3_4 = {
         r"\bconstruction_blocks_others = yes": ("common/megastructures", 'construction_blocks_and_blocked_by = multi_stage_type'),
         r"\bhas_species_flag = racket_species_flag":  r"exists = event_target:racket_species is_same_species = event_target:racket_species",
         # code opts/cosmetic only
-        re.compile(r"\bNOT = \{\s*((?:leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+) = \{)\s*([^\s]+) = yes\s*\}\s*\}", re.I): r"\1 \2 = no }",
+        re.compile(r"\bNOT = \{\s*((?:leader|owner|controller|PREV|FROM|ROOT|THIS|event_target:\w+) = \{)\s*([^\s]+) = yes\s*\}\s*\}", re.I): r"\1 \2 = no }",
     },
     "targets4": {
         # >= 3.4
@@ -694,7 +699,7 @@ v3_1 = {
                   "12": "space_monster"
               }[p.group(2)])],
         r"\{\s*which = \"?\w+\"?\s+value\s*[<=>]+\s*(?:prev|from|root|event_target:[^\.\s])+\s*\}": [r"(\s*which = \"?(\w+)\"?\s+value\s*[<=>]+\s*(prev|from|root|event_target:[^\.\s])+)", r"\1.\2"],
-        r"\bset_variable = \{\s*which = \"?\w+\"?\s+value = (?:event_target:[^\d:{}#\s=\.]+|(prev\.?|from\.?|root|this|megastructure|planet|country|owner|space_owner|ship|pop|fleet|galactic_object|leader|army|ambient_object|species|pop_faction|war|federation|starbase|deposit|sector|archaeological_site|first_contact|spy_network|espionage_operation|espionage_asset)+)\s*\}": [r"set_variable = \{\s*which = \"?(\w+)\"?\s+value = (event_target:\w+|\w+)\s*\}", r"set_variable = { which = \1 value = \2.\1 }"],
+        r"\bset_variable = \{\s*which = \"?\w+\"?\s+value = (?:event_target:[^\d:{}#\s=\.]+|(prev\.?|from\.?|root|this|megastructure|planet|country|owner|controller|space_owner|ship|pop|fleet|galactic_object|leader|army|ambient_object|species|pop_faction|war|federation|starbase|deposit|sector|archaeological_site|first_contact|spy_network|espionage_operation|espionage_asset)+)\s*\}": [r"set_variable = \{\s*which = \"?(\w+)\"?\s+value = (event_target:\w+|\w+)\s*\}", r"set_variable = { which = \1 value = \2.\1 }"],
         r"\s+spawn_megastructure = \{[^{}#]+?location = [\w\._:]+": [r"(spawn_megastructure = \{[^{}#]+?)location = ([\w\._:]+)", r"\1coords_from = \2"],
         r"\s+modifier = \{\s*mult\b": [r"\bmult\b", "factor"],
    }
@@ -735,12 +740,13 @@ v3_0 = {
         r"is_country_type = default\s+has_monthly_income = \{\s*resource = (\w+) value <=? \d": r"no_resource_for_component = { RESOURCE = \1",
         r"([^\._])owner = \{\s*is_same_(?:empire|value) = ([\w\._:]+)\s*\}": r"\1is_owned_by = \2",
         r"(\s+)is_(?:country|same_value) = ([\w\._:]+\.(?:controller|(?:space_)?owner)(?:\.overlord)?(?:[\s}]+|$))": r"\1is_same_empire = \2",
+        r"((?:controller|(?:space_)?owner|overlord) = \{|is_ai = (?:yes|no) )is_same_value =": r"\1is_same_empire =",
         # r"exists = (?:solar_system|planet)\.(?:space_)?owner( |$)": r"has_owner = yes\1", TODO not sure
         # code opts/cosmetic only
         r"\bNO[RT] = \{\s*([^\s]+) = yes\s*\}": r"\1 = no",
         r"\bany_system_planet = \{\s*is_capital = (yes|no)\s*\}": r"is_capital_system = \1",
         r"(\s+has_(?:population|migration)_control) = (yes|no)": r"\1 = { type = \2 country = prev.owner }", # NOT SURE
-        re.compile(r"\bNOT = \{\s*((?:leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+) = \{)\s*([^\s]+) = yes\s*\}\s*\}", re.I): r"\1 \2 = no }",
+        re.compile(r"\bNOT = \{\s*((?:leader|owner|controller|PREV|FROM|ROOT|THIS|event_target:\w+) = \{)\s*([^\s]+) = yes\s*\}\s*\}", re.I): r"\1 \2 = no }",
         ## Since Megacorp removed: change_species_characteristics was false documented until 3.2
         r"[\s#]+(pops_can_(be_colonizers|migrate|reproduce|join_factions|be_slaves)|can_generate_leaders|pops_have_happiness|pops_auto_growth|pop_maintenance) = (yes|no)\s*": "",
     },
@@ -923,9 +929,10 @@ elif not mergerofrules:
 
 
 if code_cosmetic and not only_warning:
-    triggerScopes = r"limit|trigger|any_\w+|leader|owner|PREV|FROM|ROOT|THIS|event_target:\w+"
-    targets3[r"((?:[<=>]\s|\.|PREV|FROM|Prev|From)+(PREV|FROM|ROOT|THIS|Prev|From|Root|This)+)\b"] = lambda p: p.group(1).lower()
-    targets3[r"\b(IF|ELSE|ELSE_IF) ="] = lambda p: p.group(1).lower() + " ="
+    triggerScopes = r"limit|trigger|any_\w+|leader|owner|controller|PREV|FROM|ROOT|THIS|event_target:\w+"
+    targets3[r"((?:[<=>]\s|\.|\t|PREV|FROM|Prev|From)+(PREV|FROM|ROOT|THIS|Prev|From|Root|This)+)\b"] = lambda p: p.group(1).lower()
+    targets3[r"\b(IF|ELSE|ELSE_IF|OWNER|Owner|CONTROLLER|Controller|LIMIT) ="] = lambda p: p.group(1).lower() + " ="
+    targets3[r"\b(or|not|nor|and) ="] = lambda p: p.group(1).upper() + " ="
     targets3[r" {4}"] = r"\t"  # r" {4}": r"\t", # convert space to tabs
     targets3[r"^(\s+)limit = \{\s*\}"] = r"\1# limit = { }"
     targets3[r'\bhost_has_dlc = "([\s\w]+)"'] = (re.compile(r"^(?!common/traits)"), lambda p: p.group(0) if p.group(1) and p.group(1) in {"Anniversary Portraits", "Apocalypse", "Arachnoid Portrait Pack", "Creatures of the Void Portrait Pack", "Megacorp", "Utopia"} else "has_" + {
@@ -947,10 +954,10 @@ if code_cosmetic and not only_warning:
             "Galactic Paragons": "paragon_dlc",
          }[p.group(1)] + " = yes")
     # targets3[r"\s*days\s*=\s*-1\s*"] = ' ' # still needed to execute immediately
-    # targets3[r"# {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
+    targets3[r"([#.]) {1,3}([a-z])([a-z]+ +[^;:\s#=<>]+)"] = lambda p: p.group(1)+" "+p.group(2).upper() + p.group(3) # format comment
     targets3[r"#([^\-\s#])"] = r"# \1" # r"#([^\s#])": r"# \1", # format comment
     #  targets3[r"# +([A-Z][^\n=<>{}\[\]# ]+? [\w,\.;\'\//+\- ()&]+? \w+ \w+ \w+)$"] = r"# \1." # set comment punctuation mark
-    targets3[r"# ([a-z])(\w+ +[^;:\s#=<>]+ [^\n]+?[\.!?])$"] = lambda p: "# "+p.group(1).upper() + p.group(2) # format comment
+    targets3[r"([#.] [a-z])(\w+ +[^;:\s#=<>]+ [^\n]+?[\.!?])$"] = lambda p: p.group(1).upper() + p.group(2) # format comment
     # NOT NUM triggers. TODO <> ?
     targets3[r"\bNOT = \{\s*(num_\w+|\w+?(?:_passed)) = (\d+)\s*\}"] = r"\1 != \2"
     targets3[r"\bfleet = \{\s*(destroy|delete)_fleet = this\s*\}"] = r"\1_fleet = fleet" # TODO may extend
@@ -978,7 +985,7 @@ if mergerofrules:
     targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)\s+\}?"] = [r"(\s+)(\bOR = \{)?(\s+)(?:has_country_flag = synthetic_empire\s+owner_species = \{ has_trait = trait_mechanical \}|owner_species = \{ has_trait = trait_mechanical \}\s+has_country_flag = synthetic_empire)(?(2)\1\})", (no_trigger_folder, r"\1\3is_mechanical_empire = yes")]
     targets4[r"\s+(?:OR = \{)?\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = \"?auth_machine_intelligence\"?)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = \"?auth_machine_intelligence\"?)\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|has_authority = \"?auth_machine_intelligence\"?)\s+\}?"] = [r"(\s+)(OR = \{)?(\s+)(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = \"?auth_machine_intelligence\"?|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = \"?auth_machine_intelligence\"?|is_machine_empire = yes))\s+(?:has_country_flag = synthetic_empire|owner_species = \{ has_trait = trait_mechanical \}|(?has_authority = \"?auth_machine_intelligence\"?|is_machine_empire = yes))(?(2)\1\})", (no_trigger_folder, r"\1\3is_robot_empire = yes")]
     targets4[r"NO[RT] = \{\s*(?:merg_is_(?:fallen_empire|awakened_fe) = yes\s+){2}\}"] = "is_fallen_empire = no"
-    targets4[r"\n\s+(?:OR = \{)?\s+(?:merg_is_(?:fallen_empire|awakened_fe) = yes\s+){2}\}?"] = [r"(\s+)(OR = \{)?(?(2)\s+|(\s+))merg_is_(?:fallen_empire|awakened_fe) = yes\s+merg_is_(?:fallen_empire|awakened_fe) = yes(?(2)\1\})", r"\1\3is_fallen_empire = yes"]
+    targets4[r"\n\s+(?:OR = \{)?\s+(?:merg_is_(?:fallen_empire|awakened_fe) = yes\s+){2}\}?"] = [r"(\s+)(OR = \{)?(?(2)\s+|(\s+))merg_is_(?:fallen_empire|awakened_fe) = yes\s+merg_is_(?:fallen_empire|awakened_fe) = yes(?(2)\s+\})", r"\1\3is_fallen_empire = yes"]
     targets4[r"\bNO[RT] = \{\s*(?:merg_is_(?:default_empire|awakened_fe) = yes\s+){2}\}"] = "is_country_type_with_subjects = no"
     targets4[r"\bOR = \{\s*(?:merg_is_(?:default_empire|awakened_fe) = yes\s+){2}\}"] = "is_country_type_with_subjects = yes"
     targets4[r"\bNO[RT] = \{\s*(?:merg_is_(?:default|fallen)_empire = yes\s+){2}\}"] = "is_default_or_fallen = no"
@@ -1000,6 +1007,7 @@ if mergerofrules:
     # targets31 = [(re.compile(k, flags=0), targets31[k]) for k in targets31]
 else:
     targets3[r"\bmerg_is_hab_ringworld = (yes|no)"] = r"is_ringworld = \1"
+    targets3[r"\bmerg_is_hive_world = (yes|no)"] = lambda p: {"yes": "is_planet_class = pc_hive", "no": "NOT = { is_planet_class = pc_hive }"}[p.group(1)]
 
 
 if debug_mode:
@@ -1226,6 +1234,7 @@ def modfix(file_list):
                             rt = False
                             replace = repl
                             if isinstance(repl, list) and isinstance(repl[1], tuple):
+                                # print('Has folder check')
                                 replace = repl.copy()
                                 # folder = repl[1][0]
                                 # replace[1] = repl[1][1]
