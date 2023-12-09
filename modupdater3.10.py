@@ -1,5 +1,5 @@
 # @author: FirePrince
-stellaris_version = '3.10.2' # @version
+stellaris_version = '3.10.3' # @version
 # @revision: 2023/12/04
 # @thanks: OldEnt for detailed rundowns (<3.2)
 # @thanks: yggdrasil75 for cmd params
@@ -29,7 +29,7 @@ also_old = 0
 debug_mode = 0
 mergerofrules = 0 # TODO auto detect?
 keep_default_country_trigger = 0
-only_upto_version = "3.10"
+only_upto_version = "3.10" #  Should be integer string
 
 # TODO Deprecate values - replaced by var only_from_version !?
 # only_v3_8 = False
@@ -257,46 +257,65 @@ actuallyTargets = {
     "targets3": {}, # Simple syntax
     "targets4": {}  # Multiline syntax
 }
-# BTW,  the modifier leader_age has been renamed to leader_lifespan_add and the trigger leader_lifespan has been introduced
-
+"""== 3.10 Quick stats ==
+# BTW: the modifier leader_age has been renamed to leader_lifespan_add, the trigger leader_lifespan has been introduced
+Removed paragon.5001 
+"""
 lastversion = v3_10 = {
     "targetsR": [
         [r"^[^#]+?\w+(skill|gray|weight|agent|frontier)_governor\b", "Possibly renamed to '_official' in 3.10"],
         [r"^[^#]+?\s+num_pops\b", "Can be possibly replaced with 'num_sapient_pops' in 3.10"], # TODO: needs to be more accurate
-        [r"^[^#]+?\s+leader_class = \{\s*((?:admiral|scientist|general|governor)\s+){1:4}", "Needs to be replaced with 'official' or 'commander' in 3.10"] # TODO
+        [r"\s+kill_leader = \{ type", "Probably outdated since 3.10"], # TODO: needs to be more accurate
+        (["common/traits", "common/governments/councilors"], [r"^\s+leader_class = \{\s*((?:admiral|general|governor)\s+){1,2}", "Needs to be replaced with 'official' or 'commander' in 3.10"]), # TODO
     ],
     "targets3": {
-        r'\bcan_fill_specialist_job =': 'can_fill_specialist_job_trigger =',
-        r'\bleader_age = ': 'leader_lifespan_add = ',
-        r"^on_survey = \{": ("common/on_actions", "on_survey_planet = {"),
-        r'class = governor\b': r'class = official',
-        r'class = (?:admiral|general)\b': 'class = commander',
-        r'= subclass_governor_(?:visionary|economist|pioneer)': '= subclass_official_governor',
-        r'= subclass_admiral_(?:tactician|aggressor|strategist)': '= subclass_commander_admiral',
-        r'= subclass_general_(?:invader|protector|marshall)': '= subclass_commander_general',
+        r'\bcan_fill_specialist_job\s*=': 'can_fill_specialist_job_trigger =',
+        r'\bleader_age\s*=\s*': 'leader_lifespan_add = ',
+        r"^on_survey\s*=\s*\{": ("common/on_actions", "on_survey_planet = {"),
+        r'class\s*=\s*("?)governor\b': r'class = \1official',
+        r'class\s*=\s*("?)(?:admiral|general)\b': r'class = \1commander',
+        r'=\s*subclass_governor_(?:visionary|economist|pioneer)': '= subclass_official_governor',
+        r'=\s*subclass_admiral_(?:tactician|aggressor|strategist)': '= subclass_commander_admiral',
+        r'=\s*subclass_general_(?:invader|protector|marshall)': '= subclass_commander_general',
         # 4 sub-classes for each class
-        r'= subclass_scientist_analyst': '= subclass_scientist_governor', # '= subclass_scientist_scholar', also new
-        r'= subclass_scientist_researcher': '= subclass_scientist_councilor', # _explorer keeps same, 
+        r'=\s*subclass_scientist_analyst': '= subclass_scientist_governor', # '= subclass_scientist_scholar', also new
+        r'=\s*subclass_scientist_researcher': '= subclass_scientist_councilor', # _explorer keeps same, 
         r'\bcouncilor_gestalt_(governor|scientist|admiral|general)\b': lambda p: "councilor_gestalt_"+{
             "governor": "growth",
             "scientist": "cognitive",
             "admiral": "legion",
             "general": "regulatory"
         }[p.group(1)],
-        r'= leader_trait_clone_(army|army_fertile)_admiral': r'= leader_trait_clone_\1_commander',
-        r'= leader_trait_civil_engineer': '= leader_trait_manufacturer',
-        r'= leader_trait_scrapper_': '= leader_trait_distribution_lines_',
-        r'= leader_trait_urbanist_': '= trait_ruler_architectural_sense_',
-        r'= leader_trait_par_zealot(_\d)?\b': '= leader_trait_crusader',
-        r'= leader_trait_army_logistician(_\d)?\b': '= leader_trait_energy_weapon_specialist',
+        r'=\s*leader_trait_clone_(army|army_fertile)_admiral': r'= leader_trait_clone_\1_commander',
+        r'=\s*leader_trait_civil_engineer': '= leader_trait_manufacturer',
+        r'=\s*leader_trait_scrapper_': '= leader_trait_distribution_lines_',
+        r'=\s*leader_trait_urbanist_': '= trait_ruler_architectural_sense_',
+        r'=\s*leader_trait_par_zealot(_\d)?\b': '= leader_trait_crusader',
+        r'=\s*leader_trait_repair_crew\b': '= leader_trait_brilliant_shipwright',
+        r'=\s*leader_trait_demolisher_destiny\b': '= leader_trait_demolisher',
+        r'=\s*leader_trait_deep_space_explorer\b': '= leader_trait_xeno_cataloger',
+        r'=\s*leader_trait_supreme_admiral\b': '= leader_trait_military_overseer',
+        r'=\s*leader_trait_pilferer\b': '= leader_trait_tzrynn_tithe',
+        r'=\s*leader_trait_kidnapper\b': '= leader_trait_interrogator',
+        r'=\s*leader_trait_watchdog\b': '= leader_trait_energy_weapon_specialist',
+        r'=\s*leader_trait_insightful\b': '= leader_trait_academic_dig_site_expert',
+        r'=\s*leader_trait_experimenter\b': '= leader_trait_juryrigger',
+        r'=\s*leader_trait_fanatic\b': '= leader_trait_master_gunner',
+        # r'=\s*leader_trait_mining_focus\b': '= leader_trait_private_mines_2',
+        r'=\s*leader_trait_army_logistician(_\d)?\b': '= leader_trait_energy_weapon_specialist',
+        r'\bleader_trait_fotd_admiral\b': 'leader_trait_fotd_commander',
+        r'add_modifier = \{ modifier = space_storm \}': 'create_space_storm = yes',
+        r'remove_modifier = space_storm': 'destroy_space_storm = yes',
         r'(\s)num_pops\b': (["common/buildings", "common/decisions", "common/colony_types"], r'\1num_sapient_pops'), # WARNING: only on planet country (num_pops also pop_faction sector)
+        r'^(\s*)(valid_for_all_ethics\b.*)': ("common/traits", r'\1# \2 removed in v3.10'),
+        r"\sleader_class\s*=\s*\{\s*((?:(?:admiral|general|governor|scientist)\s+){1,4})": (["common/traits", "common/governments/councilors"],
+            lambda p: p.group(0) if not p.group(1) else r"\tleader_class = { " + re.sub(r'(admiral|general|governor)', lambda p2: p2.group(0) if not p2.group(1) else {"governor": "official", "admiral": "commander", "general": "commander" }[p2.group(1)], p.group(1), flags=re.M|re.A)),
 
     },
     "targets4": {
-        r"\bleader_class = commander\s+leader_class = commander\b": "leader_class = commander",
-        # r"\bleader_class = \{\s+((?:admiral|scientist|general|governor)\s+){1:4}\s*\}": [r'(admiral|general)?\s*?(governor)?\s*?(admiral|general)?', ("common/traits", lambda p: "leader_class = {"+{"governor": "official", "scientist": "scientist", "admiral": "commander", "general": "commander" }[p.group(1)]],
-
-        r"OR = \{\s*(?:has_modifier = (?:toxic_|frozen_)?terraforming_candidate\s+){2:3}\}": "is_terraforming_candidate = yes",
+        r'\bleader_class\s*=\s*"?commander"?\s+leader_class\s*=\s*"?commander"?\b': "leader_class = commander",
+        # r"^\s+leader_class = \{\s*((?:admiral|scientist|general|governor)\s+){1,4}": [r'(admiral|general|governor)', (["common/traits", "common/governments/councilors"], lambda p: {"governor": "official", "admiral": "commander", "general": "commander" }[p.group(1)])],
+        r"OR\s*=\s*\{\s*(?:has_modifier\s*=\s*(?:toxic_|frozen_)?terraforming_candidate\s+){2:3}\}": "is_terraforming_candidate = yes",
     }
 }
 
@@ -1281,15 +1300,15 @@ def modfix(file_list):
                                 # elif subfolder in folder:
                                 elif isinstance(folder, str):
                                     #  and folder == "common/ai_budget"
-                                    if debug_mode: print("subfolder in folder", subfolder, folder)
+                                    # if debug_mode: print("subfolder in folder", subfolder, folder)
                                     if subfolder in folder:
                                         rt = True
-                                        if debug_mode: print(folder)
+                                        # if debug_mode: print(folder)
                                 elif isinstance(folder, re.Pattern):
                                     if folder.search(subfolder):
-                                        if debug_mode: print("Check folder (regexp) True", subfolder, repl)
+                                        # if debug_mode: print("Check folder (regexp) True", subfolder, repl)
                                         rt = True
-                                    elif debug_mode: print("Folder EXCLUDED:", subfolder, repl)
+                                    # elif debug_mode: print("Folder EXCLUDED:", subfolder, repl)
                                 else: rt = False
                             else: rt = True
                             if rt: # , flags=re.I # , count=0, flags=0
@@ -1334,7 +1353,7 @@ def modfix(file_list):
                                 elif isinstance(folder, str):
                                     if subfolder in folder:
                                         rt = True
-                                        if debug_mode: print(folder)
+                                        # if debug_mode: print(folder)
                                 elif isinstance(folder, re.Pattern) and folder.search(subfolder):
                                     # print("Check folder (regexp)", subfolder)
                                     rt = True
