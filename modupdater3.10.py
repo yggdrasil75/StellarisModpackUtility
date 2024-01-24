@@ -1148,7 +1148,7 @@ def parse_dir():
 
 	if not os.path.isdir(mod_path):
 		mod_path = os.getcwd()
-	mod_path = iBox("Please select a mod folder:", mod_path)
+		mod_path = iBox("Please select a mod folder:", mod_path)
 	# mod_path = input('Enter target directory: ')
 	# mod_outpath = iBox('Enter out directory (optional):', mod_path)
 	# mod_outpath = input('Enter out directory (optional):')
